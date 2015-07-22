@@ -30,10 +30,13 @@ liblightdash_la_SOURCES = \
 	appfinder-private.h \
 	appfinder-window.c \
 	appfinder-window.h \
+	lightdash-window-switcher.c \
+	lightdash-window-switcher.h \
 	lightdash.c \
 	lightdash.h
 
 liblightdash_la_CFLAGS = \
+	-DWNCK_I_KNOW_THIS_IS_UNSTABLE \
 	$(GLIB_CFLAGS) \
 	$(GTHREAD_CFLAGS) \
 	$(GTK_CFLAGS) \
@@ -43,6 +46,7 @@ liblightdash_la_CFLAGS = \
 	$(GIO_CFLAGS) \
 	$(XFCONF_CFLAGS) \
 	$(LIBXFCE4PANEL_CFLAGS) \
+	$(LIBWNCK_CFLAGS) \
 	$(PLATFORM_CFLAGS)
 
 liblightdash_la_LIBADD = \
@@ -54,6 +58,7 @@ liblightdash_la_LIBADD = \
 	$(GARCON_LIBS) \
 	$(XFCONF_LIBS) \
 	$(GIO_LIBS) \
+	$(LIBWNCK_LIBS) \
 	$(LIBXFCE4PANEL_LIBS)
 
 liblightdash_la_LDFLAGS = \

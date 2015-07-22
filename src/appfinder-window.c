@@ -32,6 +32,7 @@
 #include <gdk/gdkkeysyms.h>
 #include <xfconf/xfconf.h>
 #include <glib/gstdio.h>
+#include <libwnck/libwnck.h>
 
 #include <src/appfinder-window.h>
 #include <src/appfinder-model.h>
@@ -39,6 +40,7 @@
 #include <src/appfinder-preferences.h>
 #include <src/appfinder-actions.h>
 #include <src/appfinder-private.h>
+#include "lightdash-window-switcher.h"
 
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
@@ -113,7 +115,6 @@ static void       xfce_appfinder_window_execute                       (XfceAppfi
                                                                        gboolean                     close_on_succeed);
 
 
-
 struct _XfceAppfinderWindowClass
 {
   GtkWindowClass __parent__;
@@ -140,10 +141,12 @@ struct _XfceAppfinderWindow
   GtkWidget                  *image;
   GtkWidget                  *view;
   GtkWidget                  *viewscroll;
-  GtkWidget					*scroll;
+  GtkWidget					 *scroll;
   GtkWidget                  *sidepane;
-  GtkWidget					*taskview_container;
-  GtkWidget					*icon_bar;
+  GtkWidget					 *taskview_container;
+  GtkWidget					 *window_switcher;
+  GtkWidget					 *pager;	
+  GtkWidget					 *icon_bar;
 
   GdkPixbuf                  *icon_find;
 
@@ -228,8 +231,11 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   GtkWidget          *button;
   GtkEntryCompletion *completion;
   gint                integer;
-    GtkWidget *label;
     GtkWidget *apps_button;
+    
+    gtk_window_set_skip_taskbar_hint (GTK_WINDOW (window), TRUE);
+    gtk_window_set_skip_pager_hint (GTK_WINDOW (window), TRUE);
+    gtk_window_stick (GTK_WINDOW (window));
 
   window->channel = xfconf_channel_get ("xfce4-appfinder");
   window->last_window_height = xfconf_channel_get_int (window->channel, "/last/window-height", DEFAULT_WINDOW_HEIGHT);
@@ -349,10 +355,24 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   window->paned = pane = gtk_hpaned_new ();
 #endif
 
+	
 	window->taskview_container = gtk_hbox_new (FALSE, 0);
   gtk_box_pack_start (GTK_BOX (vbox), window->taskview_container, TRUE, TRUE, 0);
-  label = gtk_label_new_with_mnemonic ("windows");
-  gtk_box_pack_start (GTK_BOX (window->taskview_container), label, TRUE, TRUE, 0);
+  
+  //Add window switcher  
+  window->window_switcher = lightdash_window_switcher_new ();
+  gtk_box_pack_start (GTK_BOX (window->taskview_container), window->window_switcher, TRUE, TRUE, 0);
+  gtk_widget_show (window->window_switcher);
+  
+  g_signal_connect_swapped (G_OBJECT (window->window_switcher), "task-button-clicked",
+							G_CALLBACK (gtk_widget_hide), GTK_WIDGET (window));
+						
+	//Add pager
+	window->pager = wnck_pager_new (NULL);
+	gtk_box_pack_start (GTK_BOX (window->taskview_container), window->pager, FALSE, FALSE, 0);
+	gtk_widget_set_size_request (window->pager, 100, 100);
+	gtk_widget_show (window->pager);
+  
   gtk_widget_show_all (window->taskview_container);
   
   
