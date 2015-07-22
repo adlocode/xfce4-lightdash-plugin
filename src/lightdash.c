@@ -212,14 +212,20 @@ lightdash_size_changed (XfcePanelPlugin *plugin,
 static void
 lightdash_button_clicked (GtkButton *button, LightdashPlugin *lightdash)
 {
-	if (!gtk_widget_get_visible (lightdash->lightdash_window))
+	if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (lightdash->button)) == FALSE)
         {
-			gtk_widget_show (GTK_WIDGET (lightdash->lightdash_window));
+			gtk_widget_hide (GTK_WIDGET (lightdash->lightdash_window));
 		}
 	else
 	{
-		gtk_widget_hide (GTK_WIDGET (lightdash->lightdash_window));
+		gtk_widget_show (GTK_WIDGET (lightdash->lightdash_window));
 	}
+}
+
+static void
+lightdash_window_unmap (GtkWidget *widget, LightdashPlugin *lightdash)
+{
+	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (lightdash->button), FALSE);
 }
 
 static void
@@ -253,6 +259,9 @@ lightdash_construct (XfcePanelPlugin *plugin)
 						
 	g_signal_connect (G_OBJECT (plugin), "size-changed",
                     G_CALLBACK (lightdash_size_changed), lightdash);
+                    
+    g_signal_connect (G_OBJECT (lightdash->lightdash_window), "unmap",
+                    G_CALLBACK (lightdash_window_unmap), lightdash);
 	
 }
 	
