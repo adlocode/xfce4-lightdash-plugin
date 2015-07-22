@@ -173,8 +173,8 @@ appfinder_window_destroyed (GtkWidget *window)
 
 
 
-void
-appfinder_window_new (const gchar *startup_id,
+GtkWidget *
+lightdash_window_new (const gchar *startup_id,
                       gboolean     expanded)
 {
   GtkWidget *window;
@@ -189,6 +189,8 @@ appfinder_window_new (const gchar *startup_id,
   windows = g_slist_prepend (windows, window);
   g_signal_connect (G_OBJECT (window), "destroy",
                     G_CALLBACK (appfinder_window_destroyed), NULL);
+                    
+  return window;
 }
 
 
@@ -294,7 +296,7 @@ main (gint argc, gchar **argv)
 #endif
 
   /* create initial window */
-  appfinder_window_new (NULL, !opt_collapsed);
+  lightdash_window_new (NULL, !opt_collapsed);
 
   APPFINDER_DEBUG ("enter mainloop");
 

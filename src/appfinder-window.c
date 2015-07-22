@@ -56,7 +56,7 @@
 
 
 static void       xfce_appfinder_window_finalize                      (GObject                     *object);
-static void       xfce_appfinder_window_unmap                         (GtkWidget                   *widget);
+//static void       xfce_appfinder_window_unmap                         (GtkWidget                   *widget);
 static gboolean   xfce_appfinder_window_key_press_event               (GtkWidget                   *widget,
                                                                        GdkEventKey                 *event);
 static gboolean   xfce_appfinder_window_window_state_event            (GtkWidget                   *widget,
@@ -96,7 +96,7 @@ static void       xfce_appfinder_window_category_changed              (GtkTreeSe
                                                                        XfceAppfinderWindow         *window);
 static void       xfce_appfinder_window_category_set_categories       (XfceAppfinderModel          *model,
                                                                        XfceAppfinderWindow         *window);
-static void       xfce_appfinder_window_preferences                   (GtkWidget                   *button,
+static void       xfce_lightdash_window_preferences                   (GtkWidget                   *button,
                                                                        XfceAppfinderWindow         *window);
 static void       xfce_appfinder_window_property_changed              (XfconfChannel               *channel,
                                                                        const gchar                 *prop,
@@ -140,7 +140,10 @@ struct _XfceAppfinderWindow
   GtkWidget                  *image;
   GtkWidget                  *view;
   GtkWidget                  *viewscroll;
+  GtkWidget					*scroll;
   GtkWidget                  *sidepane;
+  GtkWidget					*taskview_container;
+  GtkWidget					*icon_bar;
 
   GdkPixbuf                  *icon_find;
 
@@ -182,11 +185,28 @@ xfce_appfinder_window_class_init (XfceAppfinderWindowClass *klass)
   gobject_class->finalize = xfce_appfinder_window_finalize;
 
   gtkwidget_class = GTK_WIDGET_CLASS (klass);
-  gtkwidget_class->unmap = xfce_appfinder_window_unmap;
+  //gtkwidget_class->unmap = xfce_appfinder_window_unmap;
   gtkwidget_class->key_press_event = xfce_appfinder_window_key_press_event;
   gtkwidget_class->window_state_event = xfce_appfinder_window_window_state_event;
 }
-
+static void
+xfce_lightdash_window_apps_button_clicked (GtkButton *button, XfceAppfinderWindow *window)
+{
+	if (!gtk_widget_get_visible (window->scroll))
+        {
+			gtk_widget_show_all (window->scroll);
+			gtk_widget_show_all (window->viewscroll);
+			gtk_widget_hide_all (window->taskview_container);
+		}
+		
+		else
+		{
+			gtk_widget_hide (window->scroll);
+			gtk_widget_hide (window->viewscroll);
+			gtk_widget_show_all (window->taskview_container);
+			
+		}
+}
 
 
 static void
@@ -199,6 +219,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   GtkWidget          *sidepane;
   GtkWidget          *image;
   GtkWidget          *hbox;
+  GtkWidget 		*main_hbox;
   GtkWidget          *align;
   GtkTreeViewColumn  *column;
   GtkCellRenderer    *renderer;
@@ -207,6 +228,8 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   GtkWidget          *button;
   GtkEntryCompletion *completion;
   gint                integer;
+    GtkWidget *label;
+    GtkWidget *apps_button;
 
   window->channel = xfconf_channel_get ("xfce4-appfinder");
   window->last_window_height = xfconf_channel_get_int (window->channel, "/last/window-height", DEFAULT_WINDOW_HEIGHT);
@@ -231,13 +254,32 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
     gtk_window_set_position (GTK_WINDOW (window), GTK_WIN_POS_CENTER);
 
 #if GTK_CHECK_VERSION (3, 0, 0)
+	main_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
   vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
 #else
+	main_hbox = gtk_hbox_new (FALSE, 6);
   vbox = gtk_vbox_new (FALSE, 6);
+  
 #endif
-  gtk_container_add (GTK_CONTAINER (window), vbox);
+  gtk_container_add (GTK_CONTAINER (window), main_hbox);
+  gtk_widget_show (main_hbox);
+  window->icon_bar = gtk_vbox_new (FALSE, 0);
+  
+  gtk_box_pack_start (GTK_BOX (main_hbox), window->icon_bar, FALSE, FALSE, 0);
+  gtk_box_pack_start (GTK_BOX (main_hbox), vbox, TRUE, TRUE, 0);
+  
+  apps_button = gtk_button_new ();
+  gtk_button_set_focus_on_click (GTK_BUTTON (apps_button), FALSE);
+  gtk_box_pack_start (GTK_BOX (window->icon_bar), apps_button, FALSE, TRUE, 0);
+  gtk_widget_set_size_request (apps_button, 50, 50);
+  gtk_widget_show (apps_button);
+  
+  g_signal_connect (G_OBJECT (apps_button), "clicked",
+      G_CALLBACK (xfce_lightdash_window_apps_button_clicked), window);
+  
   gtk_container_set_border_width (GTK_CONTAINER (vbox), 6);
   gtk_widget_show (vbox);
+  gtk_widget_show (window->icon_bar);
 
 #if GTK_CHECK_VERSION (3, 0, 0)
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
@@ -255,7 +297,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   window->image = image = gtk_image_new_from_pixbuf (window->icon_find);
   gtk_widget_set_size_request (image, 48, 48);
   gtk_container_add (GTK_CONTAINER (align), image);
-  gtk_widget_show (image);
+  //gtk_widget_show (image);
 
 #if GTK_CHECK_VERSION (3, 0, 0)
   vbox2 = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
@@ -306,16 +348,26 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
 #else
   window->paned = pane = gtk_hpaned_new ();
 #endif
+
+	window->taskview_container = gtk_hbox_new (FALSE, 0);
+  gtk_box_pack_start (GTK_BOX (vbox), window->taskview_container, TRUE, TRUE, 0);
+  label = gtk_label_new_with_mnemonic ("windows");
+  gtk_box_pack_start (GTK_BOX (window->taskview_container), label, TRUE, TRUE, 0);
+  gtk_widget_show_all (window->taskview_container);
+  
+  
   gtk_box_pack_start (GTK_BOX (vbox), pane, TRUE, TRUE, 0);
   integer = xfconf_channel_get_int (window->channel, "/last/pane-position", DEFAULT_PANED_POSITION);
   gtk_paned_set_position (GTK_PANED (pane), integer);
   g_object_set (G_OBJECT (pane), "position-set", TRUE, NULL);
+  
+  
 
-  scroll = gtk_scrolled_window_new (NULL, NULL);
+  scroll = window->scroll = gtk_scrolled_window_new (NULL, NULL);
   gtk_paned_add1 (GTK_PANED (pane), scroll);
   gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (scroll), GTK_SHADOW_ETCHED_IN);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_widget_show (scroll);
+  gtk_widget_show (window->scroll);
 
   sidepane = window->sidepane = gtk_tree_view_new_with_model (GTK_TREE_MODEL (window->category_model));
   gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (sidepane), FALSE);
@@ -327,7 +379,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   gtk_tree_view_set_row_separator_func (GTK_TREE_VIEW (sidepane),
       xfce_appfinder_category_model_row_separator_func, NULL, NULL);
   gtk_container_add (GTK_CONTAINER (scroll), sidepane);
-  gtk_widget_show (sidepane);
+  //gtk_widget_show (sidepane);
 
   selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (sidepane));
   gtk_tree_selection_set_mode (selection, GTK_SELECTION_BROWSE);
@@ -349,11 +401,13 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   gtk_tree_view_column_set_attributes (GTK_TREE_VIEW_COLUMN (column), renderer,
                                        "text", XFCE_APPFINDER_CATEGORY_MODEL_COLUMN_NAME, NULL);
 
+  
+  
   window->viewscroll = scroll = gtk_scrolled_window_new (NULL, NULL);
   gtk_paned_add2 (GTK_PANED (pane), scroll);
   gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (scroll), GTK_SHADOW_ETCHED_IN);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_widget_show (scroll);
+  //gtk_widget_show (scroll);
 
   /* set the icon or tree view */
   xfce_appfinder_window_view (window);
@@ -372,7 +426,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   window->button_preferences = button = gtk_button_new_from_stock (GTK_STOCK_PREFERENCES);
   gtk_box_pack_start (GTK_BOX (hbox), button, FALSE, FALSE, 0);
   g_signal_connect (G_OBJECT (button), "clicked",
-      G_CALLBACK (xfce_appfinder_window_preferences), window);
+      G_CALLBACK (xfce_lightdash_window_preferences), window);
 
 #if GTK_CHECK_VERSION (3, 0, 0)
   bbox = gtk_button_box_new (GTK_ORIENTATION_HORIZONTAL);
@@ -417,6 +471,8 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   window->property_watch_id =
     g_signal_connect (G_OBJECT (window->channel), "property-changed",
         G_CALLBACK (xfce_appfinder_window_property_changed), window);
+        
+  gtk_widget_grab_focus (entry);
 
   APPFINDER_DEBUG ("constructed window");
 }
@@ -455,7 +511,7 @@ xfce_appfinder_window_finalize (GObject *object)
 }
 
 
-
+/*
 static void
 xfce_appfinder_window_unmap (GtkWidget *widget)
 {
@@ -475,7 +531,7 @@ xfce_appfinder_window_unmap (GtkWidget *widget)
   xfconf_channel_set_int (window->channel, "/last/pane-position", position);
 
   return (*GTK_WIDGET_CLASS (xfce_appfinder_window_parent_class)->unmap) (widget);
-}
+} */
 
 
 
@@ -1169,6 +1225,21 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
         {
           window->filter_text = NULL;
         }
+        
+        if (gtk_entry_get_text_length (GTK_ENTRY(window->entry)) != 0)
+        {
+			gtk_widget_show_all (window->scroll);
+			gtk_widget_show_all (window->viewscroll);
+			gtk_widget_hide_all (window->taskview_container);
+		}
+		
+		else
+		{
+			gtk_widget_hide (window->scroll);
+			gtk_widget_hide (window->viewscroll);
+			gtk_widget_show_all (window->taskview_container);
+			
+		}
 
       APPFINDER_DEBUG ("refilter entry");
       if (GTK_IS_TREE_VIEW (window->view))
@@ -1508,7 +1579,7 @@ xfce_appfinder_window_category_set_categories (XfceAppfinderModel  *signal_from_
 
 
 static void
-xfce_appfinder_window_preferences (GtkWidget           *button,
+xfce_lightdash_window_preferences (GtkWidget           *button,
                                    XfceAppfinderWindow *window)
 {
   appfinder_return_if_fail (GTK_IS_WIDGET (button));
@@ -1753,7 +1824,7 @@ xfce_appfinder_window_execute (XfceAppfinderWindow *window,
     }
 
   if (result && close_on_succeed)
-    gtk_widget_destroy (GTK_WIDGET (window));
+    gtk_widget_hide (GTK_WIDGET (window));
 }
 
 

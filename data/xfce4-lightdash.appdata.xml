@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+  <id>xfce4-lightdash.desktop</id>
+  <metadata_license>CC-BY-3.0</metadata_license>
+  <project_license>GPL-2.0+</project_license>
+  <name>Application Finder</name>
+  <summary>Application to quickly run applications and commands</summary>
+
+  <description>
+    <p>The application finder is a tool to find and launch installed applications on your system and the quickly execute commands. It can also be used to quickly add launchers to the Xfce Panel by dragging an item from the view and drop it on the panel.</p>
+    <p xml:lang="cs">Vyhledávač aplikací je nástroj pro vyhledávání a spouštění aplikací nainstalovaných v systému a pro rychlé spouštění příkazů. Lze jej taky použít pro rychlé přidání spouštěčů do panelu Xfce přetažením z výsledků hledání na panel.</p>
+    <p xml:lang="de">Der Anwendungsfinder ist ein Werkzeug, um im System installierte Anwendungen zu finden und zu starten und schnell Befehle auszuführen. Er kann ebenfalls verwendet werden, um schnell Starter zur Xfce-Leiste hinzuzufügen, durch ziehen aus der Ansicht und ablegen in der Leiste.</p>
+    <p xml:lang="en_AU">The application finder is a tool to find and launch installed applications on your system and the quickly execute commands. It can also be used to quickly add launchers to the Xfce Panel by dragging an item from the view and drop it on the panel.</p>
+    <p xml:lang="es">El buscador de aplicaciones es una herramienta para encontrar y poner en marcha las aplicaciones instaladas en el sistema y ejecutar rápidamente órdenes. También se puede utilizar para agregar rápidamente lanzadores al panel de Xfce arrastrando un elemento de la vista y soltarlo en el panel.</p>
+    <p xml:lang="fr">La liste des applications est un outil qui permet de rechercher et de lancer les applications installées sur votre système et d’exécuter rapidement des commandes. Il permet également d’ajouter rapidement des lanceurs sur le tableau de bord Xfce par un glisser-déposer d’un élément depuis la vue des applications vers le tableau de bord.</p>
+    <p xml:lang="hr">Nalaznik programa je alat za pronalazak instaliranih programa na sustavu te brzo izvođenje naredbi. Također se može koristiti za dodavanje brzih pokretača na Xfce ploču povlačenjem s liste te ispuštanjem na ploču.</p>
+    <p xml:lang="it">Il ricercatore di applicazioni è uno strumento per trovare e avviare le applicazioni installate sul proprio sistema e per eseguire velocemente i comandi. Può anche essere utilizzato per aggiungere velocemente degli avviatori al pannello di Xfce trascinando sul pannello stesso gli elementi dell'elenco.</p>
+    <p xml:lang="ja">アプリケーションファインダーはシステムにインストールされているアプリケーションを探して起動したりすばやくコマンドを実行するツールです。ウィンドウ上のアイテムを Xfce パネルにドラッグアンドドロップすることでパネル上にランチャーを追加することもできます。</p>
+    <p xml:lang="kk">Қолданбаларды табушы - бұл жүйеңізде орнатылған қолданбаларды табу және жөнелту, және де командаларды жылдам орындау үшін арналған сайман. Сонымен бірге, оның көмегімен қолданбалар көрінісінен тартып апару арқылы Xfce панеліне жөнелткіштерді қосуға болады.</p>
+    <p xml:lang="ko">프로그램 검색기는 시스템에 설치한 프로그램을 찾아 실행시키며, 명령을 빠르게 실행 처리하는 도구입니다. 또한 바로 가기 아이콘을 보기 창에서 Xfce 패널로 끌어다 놓는 방식으로 간편하게 추가할 수 있습니다.</p>
+    <p xml:lang="lt">Programų paieška yra įrankis, skirtas rasti ir paleisti jūsų sistemoje įdiegtas programas bei greitai vykdyti komandas. Jį taip pat galima naudoti, norint pridėti leistukus į Xfce Skydelį, tempiant elementą iš rodinio ir numetant jį ant skydelio.</p>
+    <p xml:lang="ms">Pencari aplikasi ini adalah alat untuk cari dan lancar aplikasi terpasang di dalam sistem anda dan lakukan perintah dengan pantas. Ia juga boleh digunakan untuk menambah pelancar secara pantas ke Panel Xfce dengan menyeret item dari paparan dan lepas ia ke atas panel.</p>
+    <p xml:lang="nb">Programkatalogen er et verktøy for å finne og kjøre installerte programmer på ditt system, samt å raskt kjøre kommandoer. Den kan også brukes til å hurtig legge til hurtigstartere på Xfce-panelet ved å dra elementet fra synlig flate til panelet.</p>
+    <p xml:lang="nl">De toepassingenzoeker is een hulpmiddel om geïnstalleerde toepassingen te vinden en te starten en om snel opdrachten uit te voeren. Hij kan ook worden gebruikt om snelstarters toe te voegen aan de Xfce-werkbalk, eenvoudigweg door een weergegeven element te slepen naar de werkbalk en het daar los te laten.</p>
+    <p xml:lang="nn">Programfinnaren er eit verktøy for å finna og starta innstallerte program på systemet, og snøggt utføra kommandoar. Han kan òg brukast til å kjapt leggja til startarar på Xfce-panelet ved å dra eit element frå lista og sleppa det på panelet.</p>
+    <p xml:lang="pl">Wyszukiwanie programów to narzędzie do odnajdywania i uruchamiania zainstalowanych w systemie programów oraz do szybkiego wykonywania poleceń. Może być także używane do szybkiego dodawania aktywatorów do panelu Xfce poprzez przeniesienie elementu z podglądu i upuszczeniu go na panelu.</p>
+    <p xml:lang="pt">A aplicação é uma ferramenta para encontrar e lançar aplicações instaladas no sistema e executar comandos rapidamente. Também pode ser usada para criar rapidamente lançadores no painel Xfce ao arrastar um item da vista e largá-lo sobre o painel.</p>
+    <p xml:lang="pt_BR">O localizador de aplicativos é uma ferramenta que encontra e lança aplicativos instalados no seu sistema e rapidamente executa comandos. Também pode ser usado para rapidamente adicionar lançadores no painel do Xfce ao arrastar um item da lista e soltá-lo no painel.</p>
+    <p xml:lang="ru">Поиск приложений — инструмент для поиска и запуска установленных в вашей системе приложений и быстрого выполнения команд. Также он может быть использован для быстрого добавления значков запуска на панель Xfce перетаскиванием.</p>
+    <p xml:lang="sk">Vyhľadávač aplikácií je nástroj na vyhľadanie a spustenie aplikácií nainštalovaných v systéme a na rýchle vykonanie príkazov. Možno ho tiež použiť na rýchle pridanie spúšťačov do panela Xfce pretiahnutím položky a jej upustením nad panelom.</p>
+    <p xml:lang="sr">Проналазач програма је прибор за брзо проналажење и покретање уграђених програма у систему и брзо извршавање наредби. Може бити коришћен и за брзо додавање покретача на полицу Иксфце-а превлачењем ставки са поља прегледа и њиховим спуштањем на полицу.</p>
+    <p xml:lang="sv">Programstartaren är ett verktyg för att hitta och starta installerade program på datorn och snabbt utföra kommandon. Det kan också användas för att snabbt lägga till programstartare på Xfce-panelen genom att dra ett objekt från vyn och släppa det på panelen.</p>
+    <p xml:lang="th">เครื่องมือค้นหาโปรแกรม เป็นเครื่องมือสำหรับหาและเรียกทำงานโปรแกรมที่ติดตั้งไว้ในระบบของคุณ และสำหรับเรียกคำสั่งอย่างเร็ว และยังสามารถใช้ในการเพิ่มปุ่มเรียกโปรแกรมอย่างเร็วลงในพาเนลของ Xfce ด้วยการลากรายการจากหน้าต่างโปรแกรมไปวางบนพาเนล</p>
+    <p xml:lang="tr">Uygulama bulma aracı sisteminizde kurulu uygulamaları kolayca bulup çalıştırmak ve komutları işletmek için bir araçtır. Aynı zamanda bir başlatıcıyı panele sürükleyerek Xfce Paneline hızlıca eklemek için de kullanılabilir.</p>
+    <p xml:lang="uk">Шукач програм є знаряддям для пошуку і запуску встановлених програм у Вашій системі і для швидкого запуску команд. Програму можна також використовувати для швидкого додавання запускачів до панелі Xfce, захоплюючи програми зі списку і переносячи їх на панель.</p>
+    <p xml:lang="zh_CN">应用程序查找器是用来查找和启动安装在您的系统里的应用程序的一个工具,它能快速执行命令。它也能使用拖拽项目的方式快速的添加启动器至 Xfce 面板,您只需将它拖放至面板上即可。</p>
+    <p xml:lang="zh_TW">應用程式協尋器為一個搜尋並開啟在您的系統上已安裝的應用程式，以及用以快速執行指令的工具。它也可以用來在 Xfce 面板上快速加入啟動器，只要將您看到的應用程式的項目拖放到面板上就行了。</p>
+  </description>
+
+  <screenshots>
+    <screenshot type="default">
+      <image>http://docs.xfce.org/_media/xfce/xfce4-appfinder/xfce4-appfinder-expanded.png</image>
+    </screenshot>
+  </screenshots>
+
+  <url type="homepage">http://www.xfce.org/</url>
+  <url type="bugtracker">https://bugzilla.xfce.org/</url>
+  <url type="help">http://docs.xfce.org/xfce/xfce4-appfinder/start</url>
+
+  <updatecontact>xfce4-dev@xfce.org</updatecontact>
+
+  <project_group>XFCE</project_group>
+
+  <provides>
+    <binary>xfce4-lightdash</binary>
+  </provides>
+
+</component>

@@ -3,16 +3,20 @@
 AM_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-DPACKAGE_LOCALE_DIR=\"$(localedir)\" \
-	-DG_LOG_DOMAIN=\"xfce4-appfinder\" \
+	-DG_LOG_DOMAIN=\"xfce4-lightdash\" \
 	$(PLATFORM_CPPFLAGS)
 
-bin_PROGRAMS = xfce4-appfinder
+plugin_LTLIBRARIES = \
+	liblightdash.la
 
-xfce4_appfinder_built_sources = \
+plugindir = \
+	$(libdir)/xfce4/panel/plugins
+
+xfce4_lightdash_built_sources = \
 	appfinder-preferences-ui.h
 
-xfce4_appfinder_SOURCES = \
-	$(xfce4_appfinder_built_sources) \
+liblightdash_la_SOURCES = \
+	$(xfce4_lightdash_built_sources) \
 	appfinder-actions.c \
 	appfinder-actions.h \
 	appfinder-category-model.c \
@@ -26,9 +30,10 @@ xfce4_appfinder_SOURCES = \
 	appfinder-private.h \
 	appfinder-window.c \
 	appfinder-window.h \
-	main.c
+	lightdash.c \
+	lightdash.h
 
-xfce4_appfinder_CFLAGS = \
+liblightdash_la_CFLAGS = \
 	$(GLIB_CFLAGS) \
 	$(GTHREAD_CFLAGS) \
 	$(GTK_CFLAGS) \
@@ -37,9 +42,10 @@ xfce4_appfinder_CFLAGS = \
 	$(GARCON_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(XFCONF_CFLAGS) \
+	$(LIBXFCE4PANEL_CFLAGS) \
 	$(PLATFORM_CFLAGS)
 
-xfce4_appfinder_LDADD = \
+liblightdash_la_LIBADD = \
 	$(GLIB_LIBS) \
 	$(GTHREAD_LIBS) \
 	$(GTK_LIBS) \
@@ -47,29 +53,38 @@ xfce4_appfinder_LDADD = \
 	$(LIBXFCE4UI_LIBS) \
 	$(GARCON_LIBS) \
 	$(XFCONF_LIBS) \
-	$(GIO_LIBS)
+	$(GIO_LIBS) \
+	$(LIBXFCE4PANEL_LIBS)
 
-xfce4_appfinder_LDFLAGS = \
+liblightdash_la_LDFLAGS = \
 	-no-undefined \
 	$(PLATFORM_LDFLAGS)
 
-# install symlink to 'xfrun4'
-install-exec-hook:
-	$(mkinstalldirs) $(DESTDIR)$(bindir)
-	-( cd $(DESTDIR)$(bindir) ; test -x xfrun4 || ln -sf xfce4-appfinder xfrun4 )
 
 if MAINTAINER_MODE
 
-appfinder-preferences-ui.h: $(srcdir)/appfinder-preferences.glade Makefile
-	$(AM_V_GEN) exo-csource --static --strip-comments --strip-content --name=appfinder_preferences_ui $< >$@
+appfinder-preferences-ui.h: $(srcdir)/lightdash-preferences.glade Makefile
+	$(AM_V_GEN) exo-csource --static --strip-comments --strip-content --name=lightdash_preferences_ui $< >$@
 
 DISTCLEANFILES = \
-	$(xfce4_appfinder_built_sources)
+	$(xfce4_lightdash_built_sources)
 
 BUILT_SOURCES = \
-	$(xfce4_appfinder_built_sources)
+	$(xfce4_lightdash_built_sources)
 
 endif
 
-EXTRA_DIST = \
-	appfinder-preferences.glade
+desktopdir =								\
+	$(datadir)/xfce4/panel/plugins
+
+desktop_DATA =								\
+	lightdash.desktop
+
+@INTLTOOL_DESKTOP_RULE@
+
+EXTRA_DIST =
+	lightdash.desktop.in \
+	lightdash-preferences.glade
+
+CLEANFILES =								\
+	$(desktop_DATA)
