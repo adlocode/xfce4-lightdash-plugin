@@ -164,13 +164,20 @@ lightdash_new (XfcePanelPlugin *plugin)
 	
 	lightdash->ebox = gtk_event_box_new ();
 	
-	
+	//gtk_widget_set_size_request (lightdash->ebox, 200, 100);
 	
 	lightdash->button = xfce_panel_create_toggle_button ();
 	
-	gtk_widget_set_size_request (lightdash->button, 100, 100);
-	
 	gtk_container_add (GTK_CONTAINER (lightdash->ebox), lightdash->button);
+	
+	lightdash->button_label = gtk_label_new ("Activities");
+	
+	gtk_container_add (GTK_CONTAINER (lightdash->button), (lightdash->button_label));
+	gtk_widget_show (lightdash->button_label);
+	
+	//gtk_widget_set_size_request (lightdash->button, 200, 100);
+	
+	
 	
 	gtk_widget_show_all (lightdash->ebox);
 	
@@ -184,15 +191,15 @@ lightdash_free (XfcePanelPlugin *plugin,
 	panel_slice_free (LightdashPlugin, lightdash);
 	
 }
-/*
+
 static gboolean
 lightdash_size_changed (XfcePanelPlugin *plugin,
 						gint size,
 						LightdashPlugin *lightdash)
 {
-	//GtkOrientation *orientation;
+	GtkOrientation orientation;
 	
-	//orientation = xfce_panel_plugin_get_orientation (plugin);
+	orientation = xfce_panel_plugin_get_orientation (plugin);
 	
 	if (orientation == GTK_ORIENTATION_HORIZONTAL)
 		gtk_widget_set_size_request (GTK_WIDGET (plugin), -1, size);
@@ -200,7 +207,8 @@ lightdash_size_changed (XfcePanelPlugin *plugin,
 		gtk_widget_set_size_request (GTK_WIDGET (plugin), size, -1);
 		
 	return TRUE;
-}*/
+}
+
 static void
 lightdash_button_clicked (GtkButton *button, LightdashPlugin *lightdash)
 {
@@ -243,8 +251,8 @@ lightdash_construct (XfcePanelPlugin *plugin)
 	g_signal_connect (G_OBJECT (lightdash->button), "toggled",
 						G_CALLBACK (lightdash_button_clicked), lightdash);
 						
-	// g_signal_connect (G_OBJECT (plugin), "size-changed",
-                    //G_CALLBACK (lightdash_size_changed), lightdash);
+	g_signal_connect (G_OBJECT (plugin), "size-changed",
+                    G_CALLBACK (lightdash_size_changed), lightdash);
 	
 }
 	

@@ -9,6 +9,7 @@ typedef struct
 	
 	GtkWidget *ebox;
 	GtkWidget *button;
+	GtkWidget *button_label;
 	GtkWidget *lightdash_window;
 	
 }LightdashPlugin;

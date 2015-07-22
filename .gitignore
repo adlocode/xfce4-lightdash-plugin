@@ -3,6 +3,7 @@
 *.lo
 *.swp
 *.tar.*
+*.o
 .deps
 .libs
 ChangeLog
