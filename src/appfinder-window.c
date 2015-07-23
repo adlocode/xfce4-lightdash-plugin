@@ -35,6 +35,7 @@
 #include <xfconf/xfconf.h>
 #include <glib/gstdio.h>
 #include <libwnck/libwnck.h>
+#include <exo/exo.h>
 
 #include <src/appfinder-window.h>
 #include <src/appfinder-model.h>
@@ -844,7 +845,9 @@ xfce_appfinder_window_view (XfceAppfinderWindow *window)
     }
   else
     {
-      window->view = view = gtk_tree_view_new_with_model (filter_model);
+      window->view = view = GTK_WIDGET (exo_tree_view_new ());
+      gtk_tree_view_set_model (GTK_TREE_VIEW (view), filter_model);
+      exo_tree_view_set_single_click (EXO_TREE_VIEW (view), TRUE);
       gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (view), FALSE);
       gtk_tree_view_set_enable_search (GTK_TREE_VIEW (view), FALSE);
       gtk_tree_view_set_tooltip_column (GTK_TREE_VIEW (view), XFCE_APPFINDER_MODEL_COLUMN_TOOLTIP);

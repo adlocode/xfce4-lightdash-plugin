@@ -47,6 +47,7 @@ liblightdash_la_CFLAGS = \
 	$(XFCONF_CFLAGS) \
 	$(LIBXFCE4PANEL_CFLAGS) \
 	$(LIBWNCK_CFLAGS) \
+	$(EXO_CFLAGS) \
 	$(PLATFORM_CFLAGS)
 
 liblightdash_la_LIBADD = \
@@ -59,6 +60,7 @@ liblightdash_la_LIBADD = \
 	$(XFCONF_LIBS) \
 	$(GIO_LIBS) \
 	$(LIBWNCK_LIBS) \
+	$(EXO_LIBS) \
 	$(LIBXFCE4PANEL_LIBS)
 
 liblightdash_la_LDFLAGS = \

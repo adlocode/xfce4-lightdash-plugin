@@ -84,7 +84,7 @@ XDT_CHECK_PACKAGE([LIBWNCK], [libwnck-1.0], [1.0.0])
 XDT_CHECK_PACKAGE([X11], [x11], [0.0.0])
 XDT_CHECK_PACKAGE([XCOMPOSITE], [xcomposite], [0.0.0])
 XDT_CHECK_PACKAGE([XRENDER], [xrender], [0.0.0])
-
+XDT_CHECK_PACKAGE([EXO], [exo-1], [0.0.0])
 
 dnl ************************************
 dnl *** Compile against GTK3 or GTK2 ***
