@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2011 Nick Schermer <nick@xfce.org>
+ * 
+ * Copyright (C) 2015 adlo
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -221,6 +223,22 @@ xfce_lightdash_window_show (GtkWidget *widget, XfceAppfinderWindow *window)
 	gtk_widget_grab_focus (window->entry);
 }
 
+static gboolean
+xfce_lightdash_window_window_switcher_key_press_event 
+(GtkWidget   *widget, GdkEventKey *event, XfceAppfinderWindow *window)
+{
+	
+	if (event->keyval == GDK_KEY_Tab)
+	{
+		return FALSE;
+	}
+	else
+	{
+		gtk_widget_grab_focus (window->entry);
+		gtk_window_propagate_key_event (GTK_WINDOW (window), event);
+		return TRUE;
+	}
+}
 
 static void
 xfce_appfinder_window_init (XfceAppfinderWindow *window)
@@ -242,7 +260,10 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   GtkEntryCompletion *completion;
   gint                integer;
     GtkWidget *apps_button;
+    GtkWidget *icon_apps;
     
+    gtk_window_maximize (GTK_WINDOW (window));
+	gtk_window_set_decorated (GTK_WINDOW (window), FALSE);
     gtk_window_set_skip_taskbar_hint (GTK_WINDOW (window), TRUE);
     gtk_window_set_skip_pager_hint (GTK_WINDOW (window), TRUE);
     gtk_window_stick (GTK_WINDOW (window));
@@ -319,6 +340,12 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   gtk_widget_set_size_request (image, 48, 48);
   gtk_container_add (GTK_CONTAINER (align), image);
   //gtk_widget_show (image);
+  
+   icon_apps = gtk_image_new_from_icon_name ("applications-other", 
+	GTK_ICON_SIZE_DIALOG);
+	gtk_container_add (GTK_CONTAINER(apps_button), icon_apps);
+	gtk_widget_show (icon_apps);
+  
 
 #if GTK_CHECK_VERSION (3, 0, 0)
   vbox2 = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
@@ -411,6 +438,10 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
       G_CALLBACK (gtk_widget_grab_focus), entry);
   g_signal_connect (G_OBJECT (sidepane), "key-press-event",
       G_CALLBACK (xfce_appfinder_window_treeview_key_press_event), window);
+      
+  g_signal_connect (G_OBJECT (window->window_switcher), "key-press-event",
+      G_CALLBACK (xfce_lightdash_window_window_switcher_key_press_event), window);
+      
   gtk_tree_view_set_row_separator_func (GTK_TREE_VIEW (sidepane),
       xfce_appfinder_category_model_row_separator_func, NULL, NULL);
   gtk_container_add (GTK_CONTAINER (scroll), sidepane);

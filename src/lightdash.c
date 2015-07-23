@@ -11,8 +11,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, see <http://www.gnu.org/licenses/>
+ * You should have received a copy of the GNU General Public License
+ * along with this library; if not, see <http://www.gnu.org/licenses/>
  */
  
 #ifdef HAVE_CONFIG_H
@@ -147,9 +147,6 @@ lightdash_window_new (const gchar *startup_id,
                          NULL);
   appfinder_refcount_debug_add (G_OBJECT (window), startup_id);
   xfce_appfinder_window_set_expanded (XFCE_APPFINDER_WINDOW (window), expanded);
-  //gtk_widget_show (window);
-  gtk_window_maximize (GTK_WINDOW(window));
-	gtk_window_set_decorated (GTK_WINDOW(window), FALSE);
 	
   windows = g_slist_prepend (windows, window);
   g_signal_connect (G_OBJECT (window), "destroy",
@@ -171,17 +168,14 @@ static LightdashPlugin *
 lightdash_new (XfcePanelPlugin *plugin)
 {
 	LightdashPlugin *lightdash;
-	//GtkOrientation orientation;
 	
 	lightdash = panel_slice_new0 (LightdashPlugin);
 	
 	lightdash->plugin = plugin;
 	
-	//orientation = xfce_panel_plugin_get_orientation (plugin);
 	
 	lightdash->ebox = gtk_event_box_new ();
 	
-	//gtk_widget_set_size_request (lightdash->ebox, 200, 100);
 	
 	lightdash->button = xfce_panel_create_toggle_button ();
 	
@@ -191,8 +185,6 @@ lightdash_new (XfcePanelPlugin *plugin)
 	
 	gtk_container_add (GTK_CONTAINER (lightdash->button), (lightdash->button_label));
 	gtk_widget_show (lightdash->button_label);
-	
-	//gtk_widget_set_size_request (lightdash->button, 200, 100);
 	
 	
 	
