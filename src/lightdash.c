@@ -237,6 +237,26 @@ lightdash_window_unmap (GtkWidget *widget, LightdashPlugin *lightdash)
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (lightdash->button), FALSE);
 }
 
+static gboolean lightdash_remote_event 
+(XfcePanelPlugin *plugin, gchar *name, GValue *value, LightdashPlugin *lightdash)
+{
+	if (strcmp (name, "popup"))
+	{
+		return FALSE;
+	}
+	if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (lightdash->button)))
+	{
+		gtk_widget_hide (GTK_WIDGET (lightdash->lightdash_window));
+	}
+	else
+	{
+		gtk_widget_show (GTK_WIDGET (lightdash->lightdash_window));
+		gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (lightdash->button), TRUE);
+	}
+	
+	return TRUE;
+}
+
 static void
 lightdash_construct (XfcePanelPlugin *plugin)
 {
@@ -271,6 +291,9 @@ lightdash_construct (XfcePanelPlugin *plugin)
                     
     g_signal_connect (G_OBJECT (lightdash->lightdash_window), "unmap",
                     G_CALLBACK (lightdash_window_unmap), lightdash);
+                    
+    g_signal_connect (G_OBJECT (plugin), "remote-event",
+                    G_CALLBACK (lightdash_remote_event), lightdash);
 	
 }
 	
