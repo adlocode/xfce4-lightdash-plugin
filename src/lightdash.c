@@ -219,7 +219,7 @@ lightdash_size_changed (XfcePanelPlugin *plugin,
 }
 
 static void
-lightdash_button_clicked (GtkButton *button, LightdashPlugin *lightdash)
+lightdash_button_clicked (GtkToggleButton *button, LightdashPlugin *lightdash)
 {
 	if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (lightdash->button)) == FALSE)
         {

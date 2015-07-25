@@ -148,6 +148,7 @@ struct _XfceAppfinderWindow
   GtkWidget                  *sidepane;
   GtkWidget					 *taskview_container;
   GtkWidget					 *window_switcher;
+  GtkWidget					 *apps_button;
   GtkWidget					 *pager;	
   GtkWidget					 *icon_bar;
 
@@ -196,9 +197,9 @@ xfce_appfinder_window_class_init (XfceAppfinderWindowClass *klass)
   gtkwidget_class->window_state_event = xfce_appfinder_window_window_state_event;
 }
 static void
-xfce_lightdash_window_apps_button_clicked (GtkButton *button, XfceAppfinderWindow *window)
+xfce_lightdash_window_apps_button_toggled (GtkToggleButton *button, XfceAppfinderWindow *window)
 {
-	if (!gtk_widget_get_visible (window->scroll))
+	if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (button)))
         {
 			gtk_widget_show_all (window->scroll);
 			gtk_widget_show_all (window->viewscroll);
@@ -222,6 +223,7 @@ xfce_lightdash_window_show (GtkWidget *widget, XfceAppfinderWindow *window)
 	gtk_widget_show_all (window->taskview_container);
 	gtk_entry_set_text (GTK_ENTRY(window->entry), "");
 	gtk_widget_grab_focus (window->entry);
+	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (window->apps_button), FALSE);
 }
 
 static gboolean
@@ -260,7 +262,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   GtkWidget          *button;
   GtkEntryCompletion *completion;
   gint                integer;
-    GtkWidget *apps_button;
+
     GtkWidget *icon_apps;
     
     gtk_window_maximize (GTK_WINDOW (window));
@@ -306,14 +308,14 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   gtk_box_pack_start (GTK_BOX (main_hbox), window->icon_bar, FALSE, FALSE, 5);
   gtk_box_pack_start (GTK_BOX (main_hbox), vbox, TRUE, TRUE, 0);
   
-  apps_button = gtk_button_new ();
-  gtk_button_set_focus_on_click (GTK_BUTTON (apps_button), FALSE);
-  gtk_box_pack_start (GTK_BOX (window->icon_bar), apps_button, FALSE, TRUE, 7);
-  gtk_widget_set_size_request (apps_button, 70, 70);
-  gtk_widget_show (apps_button);
+  window->apps_button = gtk_toggle_button_new ();
+  gtk_button_set_focus_on_click (GTK_BUTTON (window->apps_button), FALSE);
+  gtk_box_pack_start (GTK_BOX (window->icon_bar), window->apps_button, FALSE, TRUE, 7);
+  gtk_widget_set_size_request (window->apps_button, 70, 70);
+  gtk_widget_show (window->apps_button);
   
-  g_signal_connect (G_OBJECT (apps_button), "clicked",
-      G_CALLBACK (xfce_lightdash_window_apps_button_clicked), window);
+  g_signal_connect (G_OBJECT (window->apps_button), "toggled",
+      G_CALLBACK (xfce_lightdash_window_apps_button_toggled), window);
       
   g_signal_connect (G_OBJECT (window), "show",
       G_CALLBACK (xfce_lightdash_window_show), window);
@@ -344,7 +346,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   
    icon_apps = gtk_image_new_from_icon_name ("applications-other", 
 	GTK_ICON_SIZE_DIALOG);
-	gtk_container_add (GTK_CONTAINER(apps_button), icon_apps);
+	gtk_container_add (GTK_CONTAINER(window->apps_button), icon_apps);
 	gtk_widget_show (icon_apps);
   
 
@@ -1302,6 +1304,7 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
 			gtk_widget_show_all (window->scroll);
 			gtk_widget_show_all (window->viewscroll);
 			gtk_widget_hide_all (window->taskview_container);
+			gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (window->apps_button), TRUE);
 		}
 		
 		else
@@ -1309,6 +1312,7 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
 			gtk_widget_hide (window->scroll);
 			gtk_widget_hide (window->viewscroll);
 			gtk_widget_show_all (window->taskview_container);
+			gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (window->apps_button), FALSE);
 			
 		}
 
