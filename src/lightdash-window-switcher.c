@@ -39,13 +39,13 @@ static void my_tasklist_button_clicked (GtkButton *button, WnckWindow *window);
 static void my_tasklist_button_emit_click_signal (GtkButton *button, MyTasklist *tasklist);
 static void my_tasklist_free_skipped_windows (MyTasklist *tasklist);
 
-GType light_task_get_type (void);
-
 #define LIGHT_TASK_TYPE (light_task_get_type())
 #define LIGHT_TASK(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), LIGHT_TASK_TYPE, LightTask))
 #define LIGHT_TASK_CLASS (klass) (G_TYPE_CHECK_CLASS_CAST ((klass), LIGHT_TASK_TYPE, LightTaskClass))
 #define IS_LIGHT_TASK (obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LIGHT_TASK_TYPE))
 #define IS_LIGHT_TASK_CLASS(klass), (G_TYPE_CHECK_CLASS_TYPE ((klass), LIGHT_TASK_TYPE))
+
+GType light_task_get_type (void);
 
 typedef struct _LightTask LightTask;
 typedef struct _LightTaskClass LightTaskClass;
@@ -384,9 +384,10 @@ static void my_tasklist_attach_widget (LightTask *task, MyTasklist *tasklist)
 }
 
 static void my_tasklist_update_windows (MyTasklist *tasklist)
-{	
+{
 	GList *window_l;
 	WnckWindow *win;
+	
 	
 	//Table attachment values
 	
@@ -402,7 +403,6 @@ static void my_tasklist_update_windows (MyTasklist *tasklist)
 	
 	for (window_l = wnck_screen_get_windows (tasklist->screen); window_l != NULL; window_l = window_l->next)
     {
-		
 		win = WNCK_WINDOW (window_l->data);
 		
 		if (!(wnck_window_is_skip_tasklist (win)))
@@ -561,8 +561,9 @@ my_tasklist_drag_data_get_handl
 static void light_task_create_widgets (LightTask *task)
 {
 	static const GtkTargetEntry targets [] = { {"application/x-wnck-window-id",0,0} };
-		
-	task->label = gtk_label_new_with_mnemonic(wnck_window_get_name (task->window));
+	
+	task->label = gtk_label_new (wnck_window_get_name (task->window));
+	
 	task->vbox = gtk_vbox_new (FALSE, 0);
 		
 	task->pixbuf = wnck_window_get_icon (task->window);
