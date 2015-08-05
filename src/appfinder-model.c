@@ -230,6 +230,7 @@ xfce_appfinder_model_init (XfceAppfinderModel *model)
   model->items_hash = g_hash_table_new (g_str_hash, g_str_equal);
   model->bookmarks_hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
   model->icon_size = XFCE_APPFINDER_ICON_SIZE_DEFAULT_ITEM;
+  model->icon_size = XFCE_APPFINDER_ICON_SIZE_DEFAULT_ITEM;
   model->command_icon = xfce_appfinder_model_load_pixbuf (GTK_STOCK_EXECUTE, model->icon_size);
   model->command_icon_large = xfce_appfinder_model_load_pixbuf (GTK_STOCK_EXECUTE, XFCE_APPFINDER_ICON_SIZE_48);
   model->command_category = xfce_appfinder_model_get_command_category ();
@@ -2414,7 +2415,7 @@ gboolean
 xfce_appfinder_model_bookmark_toggle (XfceAppfinderModel  *model,
                                       const gchar         *desktop_id,
                                       GError             **error)
-{
+{ 
   ModelItem    *item;
   GSList       *li;
   const gchar  *desktop_id2;
@@ -2491,7 +2492,7 @@ xfce_appfinder_model_bookmark_toggle (XfceAppfinderModel  *model,
     {
       /* possible restart monitoring and update mtime */
       xfce_appfinder_model_bookmarks_monitor (model, filename);
-    }
+    } 
 
   /* optimization for next run */
   old_len = contents->allocated_len;

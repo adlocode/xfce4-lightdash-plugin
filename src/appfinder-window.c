@@ -214,10 +214,11 @@ xfce_lightdash_window_apps_button_toggled (GtkToggleButton *button, XfceAppfinde
 			
 		}
 }
-
+	
 static void
 xfce_lightdash_window_show (GtkWidget *widget, XfceAppfinderWindow *window)
 {
+	gtk_window_set_keep_above (GTK_WINDOW (window), TRUE);
 	gtk_widget_hide (window->scroll);
 	gtk_widget_hide (window->viewscroll);
 	gtk_widget_show_all (window->taskview_container);
@@ -270,7 +271,10 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
     gtk_window_set_skip_taskbar_hint (GTK_WINDOW (window), TRUE);
     gtk_window_set_skip_pager_hint (GTK_WINDOW (window), TRUE);
     gtk_window_stick (GTK_WINDOW (window));
-
+    gtk_window_set_modal (GTK_WINDOW (window), TRUE);
+    gtk_window_set_keep_above (GTK_WINDOW (window), TRUE);
+	
+	
   window->channel = xfconf_channel_get ("xfce4-appfinder");
   window->last_window_height = xfconf_channel_get_int (window->channel, "/last/window-height", DEFAULT_WINDOW_HEIGHT);
 
@@ -316,7 +320,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   
   g_signal_connect (G_OBJECT (window->apps_button), "toggled",
       G_CALLBACK (xfce_lightdash_window_apps_button_toggled), window);
-      
+          
   g_signal_connect (G_OBJECT (window), "show",
       G_CALLBACK (xfce_lightdash_window_show), window);
       
@@ -578,7 +582,6 @@ xfce_appfinder_window_finalize (GObject *object)
 
   (*G_OBJECT_CLASS (xfce_appfinder_window_parent_class)->finalize) (object);
 }
-
 
 /*
 static void
