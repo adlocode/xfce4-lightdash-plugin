@@ -20,9 +20,6 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gtk/gtk.h>
-#include <X11/Xlib.h>
-#include <X11/extensions/Xcomposite.h>
-#include <X11/extensions/Xrender.h>
 #include <libwnck/libwnck.h>
 
 G_BEGIN_DECLS
@@ -41,19 +38,10 @@ struct _MyTasklist
 	GtkEventBox event_box;
 	
 	GtkWidget *table;
-	
 	WnckScreen *screen;
-	GdkScreen *gdk_screen;
-	Display *dpy;
-	
-	gboolean composited;
-	
-	gboolean adjusted;
 	
 	GList *tasks;
 	GList *skipped_windows;
-	
-	guint table_columns;
 	
 	guint left_attach;	
 	guint right_attach;		

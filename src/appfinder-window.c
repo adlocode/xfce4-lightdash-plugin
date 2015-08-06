@@ -218,6 +218,7 @@ xfce_lightdash_window_apps_button_toggled (GtkToggleButton *button, XfceAppfinde
 static void
 xfce_lightdash_window_show (GtkWidget *widget, XfceAppfinderWindow *window)
 {
+	
 	gtk_window_set_keep_above (GTK_WINDOW (window), TRUE);
 	gtk_widget_hide (window->scroll);
 	gtk_widget_hide (window->viewscroll);
@@ -408,10 +409,14 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
 	window->taskview_container = gtk_hbox_new (FALSE, 0);
   gtk_box_pack_start (GTK_BOX (vbox), window->taskview_container, TRUE, TRUE, 0);
   
+ 
+  
   //Add window switcher  
   window->window_switcher = lightdash_window_switcher_new ();
   gtk_box_pack_start (GTK_BOX (window->taskview_container), window->window_switcher, TRUE, TRUE, 3);
   gtk_widget_show (window->window_switcher);
+  //gtk_widget_set_size_request (window->window_switcher, 200, 200);
+  
   
   g_signal_connect_swapped (G_OBJECT (window->window_switcher), "task-button-clicked",
 							G_CALLBACK (gtk_widget_hide), GTK_WIDGET (window));

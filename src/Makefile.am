@@ -48,6 +48,11 @@ liblightdash_la_CFLAGS = \
 	$(LIBXFCE4PANEL_CFLAGS) \
 	$(LIBWNCK_CFLAGS) \
 	$(EXO_CFLAGS) \
+	$(X11_CFLAGS) \
+	$(XCOMPOSITE_CFLAGS) \
+	$(XRENDER_CFLAGS) \
+	$(XDAMAGE_CFLAGS) \
+	$(CAIRO_XLIB_XRENDER_CFLAGS) \
 	$(PLATFORM_CFLAGS)
 
 liblightdash_la_LIBADD = \
@@ -61,7 +66,12 @@ liblightdash_la_LIBADD = \
 	$(GIO_LIBS) \
 	$(LIBWNCK_LIBS) \
 	$(EXO_LIBS) \
-	$(LIBXFCE4PANEL_LIBS)
+	$(LIBXFCE4PANEL_LIBS) \
+	$(X11_LIBS) \
+	$(XCOMPOSITE_LIBS) \
+	$(XRENDER_LIBS) \
+	$(XDAMAGE_LIBS) \
+	$(CAIRO_XLIB_XRENDER_LIBS)
 
 liblightdash_la_LDFLAGS = \
 	-no-undefined \
