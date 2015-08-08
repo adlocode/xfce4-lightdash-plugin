@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include "lightdash-window-switcher.h"
 
-#define TABLE_COLUMNS 3
+#define TABLE_ROWS 3
 
 /* 
  * This tasklist emits signals when various events happen. This allows
@@ -93,6 +93,8 @@ struct _LightTask
 	guint icon_changed_tag;
 	guint workspace_changed_tag;
 	guint state_changed_tag;
+	
+	guint expose_tag;
 	guint button_resized_tag;
 	guint button_resized_check_tag;
 	
@@ -132,6 +134,8 @@ LightTask *task);
 
 void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 	GdkRectangle *allocation, LightTask *task);
+	
+gboolean lightdash_window_switcher_icon_expose (GtkWidget *widget, GdkEvent *event, LightTask *task);
 
 static void light_task_class_init (LightTaskClass *klass)
 
@@ -367,7 +371,7 @@ static void my_tasklist_init (MyTasklist *tasklist)
 	
 	
 	
-	tasklist->table = gtk_table_new (3, tasklist->table_columns, TRUE);
+	tasklist->table = gtk_table_new (TABLE_ROWS, tasklist->table_columns, TRUE);
 	gtk_container_add (GTK_CONTAINER(tasklist), tasklist->table);
 	
 	
@@ -539,7 +543,7 @@ static void my_tasklist_update_windows (MyTasklist *tasklist)
 	tasklist->bottom_attach=1;
 	
 	my_tasklist_free_tasks (tasklist);
-	gtk_table_resize (GTK_TABLE(tasklist->table), 3, tasklist->table_columns);
+	gtk_table_resize (GTK_TABLE(tasklist->table), TABLE_ROWS, tasklist->table_columns);
 	
 	
 	
@@ -729,6 +733,37 @@ void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 		
 		
 	}	
+}
+
+gboolean lightdash_window_switcher_icon_expose (GtkWidget *widget, GdkEvent *event, LightTask *task)
+{
+	
+	gfloat factor;
+	cairo_t *cr;
+	
+	factor = (gfloat)task->icon->allocation.height/(gfloat)task->attr.height;
+		
+		g_object_unref (task->gdk_pixmap);
+		
+		task->gdk_pixmap = gdk_pixmap_new (NULL, task->attr.width*factor, task->attr.height*factor, 24);
+
+		cr = gdk_cairo_create (task->gdk_pixmap);
+		
+		cairo_scale (cr, factor, factor);
+
+		cairo_rectangle (cr, 0, 0, task->attr.width, task->attr.height);
+			
+		cairo_set_source_surface (cr, task->surface, 0, 0);
+			
+		cairo_fill (cr);
+		
+		gtk_image_set_from_pixmap (GTK_IMAGE (task->icon), task->gdk_pixmap, NULL);
+		
+		cairo_destroy (cr);
+		
+		g_signal_handler_disconnect (task->icon, task->expose_tag);
+		
+		return FALSE;
 }		
 
 static void my_tasklist_drag_begin_handl
@@ -811,7 +846,6 @@ static void light_task_create_widgets (LightTask *task)
 	task->gdk_window = gdk_x11_window_foreign_new_for_display 
 		(gdk_screen_get_display (task->tasklist->gdk_screen), task->xid);
 		
-	//task->tasklist->composited = FALSE;	
 	if (task->tasklist->composited 
 		&& !wnck_window_is_minimized (task->window)
 		&& wnck_window_is_on_workspace (task->window,
@@ -904,6 +938,10 @@ static void light_task_create_widgets (LightTask *task)
 					
 	if (!wnck_window_is_minimized (task->window))
 	{
+		task->expose_tag = g_signal_connect (task->icon, "expose-event",
+							G_CALLBACK (lightdash_window_switcher_icon_expose),
+							task);
+							
 		task->button_resized_check_tag = g_signal_connect (task->icon, "size-allocate",
 							G_CALLBACK (lightdash_window_switcher_button_check_allocate_signal),
 							task);
