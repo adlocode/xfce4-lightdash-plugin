@@ -50,10 +50,18 @@ struct _MyTasklist
 	
 	gboolean adjusted;
 	
+	gboolean update_complete;
+	
 	GList *tasks;
 	GList *skipped_windows;
 	
+	guint window_counter;
+	
+	guint total_buttons_area;
+	guint table_area;
+	
 	guint table_columns;
+	guint table_rows;
 	
 	guint left_attach;	
 	guint right_attach;		
