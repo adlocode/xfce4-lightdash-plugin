@@ -46,6 +46,8 @@ struct _MyTasklist
 	GdkScreen *gdk_screen;
 	Display *dpy;
 	
+	GdkWindow *parent_gdk_window;
+	
 	gboolean composited;
 	
 	gboolean adjusted;
