@@ -181,7 +181,7 @@ static void light_task_finalize (GObject *object)
 	{
 		if (task->button_resized_tag)
 		{
-			g_signal_handler_disconnect (task->image,
+			g_signal_handler_disconnect (task->button,
 							task->button_resized_tag);
 			task->button_resized_tag = 0;
 		}
@@ -272,6 +272,8 @@ light_task_new_from_window (MyTasklist *tasklist, WnckWindow *window)
 	task->window = g_object_ref (window);
 	
 	task->button_resized_tag = 0;
+	
+	task->expose_tag = 0;
 	
 	task->xid = wnck_window_get_xid (window);
 	
@@ -523,7 +525,7 @@ my_tasklist_free_tasks (MyTasklist *tasklist)
 			{
 				if (task->button_resized_tag)
 				{
-				g_signal_handler_disconnect (task->image,
+				g_signal_handler_disconnect (task->button,
 							task->button_resized_tag);
 				task->button_resized_tag = 0;
 				}
@@ -776,7 +778,7 @@ static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window
 
 			if (task->button_resized_tag)
 			{
-				g_signal_handler_disconnect (task->image,
+				g_signal_handler_disconnect (task->button,
 							task->button_resized_tag);
 				task->button_resized_tag = 0;
 			}
@@ -960,13 +962,7 @@ void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 			* (gfloat)task->tasklist->window_counter;
 			
 		table_area = (gfloat)task->tasklist->table->allocation.width 
-			* (gfloat)task->tasklist->table->allocation.height;	
-		
-		g_print ("%s", wnck_window_get_name (task->window));
-		g_print ("%s", " ");
-		g_print ("%f", total_buttons_area / table_area);
-		g_print ("%s", " ");	
-				
+			* (gfloat)task->tasklist->table->allocation.height;
 
 		
 		if (table_area != 0 && task->tasklist->update_complete && task->tasklist->table_columns > DEFAULT_TABLE_COLUMNS 
@@ -1001,8 +997,9 @@ gboolean lightdash_window_switcher_image_expose (GtkWidget *widget, GdkEvent *ev
 		
 		gtk_image_set_from_pixmap (GTK_IMAGE (task->image), task->gdk_pixmap, NULL);
 		
-		
+		if (task->expose_tag)
 		g_signal_handler_disconnect (task->image, task->expose_tag);
+		task->expose_tag = 0;
 		
 		task->previous_height = task->image->allocation.height;
 		task->previous_width = task->image->allocation.width;

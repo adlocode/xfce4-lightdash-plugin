@@ -419,8 +419,9 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   //Add window switcher  
   window->window_switcher = lightdash_window_switcher_new ();
   gtk_box_pack_start (GTK_BOX (window->taskview_container), window->window_switcher, TRUE, TRUE, 3);
+  //gtk_widget_set_size_request (window->window_switcher, 50, 50);
   gtk_widget_show (window->window_switcher);
-  //gtk_widget_set_size_request (window->window_switcher, 200, 200);
+  
   
   
   g_signal_connect_swapped (G_OBJECT (window->window_switcher), "task-button-clicked",
