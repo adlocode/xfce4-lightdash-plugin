@@ -147,7 +147,7 @@ LightTask *task);
 void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 	GdkRectangle *allocation, LightTask *task);
 	
-gboolean lightdash_window_switcher_icon_expose (GtkWidget *widget, GdkEvent *event, LightTask *task);
+gboolean lightdash_window_switcher_image_expose (GtkWidget *widget, GdkEvent *event, LightTask *task);
 
 LightTask * get_task_from_window (MyTasklist *tasklist, WnckWindow *window);
 
@@ -1003,7 +1003,7 @@ void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 	}	
 }
 
-gboolean lightdash_window_switcher_icon_expose (GtkWidget *widget, GdkEvent *event, LightTask *task)
+gboolean lightdash_window_switcher_image_expose (GtkWidget *widget, GdkEvent *event, LightTask *task)
 {
 		gint pixmap_width;
 	
@@ -1024,6 +1024,8 @@ gboolean lightdash_window_switcher_icon_expose (GtkWidget *widget, GdkEvent *eve
 		task->previous_width = task->image->allocation.width;
 		
 		task->preview_created = TRUE;
+		
+		XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
 		
 		return FALSE;
 }
@@ -1258,7 +1260,7 @@ static void light_task_create_widgets (LightTask *task)
 	if (!wnck_window_is_minimized (task->window))
 	{
 		task->expose_tag = g_signal_connect (task->image, "expose-event",
-							G_CALLBACK (lightdash_window_switcher_icon_expose),
+							G_CALLBACK (lightdash_window_switcher_image_expose),
 							task);
 		
 		task->button_resized_check_tag = g_signal_connect (task->image, "size-allocate",

@@ -227,6 +227,8 @@ xfce_lightdash_window_show (GtkWidget *widget, XfceAppfinderWindow *window)
 	gtk_entry_set_text (GTK_ENTRY(window->entry), "");
 	gtk_widget_grab_focus (window->entry);
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (window->apps_button), FALSE);
+	gtk_window_maximize (GTK_WINDOW (window));
+	
 }
 
 static gboolean
@@ -268,14 +270,16 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
 
     GtkWidget *icon_apps;
     
-    
+    gtk_window_set_resizable (GTK_WINDOW (window), TRUE);
+    gtk_window_maximize (GTK_WINDOW (window));
 	gtk_window_set_decorated (GTK_WINDOW (window), FALSE);
     gtk_window_set_skip_taskbar_hint (GTK_WINDOW (window), TRUE);
     gtk_window_set_skip_pager_hint (GTK_WINDOW (window), TRUE);
     gtk_window_stick (GTK_WINDOW (window));
     gtk_window_set_modal (GTK_WINDOW (window), TRUE);
     gtk_window_set_keep_above (GTK_WINDOW (window), TRUE);
-	gtk_window_maximize (GTK_WINDOW (window));
+
+	
 	
   window->channel = xfconf_channel_get ("xfce4-appfinder");
   window->last_window_height = xfconf_channel_get_int (window->channel, "/last/window-height", DEFAULT_WINDOW_HEIGHT);
