@@ -881,20 +881,28 @@ void lightdash_window_switcher_button_check_allocate_signal
 }
 void lightdash_window_switcher_update_preview (LightTask *task, gfloat original_length, gfloat new_length)
 {
+		gint width, height;
 		gfloat factor;
 		cairo_t *cr;
 		
-		
 		factor = (gfloat)new_length/(gfloat)original_length;
 		
+		width = task->attr.width*factor;
+		height = task->attr.height*factor;
 		
 		g_object_unref (task->gdk_pixmap);
 		
+		if ((gint)width == 0 || (gint)height == 0)
+		{
+			width = 1;
+			height = 1;
+		}
+		
 		task->gdk_pixmap = gdk_pixmap_new (NULL, 
-			task->attr.width*factor, 
-			task->attr.height*factor, 
+			width, 
+			height, 
 			24);
-
+			
 		cr = gdk_cairo_create (task->gdk_pixmap);
 		
 		cairo_scale (cr, factor, factor);
@@ -931,7 +939,6 @@ void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 			&& task->image->allocation.width == task->previous_width)
 		return;
 		
-		
 		lightdash_window_switcher_update_preview (task, task->attr.height, task->image->allocation.height);
 		
 		gdk_pixmap_get_size (task->gdk_pixmap, &pixmap_width, NULL);
@@ -939,7 +946,6 @@ void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 		
 		if (task->image->allocation.width < pixmap_width)
 		lightdash_window_switcher_update_preview (task, task->attr.width, task->image->allocation.width);
-		
 
 		
 		if (task->button->allocation.height)
@@ -962,7 +968,13 @@ void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 			* (gfloat)task->tasklist->window_counter;
 			
 		table_area = (gfloat)task->tasklist->table->allocation.width 
-			* (gfloat)task->tasklist->table->allocation.height;
+			* (gfloat)task->tasklist->table->allocation.height;	
+		
+		//g_print ("%s", wnck_window_get_name (task->window));
+		//g_print ("%s", " ");
+		//g_print ("%f", total_buttons_area / table_area);
+		//g_print ("%s", " ");	
+				
 
 		
 		if (table_area != 0 && task->tasklist->update_complete && task->tasklist->table_columns > DEFAULT_TABLE_COLUMNS 
@@ -1151,7 +1163,7 @@ static void light_task_create_widgets (LightTask *task)
 			format = XRenderFindVisualFormat (task->tasklist->dpy, task->attr.visual);	
 			
 			//pa.subwindow_mode = IncludeInferiors;
-			task->gdk_pixmap = gdk_pixmap_new (NULL, 5, 5, 24);
+			task->gdk_pixmap = gdk_pixmap_new (NULL, 1, 1, 24);
 			
 			
 			//cr = gdk_cairo_create (task->gdk_pixmap);
