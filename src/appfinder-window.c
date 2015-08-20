@@ -422,7 +422,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   //gtk_widget_set_size_request (window->window_switcher, 50, 50);
   gtk_widget_show (window->window_switcher);
   
-  
+  gtk_widget_set_size_request (GTK_WIDGET (window), 10, 10);
   
   g_signal_connect_swapped (G_OBJECT (window->window_switcher), "task-button-clicked",
 							G_CALLBACK (gtk_widget_hide), GTK_WIDGET (window));

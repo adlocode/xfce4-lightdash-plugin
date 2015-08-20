@@ -181,7 +181,7 @@ lightdash_new (XfcePanelPlugin *plugin)
 	
 	gtk_container_add (GTK_CONTAINER (lightdash->ebox), lightdash->button);
 	
-	lightdash->button_label = gtk_label_new ("Activities");
+	lightdash->button_label = gtk_label_new (_("Activities"));
 	
 	gtk_container_add (GTK_CONTAINER (lightdash->button), (lightdash->button_label));
 	gtk_widget_show (lightdash->button_label);
