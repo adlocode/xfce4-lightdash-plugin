@@ -26,14 +26,14 @@ G_BEGIN_DECLS
 typedef struct _XfceAppfinderPreferencesClass XfceAppfinderPreferencesClass;
 typedef struct _XfceAppfinderPreferences      XfceAppfinderPreferences;
 
-#define XFCE_TYPE_APPFINDER_PREFERENCES            (xfce_appfinder_preferences_get_type ())
+#define XFCE_TYPE_APPFINDER_PREFERENCES            (xfce_lightdash_preferences_get_type ())
 #define XFCE_APPFINDER_PREFERENCES(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), XFCE_TYPE_APPFINDER_PREFERENCES, XfceAppfinderPreferences))
 #define XFCE_APPFINDER_PREFERENCES_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), XFCE_TYPE_APPFINDER_PREFERENCES, XfceAppfinderPreferencesClass))
 #define XFCE_IS_APPFINDER_PREFERENCES(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), XFCE_TYPE_APPFINDER_PREFERENCES))
 #define XFCE_IS_APPFINDER_PREFERENCES_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), XFCE_TYPE_APPFINDER_PREFERENCES))
 #define XFCE_APPFINDER_PREFERENCES_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), XFCE_TYPE_APPFINDER_PREFERENCES, XfceAppfinderPreferencesClass))
 
-GType xfce_appfinder_preferences_get_type (void) G_GNUC_CONST;
+GType xfce_lightdash_preferences_get_type (void) G_GNUC_CONST;
 
 void  xfce_appfinder_preferences_show     (GdkScreen *screen);
 

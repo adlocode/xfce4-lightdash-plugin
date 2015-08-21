@@ -82,25 +82,25 @@ enum
 
 
 
-G_DEFINE_TYPE (XfceAppfinderPreferences, xfce_appfinder_preferences, GTK_TYPE_BUILDER)
+G_DEFINE_TYPE (XfceAppfinderPreferences, xfce_lightdash_preferences, GTK_TYPE_BUILDER)
 
 
 
 static void
-xfce_appfinder_preferences_class_init (XfceAppfinderPreferencesClass *klass)
+xfce_lightdash_preferences_class_init (XfceAppfinderPreferencesClass *klass)
 {
 }
 
 
 
 static void
-xfce_appfinder_preferences_init (XfceAppfinderPreferences *preferences)
+xfce_lightdash_preferences_init (XfceAppfinderPreferences *preferences)
 {
   GObject     *object;
   GtkTreePath *path;
   GObject     *icons;
 
-  preferences->channel = xfconf_channel_get ("xfce4-appfinder");
+  preferences->channel = xfconf_channel_get ("xfce4-lightdash");
 
   /* load the builder data into the object */
   gtk_builder_add_from_string (GTK_BUILDER (preferences), lightdash_preferences_ui,

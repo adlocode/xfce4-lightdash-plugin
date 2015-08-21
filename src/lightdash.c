@@ -262,7 +262,7 @@ lightdash_construct (XfcePanelPlugin *plugin)
 {
 	LightdashPlugin *lightdash;
   
-	//xfce_textdomain(GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR, "UTF-8");
+	xfce_textdomain(GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR, "UTF-8");
 	
 	lightdash = lightdash_new (plugin);
 	

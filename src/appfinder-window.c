@@ -281,7 +281,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
 
 	
 	
-  window->channel = xfconf_channel_get ("xfce4-appfinder");
+  window->channel = xfconf_channel_get ("xfce4-lightdash");
   window->last_window_height = xfconf_channel_get_int (window->channel, "/last/window-height", DEFAULT_WINDOW_HEIGHT);
 
   window->category_model = xfce_appfinder_category_model_new ();

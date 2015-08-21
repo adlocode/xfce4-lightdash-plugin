@@ -118,6 +118,9 @@
 /* Version number of package */
 #undef VERSION
 
+/* wnck */
+#undef WNCK_I_KNOW_THIS_IS_UNSTABLE
+
 /* Define to 1 if on MINIX. */
 #undef _MINIX
 
