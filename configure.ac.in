@@ -50,14 +50,6 @@ AC_PROG_LD()
 AC_PROG_INSTALL()
 IT_PROG_INTLTOOL([0.35.0])
 
-GETTEXT_PACKAGE=xfce4-lightdash
-AC_SUBST(GETTEXT_PACKAGE)
-AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$GETTEXT_PACKAGE"], ["UTF-8"])
-AM_GLIB_GNU_GETTEXT
-
-LIGHTDASH_LOCALEDIR=[${datadir}/locale]
-AC_SUBST(LIGHTDASH_LOCALEDIR)
-
 dnl **************************
 dnl *** Initialize libtool ***
 dnl **************************
@@ -74,7 +66,7 @@ AC_CHECK_FUNCS([daemon setsid])
 dnl ******************************
 dnl *** Check for i18n support ***
 dnl ******************************
-XDT_I18N([@LINGUAS@])
+XDT_I18N([@LINGUAS@],[xfce4-lightdash])
 
 AC_DEFINE([WNCK_I_KNOW_THIS_IS_UNSTABLE], [1], [wnck])
 
@@ -125,7 +117,6 @@ XDT_FEATURE_LINKER_OPTS()
 dnl *********************************
 dnl *** Substitute platform flags ***
 dnl *********************************
-AC_SUBST(GETTEXT_PACKAGE)
 AC_MSG_CHECKING([PLATFORM_CPPFLAGS])
 AC_MSG_RESULT([$PLATFORM_CPPFLAGS])
 AC_SUBST([PLATFORM_CPPFLAGS])
@@ -136,13 +127,6 @@ AC_MSG_CHECKING([PLATFORM_LDFLAGS])
 AC_MSG_RESULT([$PLATFORM_LDFLAGS])
 AC_SUBST([PLATFORM_LDFLAGS])
 
-GETTEXT_PACKAGE=xfce4-lightdash
-AC_SUBST(GETTEXT_PACKAGE)
-AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$GETTEXT_PACKAGE"], ["UTF-8"])
-AM_GLIB_GNU_GETTEXT
-
-LIGHTDASH_LOCALEDIR=[${datadir}/locale]
-AC_SUBST(LIGHTDASH_LOCALEDIR)
 
 AC_OUTPUT([
 Makefile
