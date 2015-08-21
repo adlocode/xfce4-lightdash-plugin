@@ -21,8 +21,6 @@ liblightdash_la_SOURCES = \
 	appfinder-actions.h \
 	appfinder-category-model.c \
 	appfinder-category-model.h \
-	appfinder-gdbus.c \
-	appfinder-gdbus.h \
 	appfinder-model.c \
 	appfinder-model.h \
 	appfinder-preferences.c \

@@ -20,6 +20,7 @@
 #define __XFCE_APPFINDER_WINDOW_H__
 
 #include <gtk/gtk.h>
+#include "lightdash.h"
 
 G_BEGIN_DECLS
 
@@ -37,6 +38,11 @@ GType      xfce_appfinder_window_get_type     (void) G_GNUC_CONST;
 
 void       xfce_appfinder_window_set_expanded (XfceAppfinderWindow *window,
                                                gboolean             expanded);
+                                               
+GtkWidget *
+lightdash_window_new (const gchar *startup_id,
+                      gboolean     expanded,
+                      LightdashPlugin *plugin);
 
 G_END_DECLS
 

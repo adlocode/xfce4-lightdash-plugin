@@ -38,16 +38,10 @@
 #include <src/appfinder-window.h>
 #include <src/appfinder-private.h>
 #include <src/appfinder-model.h>
-#include <src/appfinder-gdbus.h>
 
 static gboolean            opt_collapsed = FALSE;
 
 
-
-
-static GSList             *windows = NULL;
-static gboolean            service_owner = FALSE;
-static XfceAppfinderModel *model_cache = NULL;
 
 #ifdef DEBUG
 static GHashTable         *objects_table = NULL;
@@ -93,70 +87,6 @@ appfinder_refcount_debug_add (GObject     *object,
 
 
 #endif
-
-
-
-static void
-appfinder_window_destroyed (GtkWidget *window)
-{
-  XfconfChannel *channel;
-
-  if (windows == NULL)
-    return;
-
-  /* take a reference on the model */
-  if (model_cache == NULL)
-    {
-      APPFINDER_DEBUG ("main took reference on the main model");
-      model_cache = xfce_appfinder_model_get ();
-    }
-
-  /* remove from internal list */
-  windows = g_slist_remove (windows, window);
-
-  /* check if we're going to the background
-   * if the last window is closed */
-  if (windows == NULL)
-    {
-      if (!service_owner)
-        {
-          /* leave if we're not the daemon or started
-           * with --disable-server */
-          gtk_main_quit ();
-        }
-      else
-        {
-          /* leave if the user disable the service in the prefereces */
-          channel = xfconf_channel_get ("xfce4-appfinder");
-          if (!xfconf_channel_get_bool (channel, "/enable-service", TRUE))
-            gtk_main_quit ();
-        }
-    }
-}
-
-
-
-GtkWidget *
-lightdash_window_new (const gchar *startup_id,
-                      gboolean     expanded)
-{
-  GtkWidget *window;
-
-  window = g_object_new (XFCE_TYPE_APPFINDER_WINDOW,
-                         "startup-id", IS_STRING (startup_id) ? startup_id : NULL,
-                         NULL);
-  appfinder_refcount_debug_add (G_OBJECT (window), startup_id);
-  xfce_appfinder_window_set_expanded (XFCE_APPFINDER_WINDOW (window), expanded);
-	
-  windows = g_slist_prepend (windows, window);
-  g_signal_connect (G_OBJECT (window), "destroy",
-                    G_CALLBACK (appfinder_window_destroyed), NULL);
-                    
-  return window;
-}
-
-
-
 
 
 static void
@@ -273,7 +203,7 @@ lightdash_construct (XfcePanelPlugin *plugin)
 
 
   /* create initial window */
-  lightdash->lightdash_window = lightdash_window_new (NULL, !opt_collapsed);
+  lightdash->lightdash_window = lightdash_window_new (NULL, !opt_collapsed, lightdash);
 
 
 	gtk_container_add (GTK_CONTAINER (plugin), lightdash->ebox);
