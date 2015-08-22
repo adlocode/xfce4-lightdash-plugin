@@ -77,8 +77,7 @@ static XfceAppfinderModel *model_cache = NULL;
 
 static void       xfce_appfinder_window_finalize                      (GObject                     *object);
 
-static void
-appfinder_window_destroyed (GtkWidget *window);
+static void appfinder_window_destroyed (GtkWidget *window);
 //static void       xfce_appfinder_window_unmap                         (GtkWidget                   *widget);
 static gboolean   xfce_appfinder_window_key_press_event               (GtkWidget                   *widget,
                                                                        GdkEventKey                 *event);
@@ -134,6 +133,8 @@ static void       xfce_appfinder_window_icon_theme_changed            (XfceAppfi
 static void       xfce_appfinder_window_launch_clicked                (XfceAppfinderWindow         *window);
 static void       xfce_appfinder_window_execute                       (XfceAppfinderWindow         *window,
                                                                        gboolean                     close_on_succeed);
+                                                                       
+static void xfce_appfinder_window_create (XfceAppfinderWindow *window);
 
 
 struct _XfceAppfinderWindowClass
@@ -144,6 +145,8 @@ struct _XfceAppfinderWindowClass
 struct _XfceAppfinderWindow
 {
   GtkWindow __parent__;
+  
+  LightdashPlugin *lightdash_plugin;
 
   XfceAppfinderModel         *model;
 
@@ -268,6 +271,12 @@ xfce_lightdash_window_window_switcher_key_press_event
 
 static void
 xfce_appfinder_window_init (XfceAppfinderWindow *window)
+{
+	
+}
+
+static void
+xfce_appfinder_window_create (XfceAppfinderWindow *window)
 {
   GtkWidget          *vbox, *vbox2;
   GtkWidget          *entry;
@@ -654,13 +663,18 @@ appfinder_window_destroyed (GtkWidget *window)
 
 GtkWidget *
 lightdash_window_new (const gchar *startup_id,
-                      gboolean     expanded, LightdashPlugin *plugin)
+                      gboolean     expanded, LightdashPlugin *lightdash_plugin)
 {
   GtkWidget *window;
 
   window = g_object_new (XFCE_TYPE_APPFINDER_WINDOW,
                          "startup-id", IS_STRING (startup_id) ? startup_id : NULL,
                          NULL);
+                         
+  XFCE_APPFINDER_WINDOW (window)->lightdash_plugin = lightdash_plugin;
+                         
+  xfce_appfinder_window_create (XFCE_APPFINDER_WINDOW (window));
+  
   appfinder_refcount_debug_add (G_OBJECT (window), startup_id);
   xfce_appfinder_window_set_expanded (XFCE_APPFINDER_WINDOW (window), expanded);
 	

@@ -42,7 +42,7 @@ void       xfce_appfinder_window_set_expanded (XfceAppfinderWindow *window,
 GtkWidget *
 lightdash_window_new (const gchar *startup_id,
                       gboolean     expanded,
-                      LightdashPlugin *plugin);
+                      LightdashPlugin *lightdash_plugin);
 
 G_END_DECLS
 
