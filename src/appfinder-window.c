@@ -134,7 +134,7 @@ static void       xfce_appfinder_window_launch_clicked                (XfceAppfi
 static void       xfce_appfinder_window_execute                       (XfceAppfinderWindow         *window,
                                                                        gboolean                     close_on_succeed);
                                                                        
-static void xfce_appfinder_window_create (XfceAppfinderWindow *window);
+void xfce_appfinder_window_create (XfceAppfinderWindow *window);
 
 
 struct _XfceAppfinderWindowClass
@@ -275,7 +275,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
 	
 }
 
-static void
+void
 xfce_appfinder_window_create (XfceAppfinderWindow *window)
 {
   GtkWidget          *vbox, *vbox2;
@@ -305,8 +305,6 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
     gtk_window_set_modal (GTK_WINDOW (window), TRUE);
     gtk_window_set_keep_above (GTK_WINDOW (window), TRUE);
     gtk_widget_set_size_request (GTK_WIDGET (window), 50, 50);
-
-	
 	
   window->channel = xfconf_channel_get ("xfce4-lightdash");
   window->last_window_height = xfconf_channel_get_int (window->channel, "/last/window-height", DEFAULT_WINDOW_HEIGHT);
@@ -654,8 +652,8 @@ appfinder_window_destroyed (GtkWidget *window)
       else
         {
           /* leave if the user disable the service in the prefereces */
-          channel = xfconf_channel_get ("xfce4-appfinder");
-          if (!xfconf_channel_get_bool (channel, "/enable-service", TRUE))
+          channel = xfconf_channel_get ("xfce4-lightdash");
+          if (!xfconf_channel_get_bool (channel, "/enable-service", FALSE))
             gtk_main_quit ();
         }
     }

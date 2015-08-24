@@ -31,7 +31,9 @@ liblightdash_la_SOURCES = \
 	lightdash-window-switcher.c \
 	lightdash-window-switcher.h \
 	lightdash.c \
-	lightdash.h
+	lightdash.h \
+	lightdash-dialogs.c \
+	lightdash-dialogs.h
 
 liblightdash_la_CFLAGS = \
 	-DWNCK_I_KNOW_THIS_IS_UNSTABLE \

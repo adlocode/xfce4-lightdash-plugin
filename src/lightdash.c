@@ -30,6 +30,7 @@
 #include <stdlib.h>
 
 #include "lightdash.h"
+#include "lightdash-dialogs.h"
 #include "appfinder-window.h"
 
 #include <garcon/garcon.h>
@@ -208,7 +209,9 @@ lightdash_construct (XfcePanelPlugin *plugin)
 
 	gtk_container_add (GTK_CONTAINER (plugin), lightdash->ebox);
 	
-	xfce_panel_plugin_add_action_widget (plugin, lightdash->ebox);
+	xfce_panel_plugin_add_action_widget (plugin, lightdash->button);
+	
+	xfce_panel_plugin_menu_show_configure (plugin);
 	
 	g_signal_connect (G_OBJECT (plugin), "free-data",
 						G_CALLBACK (lightdash_free), lightdash);
@@ -221,6 +224,9 @@ lightdash_construct (XfcePanelPlugin *plugin)
                     
     g_signal_connect (G_OBJECT (lightdash->lightdash_window), "unmap",
                     G_CALLBACK (lightdash_window_unmap), lightdash);
+                    
+    g_signal_connect (G_OBJECT (plugin), "configure-plugin",
+					G_CALLBACK (lightdash_configure), lightdash);
                     
     g_signal_connect (G_OBJECT (plugin), "remote-event",
                     G_CALLBACK (lightdash_remote_event), lightdash);
