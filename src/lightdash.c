@@ -59,8 +59,8 @@ appfinder_refcount_debug_weak_notify (gpointer  data,
                                       GObject  *where_the_object_was)
 {
   /* remove the unreffed object pixbuf from the table */
-  if (!g_hash_table_remove (objects_table, where_the_object_was))
-    appfinder_assert_not_reached ();
+  //if (!g_hash_table_remove (objects_table, where_the_object_was))
+    //appfinder_assert_not_reached ();
 }
 
 

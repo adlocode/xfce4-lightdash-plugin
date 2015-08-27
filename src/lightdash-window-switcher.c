@@ -1097,7 +1097,7 @@ static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTas
 	if (task->image->allocation.width < pixmap_width)
 	lightdash_window_switcher_update_preview (task, task->attr.width, task->image->allocation.width);
 	
-	}
+	}/*
 	else if (ev->type == ConfigureNotify && task->preview_created)
 	{
 		ce = &ev->xconfigure;
@@ -1108,7 +1108,7 @@ static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTas
 		g_print ("%s", "configure");
 		
 		//lightdash_window_switcher_update_preview (task, ce->width, ce->height, TRUE);
-	}
+	}*/
 	
 	
 }
@@ -1117,6 +1117,15 @@ static void light_task_create_widgets (LightTask *task)
 	XRenderPictFormat *format;
 	//cairo_t *cr;
 	//XRenderPictureAttributes pa;
+	
+	GtkWidget *parent_gtk_widget;
+	
+	parent_gtk_widget = gtk_widget_get_toplevel (GTK_WIDGET (task->tasklist));
+	
+	if (gtk_widget_is_toplevel (parent_gtk_widget))
+	{
+		task->tasklist->parent_gdk_window = gtk_widget_get_window (parent_gtk_widget);
+	}
 	
 	static const GtkTargetEntry targets [] = { {"application/x-wnck-window-id",0,0} };
 	
@@ -1210,7 +1219,10 @@ static void light_task_create_widgets (LightTask *task)
 			XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
 			
 			if (task->tasklist->parent_gdk_window && task->gdk_window != task->tasklist->parent_gdk_window)
-			gdk_window_add_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
+				gdk_window_add_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
+				
+			else
+			g_print ("%s", "same");
 			
 			
 			

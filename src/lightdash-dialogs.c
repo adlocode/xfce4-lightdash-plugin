@@ -34,25 +34,68 @@ static void lightdash_configure_response (GtkWidget *dialog,
       /* destroy the properties dialog */
       gtk_widget_destroy (dialog);
 }
+
+static void lightdash_preferences_entry_changed (GtkEditable *editable, LightdashPlugin *lightdash)
+{
+	const gchar *text = gtk_entry_get_text (GTK_ENTRY (editable));
+	gtk_label_set_text (GTK_LABEL (lightdash->button_label), text);
+}
 				
 void lightdash_configure (XfcePanelPlugin *plugin,
 							LightdashPlugin *lightdash)
 {
 	GtkWidget *dialog;
+	GtkWidget *hbox;
+	GtkWidget *label;
+	GtkWidget *entry;
+	GtkWidget *toplevel;
+	GtkWindow *window;
+	
+	window = NULL;
+	
+	toplevel = gtk_widget_get_toplevel (GTK_WIDGET (plugin));
+	
+	if (gtk_widget_is_toplevel (toplevel))
+	{
+		window = GTK_WINDOW (toplevel);
+	}
 	
 	xfce_panel_plugin_block_menu (plugin);
 	
-	dialog = xfce_titled_dialog_new_with_buttons (_("Lightdash"),
-						GTK_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (plugin))),
+	dialog = xfce_titled_dialog_new_with_buttons (_("lightdash"),
+						window,
 						GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_NO_SEPARATOR,
 						GTK_STOCK_HELP, GTK_RESPONSE_HELP,
 						GTK_STOCK_CLOSE, GTK_RESPONSE_OK,
 						NULL);
-						
+	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	hbox = gtk_box_new (GTK_ORIENTATION_VERTICAL);
+	#else
+	hbox = gtk_hbox_new (FALSE, 0);
+	#endif
+	
+	label = gtk_label_new (_("Title:"));
+	
+	entry = gtk_entry_new ();
+	gtk_entry_set_text (GTK_ENTRY (entry), gtk_label_get_text (GTK_LABEL (lightdash->button_label)));
+	
+	g_signal_connect (G_OBJECT (entry), "changed",
+      G_CALLBACK (lightdash_preferences_entry_changed), lightdash);
+	
+	gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), 
+		hbox, FALSE, FALSE, 6);
+	
+	gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 6);
+	
+	gtk_box_pack_start (GTK_BOX (hbox), entry, FALSE, FALSE, 6);
+	
+	gtk_widget_show_all (hbox);
+	 				
 	g_object_set_data (G_OBJECT (plugin), "dialog", dialog);
 	
 	g_signal_connect (G_OBJECT (dialog), "response",
 			G_CALLBACK (lightdash_configure_response), lightdash);
 						
-	gtk_widget_show (dialog);
+	gtk_widget_show_all (dialog);
 }
