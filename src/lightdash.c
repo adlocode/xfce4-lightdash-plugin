@@ -59,8 +59,8 @@ appfinder_refcount_debug_weak_notify (gpointer  data,
                                       GObject  *where_the_object_was)
 {
   /* remove the unreffed object pixbuf from the table */
-  //if (!g_hash_table_remove (objects_table, where_the_object_was))
-    //appfinder_assert_not_reached ();
+  if (!g_hash_table_remove (objects_table, where_the_object_was))
+    appfinder_assert_not_reached ();
 }
 
 
@@ -104,22 +104,16 @@ lightdash_new (XfcePanelPlugin *plugin)
 	
 	lightdash->plugin = plugin;
 	
-	
-	lightdash->ebox = gtk_event_box_new ();
-	
-	
 	lightdash->button = xfce_panel_create_toggle_button ();
-	
-	gtk_container_add (GTK_CONTAINER (lightdash->ebox), lightdash->button);
 	
 	lightdash->button_label = gtk_label_new (_("Activities"));
 	
 	gtk_container_add (GTK_CONTAINER (lightdash->button), (lightdash->button_label));
 	gtk_widget_show (lightdash->button_label);
 	
+	gtk_container_add (GTK_CONTAINER (plugin), lightdash->button);
 	
-	
-	gtk_widget_show_all (lightdash->ebox);
+	gtk_widget_show_all (lightdash->button);
 	
 	return lightdash;
 }
@@ -205,9 +199,6 @@ lightdash_construct (XfcePanelPlugin *plugin)
 
   /* create initial window */
   lightdash->lightdash_window = lightdash_window_new (NULL, !opt_collapsed, lightdash);
-
-
-	gtk_container_add (GTK_CONTAINER (plugin), lightdash->ebox);
 	
 	xfce_panel_plugin_add_action_widget (plugin, lightdash->button);
 	
