@@ -48,6 +48,7 @@ void lightdash_configure (XfcePanelPlugin *plugin,
 	GtkWidget *hbox;
 	GtkWidget *label;
 	GtkWidget *entry;
+	GtkWidget *opacity_slider;
 	GtkWidget *toplevel;
 	GtkWindow *window;
 	
@@ -84,11 +85,27 @@ void lightdash_configure (XfcePanelPlugin *plugin,
       G_CALLBACK (lightdash_preferences_entry_changed), lightdash);
 	
 	gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), 
-		hbox, FALSE, FALSE, 6);
+		hbox, TRUE, TRUE, 6);
 	
 	gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 6);
 	
-	gtk_box_pack_start (GTK_BOX (hbox), entry, FALSE, FALSE, 6);
+	gtk_box_pack_start (GTK_BOX (hbox), entry, TRUE, TRUE, 6);
+	gtk_widget_show_all (hbox);
+	
+	
+	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	hbox = gtk_box_new (GTK_ORIENTATION_VERTICAL);
+	#else
+	hbox = gtk_hbox_new (FALSE, 0);
+	#endif
+	
+	opacity_slider = gtk_hscale_new_with_range (0.0, 100.0, 1.0);
+	
+	gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), 
+		hbox, TRUE, TRUE, 6);
+		
+	gtk_box_pack_start (GTK_BOX (hbox), opacity_slider, TRUE, TRUE, 6);
 	
 	gtk_widget_show_all (hbox);
 	 				

@@ -36,6 +36,7 @@
 #include <glib/gstdio.h>
 #include <libwnck/libwnck.h>
 #include <exo/exo.h>
+#include <cairo/cairo.h>
 
 #include <src/appfinder-window.h>
 #include <src/appfinder-model.h>
@@ -132,9 +133,17 @@ static void       xfce_appfinder_window_row_activated                 (XfceAppfi
 static void       xfce_appfinder_window_icon_theme_changed            (XfceAppfinderWindow         *window);
 static void       xfce_appfinder_window_launch_clicked                (XfceAppfinderWindow         *window);
 static void       xfce_appfinder_window_execute                       (XfceAppfinderWindow         *window,
-                                                                       gboolean                     close_on_succeed);
+ 
+                                                                      gboolean                     close_on_succeed);
+                                                                      
+                                                          
                                                                        
 void xfce_appfinder_window_create (XfceAppfinderWindow *window);
+gboolean
+xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderWindow *window);
+
+void
+xfce_lightdash_window_screen_changed (GtkWidget *widget, GdkScreen *wscreen);
 
 
 struct _XfceAppfinderWindowClass
@@ -269,6 +278,50 @@ xfce_lightdash_window_window_switcher_key_press_event
 	}
 }
 
+void
+xfce_lightdash_window_screen_changed (GtkWidget *widget, GdkScreen *wscreen)
+{
+	GdkScreen *screen;
+	GdkColormap *colormap;
+	
+	screen = gtk_widget_get_screen (widget);
+	colormap = gdk_screen_get_rgba_colormap (screen);
+	
+	gtk_widget_set_colormap (widget, colormap);
+}
+
+gboolean
+xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderWindow *window)
+{
+	GtkStyle *style;
+	GdkColor color;
+	cairo_t *cr;
+	
+	if (!gtk_widget_get_realized (widget))
+	{
+		gtk_widget_realize (widget);
+	}
+	
+	style = gtk_widget_get_style (widget);
+	
+	if (style == NULL)
+	{
+		return FALSE;
+	}
+	
+	color = style->bg[GTK_STATE_NORMAL];
+	
+	cr = gdk_cairo_create (gtk_widget_get_window (widget));
+	cairo_set_source_rgba (cr, color.red/65535.0, color.green/65535.0, color.blue/65535.0, 0.94);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_paint (cr);
+	cairo_destroy (cr);
+	
+	return FALSE;
+	
+}
+	
+	
 static void
 xfce_appfinder_window_init (XfceAppfinderWindow *window)
 {
@@ -304,7 +357,8 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
     gtk_window_stick (GTK_WINDOW (window));
     gtk_window_set_modal (GTK_WINDOW (window), TRUE);
     gtk_window_set_keep_above (GTK_WINDOW (window), TRUE);
-    gtk_widget_set_name (GTK_WIDGET (window), "lightdash-window");   
+    gtk_widget_set_name (GTK_WIDGET (window), "lightdash-window");
+    gtk_widget_set_app_paintable (GTK_WIDGET (window), TRUE);  
     
     //Setting the size request allows the previews to shrink when required
     gtk_widget_set_size_request (GTK_WIDGET (window), 50, 50);
@@ -359,7 +413,10 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
   g_signal_connect (G_OBJECT (window), "show",
       G_CALLBACK (xfce_lightdash_window_show), window);
       
-  
+  g_signal_connect (G_OBJECT (window), "expose-event",
+      G_CALLBACK (xfce_lightdash_window_expose), window);
+      
+  xfce_lightdash_window_screen_changed (GTK_WIDGET (window), NULL);
   
   gtk_container_set_border_width (GTK_CONTAINER (vbox), 6);
   gtk_widget_show (vbox);
@@ -450,7 +507,6 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
   gtk_box_pack_start (GTK_BOX (window->taskview_container), window->window_switcher, TRUE, TRUE, 3);
   //gtk_widget_set_size_request (window->window_switcher, 50, 50);
   gtk_widget_show (window->window_switcher);
-  
 
   
   g_signal_connect_swapped (G_OBJECT (window->window_switcher), "task-button-clicked",

@@ -452,7 +452,7 @@ static void my_tasklist_init (MyTasklist *tasklist)
 	tasklist->bottom_attach=1;
 	
 	
-	
+	gtk_event_box_set_visible_window (GTK_EVENT_BOX (tasklist), FALSE);
 	tasklist->table = gtk_table_new (tasklist->table_rows, tasklist->table_columns, TRUE);
 	gtk_container_add (GTK_CONTAINER(tasklist), tasklist->table);
 	
@@ -898,10 +898,10 @@ void lightdash_window_switcher_update_preview (LightTask *task, gfloat original_
 			height = 1;
 		}
 		
-		task->gdk_pixmap = gdk_pixmap_new (NULL, 
+		task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 
 			width, 
 			height, 
-			24);
+			-1);
 			
 		cr = gdk_cairo_create (task->gdk_pixmap);
 		
@@ -1091,7 +1091,6 @@ static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTas
 	
 	lightdash_window_switcher_update_preview (task, task->attr.height, task->image->allocation.height);
 	
-	
 	gdk_pixmap_get_size (task->gdk_pixmap, &pixmap_width, NULL);
 		
 	if (task->image->allocation.width < pixmap_width)
@@ -1172,7 +1171,7 @@ static void light_task_create_widgets (LightTask *task)
 			format = XRenderFindVisualFormat (task->tasklist->dpy, task->attr.visual);	
 			
 			//pa.subwindow_mode = IncludeInferiors;
-			task->gdk_pixmap = gdk_pixmap_new (NULL, 1, 1, 24);
+			task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 1, 1, -1);
 			
 			
 			//cr = gdk_cairo_create (task->gdk_pixmap);
@@ -1215,11 +1214,14 @@ static void light_task_create_widgets (LightTask *task)
 				//CompositeRedirectAutomatic);
 			
 			
-			task->damage = XDamageCreate (task->tasklist->dpy, task->xid, XDamageReportDeltaRectangles);
-			XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
+
 			
 			if (task->tasklist->parent_gdk_window && task->gdk_window != task->tasklist->parent_gdk_window)
+			{
+				task->damage = XDamageCreate (task->tasklist->dpy, task->xid, XDamageReportDeltaRectangles);
+				XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
 				gdk_window_add_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
+			}
 				
 			else
 			g_print ("%s", "same");
