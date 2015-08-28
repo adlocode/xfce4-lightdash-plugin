@@ -593,7 +593,7 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
   gtk_widget_show (hbox);
 
   window->button_preferences = button = gtk_button_new_from_stock (GTK_STOCK_PREFERENCES);
-  gtk_box_pack_start (GTK_BOX (hbox), button, FALSE, FALSE, 0);
+  //gtk_box_pack_start (GTK_BOX (hbox), button, FALSE, FALSE, 0);
   g_signal_connect (G_OBJECT (button), "clicked",
       G_CALLBACK (xfce_lightdash_window_preferences), window);
 
@@ -609,7 +609,7 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
   gtk_widget_show (bbox);
 
   button = gtk_button_new_from_stock (GTK_STOCK_CLOSE);
-  gtk_container_add (GTK_CONTAINER (bbox), button);
+  //gtk_container_add (GTK_CONTAINER (bbox), button);
   g_signal_connect_swapped (G_OBJECT (button), "clicked",
       G_CALLBACK (gtk_widget_destroy), window);
   gtk_widget_show (button);
