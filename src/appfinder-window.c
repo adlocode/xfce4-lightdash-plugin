@@ -270,6 +270,14 @@ xfce_lightdash_window_window_switcher_key_press_event
 	{
 		return FALSE;
 	}
+	else if (event->keyval == GDK_KEY_Right
+			|| event->keyval == GDK_KEY_Left
+			|| event->keyval == GDK_KEY_Up
+			|| event->keyval == GDK_KEY_Down
+			|| event->keyval == GDK_KEY_Return)
+	{
+		return FALSE;
+	}
 	else
 	{
 		gtk_widget_grab_focus (window->entry);
