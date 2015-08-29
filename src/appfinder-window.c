@@ -143,7 +143,7 @@ gboolean
 xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderWindow *window);
 
 void
-xfce_lightdash_window_screen_changed (GtkWidget *widget, GdkScreen *wscreen);
+xfce_lightdash_window_screen_changed (GtkWidget *widget, GdkScreen *wscreen, XfceAppfinderWindow *window);
 
 
 struct _XfceAppfinderWindowClass
@@ -199,6 +199,7 @@ struct _XfceAppfinderWindow
 
   gulong                      property_watch_id;
   gulong                      categories_changed_id;
+  gboolean					  supports_alpha;
 };
 
 static const GtkTargetEntry target_list[] =
@@ -287,13 +288,22 @@ xfce_lightdash_window_window_switcher_key_press_event
 }
 
 void
-xfce_lightdash_window_screen_changed (GtkWidget *widget, GdkScreen *wscreen)
+xfce_lightdash_window_screen_changed (GtkWidget *widget, GdkScreen *wscreen, XfceAppfinderWindow *window)
 {
 	GdkScreen *screen;
 	GdkColormap *colormap;
 	
 	screen = gtk_widget_get_screen (widget);
 	colormap = gdk_screen_get_rgba_colormap (screen);
+	if (!colormap)
+	{
+		colormap = gdk_screen_get_system_colormap (screen);
+		window->supports_alpha = FALSE;
+	}
+	else
+	{
+		window->supports_alpha = TRUE;
+	}
 	
 	gtk_widget_set_colormap (widget, colormap);
 }
@@ -320,10 +330,19 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 	color = style->bg[GTK_STATE_NORMAL];
 	
 	cr = gdk_cairo_create (gtk_widget_get_window (widget));
+	if (window->supports_alpha)
+	{
 	cairo_set_source_rgba (cr, color.red/65535.0, 
 							color.green/65535.0, 
 							color.blue/65535.0, 
 							window->lightdash_plugin->opacity/100.0);
+	}
+	else
+	{
+		cairo_set_source_rgb (cr, color.red/65535.0, 
+							color.green/65535.0, 
+							color.blue/65535.0);
+	}
 							
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 	cairo_paint (cr);
@@ -359,8 +378,9 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
   GtkWidget          *button;
   GtkEntryCompletion *completion;
   gint                integer;
-
-    GtkWidget *icon_apps;
+   GtkWidget *icon_apps;
+    
+    window->supports_alpha = FALSE;
     
     gtk_window_maximize (GTK_WINDOW (window));
 	gtk_window_set_decorated (GTK_WINDOW (window), FALSE);
@@ -428,7 +448,10 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
   g_signal_connect (G_OBJECT (window), "expose-event",
       G_CALLBACK (xfce_lightdash_window_expose), window);
       
-  xfce_lightdash_window_screen_changed (GTK_WIDGET (window), NULL);
+  g_signal_connect (G_OBJECT (window), "screen-changed",
+      G_CALLBACK (xfce_lightdash_window_screen_changed), window);
+      
+  xfce_lightdash_window_screen_changed (GTK_WIDGET (window), NULL, window);
   
   gtk_container_set_border_width (GTK_CONTAINER (vbox), 6);
   gtk_widget_show (vbox);
