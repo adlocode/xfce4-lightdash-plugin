@@ -108,6 +108,8 @@ lightdash_new (XfcePanelPlugin *plugin)
 	
 	lightdash->button_label = gtk_label_new (_("Activities"));
 	
+	lightdash->opacity = 94;
+	
 	gtk_container_add (GTK_CONTAINER (lightdash->button), (lightdash->button_label));
 	gtk_widget_show (lightdash->button_label);
 	

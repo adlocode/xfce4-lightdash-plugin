@@ -320,7 +320,11 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 	color = style->bg[GTK_STATE_NORMAL];
 	
 	cr = gdk_cairo_create (gtk_widget_get_window (widget));
-	cairo_set_source_rgba (cr, color.red/65535.0, color.green/65535.0, color.blue/65535.0, 0.94);
+	cairo_set_source_rgba (cr, color.red/65535.0, 
+							color.green/65535.0, 
+							color.blue/65535.0, 
+							window->lightdash_plugin->opacity/100.0);
+							
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 	cairo_paint (cr);
 	cairo_destroy (cr);

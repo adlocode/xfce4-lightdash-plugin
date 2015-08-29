@@ -32,6 +32,8 @@ typedef struct
 	GtkWidget *button_label;
 	GtkWidget *lightdash_window;
 	
+	guint opacity;
+	
 }LightdashPlugin;
 
 G_END_DECLS

@@ -35,6 +35,11 @@ static void lightdash_configure_response (GtkWidget *dialog,
       gtk_widget_destroy (dialog);
 }
 
+static void lightdash_opacity_slider_changed (GtkRange *range, LightdashPlugin *lightdash)
+{
+	lightdash->opacity = gtk_range_get_value (range);
+}
+
 static void lightdash_preferences_entry_changed (GtkEditable *editable, LightdashPlugin *lightdash)
 {
 	const gchar *text = gtk_entry_get_text (GTK_ENTRY (editable));
@@ -102,10 +107,19 @@ void lightdash_configure (XfcePanelPlugin *plugin,
 	
 	opacity_slider = gtk_hscale_new_with_range (0.0, 100.0, 1.0);
 	
+	gtk_range_set_value (GTK_RANGE (opacity_slider), lightdash->opacity);
+	
 	gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), 
 		hbox, TRUE, TRUE, 6);
-		
+	
+	label = gtk_label_new (_("Opacity:"));
+	
+	gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 6);
+	
 	gtk_box_pack_start (GTK_BOX (hbox), opacity_slider, TRUE, TRUE, 6);
+	
+	g_signal_connect (G_OBJECT (opacity_slider), "value-changed",
+			G_CALLBACK (lightdash_opacity_slider_changed), lightdash);
 	
 	gtk_widget_show_all (hbox);
 	 				
