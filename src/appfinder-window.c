@@ -1031,7 +1031,8 @@ xfce_appfinder_window_view (XfceAppfinderWindow *window)
 
   if (icon_view)
     {
-      window->view = view = gtk_icon_view_new_with_model (filter_model);
+      window->view = view = exo_icon_view_new_with_model (filter_model);
+      exo_icon_view_set_single_click (EXO_ICON_VIEW (view), TRUE);
       gtk_icon_view_set_selection_mode (GTK_ICON_VIEW (view), GTK_SELECTION_BROWSE);
       gtk_icon_view_set_pixbuf_column (GTK_ICON_VIEW (view), XFCE_APPFINDER_MODEL_COLUMN_ICON);
       gtk_icon_view_set_text_column (GTK_ICON_VIEW (view), XFCE_APPFINDER_MODEL_COLUMN_TITLE);
