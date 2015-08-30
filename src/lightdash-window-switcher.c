@@ -1094,11 +1094,8 @@ static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTas
 	lightdash_window_switcher_update_preview (task, task->image->allocation.width, task->image->allocation.height);
 	
 	gdk_pixmap_get_size (task->gdk_pixmap, &pixmap_width, NULL);
-		
-	//if (task->image->allocation.width < pixmap_width)
-	//lightdash_window_switcher_update_preview (task, task->attr.width, task->image->allocation.width);
 	
-	}
+	}/*
 	else if (ev->type == ConfigureNotify && task->preview_created)
 	{
 		ce = &ev->xconfigure;
@@ -1106,10 +1103,10 @@ static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTas
 		if (ce->height == task->attr.height || ce->width == task->attr.width)
 			return;
 			
-		g_print ("%s", "configure");
+		//g_print ("%s", "configure");
 		
-		lightdash_window_switcher_update_preview (task, ce->width, ce->height);
-	}
+		//lightdash_window_switcher_update_preview (task, task->image->allocation.width, task->image->allocation.height);
+	}*/
 	
 	
 }
