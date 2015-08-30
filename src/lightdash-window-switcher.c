@@ -153,7 +153,7 @@ LightTask * get_task_from_window (MyTasklist *tasklist, WnckWindow *window);
 
 skipped_window * get_skipped_window (MyTasklist *tasklist, WnckWindow *window);
 
-void lightdash_window_switcher_update_preview (LightTask *task, gfloat original_length, gfloat new_length);
+void lightdash_window_switcher_update_preview (LightTask *task, gfloat width, gfloat height);
 
 //****************
 
@@ -879,28 +879,29 @@ void lightdash_window_switcher_button_check_allocate_signal
 							task);
 	}
 }
-void lightdash_window_switcher_update_preview (LightTask *task, gfloat original_length, gfloat new_length)
+void lightdash_window_switcher_update_preview (LightTask *task, gfloat width, gfloat height)
 {
-		gint width, height;
+		gint dest_width, dest_height;
 		gfloat factor;
 		cairo_t *cr;
 		
-		factor = (gfloat)new_length/(gfloat)original_length;
+		factor = (gfloat) MIN ((gfloat)task->image->allocation.width / (gfloat)task->attr.width,
+						(gfloat)task->image->allocation.height / (gfloat)task->attr.height);
 		
-		width = task->attr.width*factor;
-		height = task->attr.height*factor;
+		dest_width = task->attr.width*factor;
+		dest_height = task->attr.height*factor;
 		
 		g_object_unref (task->gdk_pixmap);
 		
-		if ((gint)width == 0 || (gint)height == 0)
+		if ((gint)dest_width == 0 || (gint)dest_height == 0)
 		{
-			width = 1;
-			height = 1;
+			dest_width = 1;
+			dest_height = 1;
 		}
 		
 		task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 
-			width, 
-			height, 
+			dest_width, 
+			dest_height, 
 			-1);
 			
 		cr = gdk_cairo_create (task->gdk_pixmap);
@@ -918,6 +919,7 @@ void lightdash_window_switcher_update_preview (LightTask *task, gfloat original_
 		gtk_image_set_from_pixmap (GTK_IMAGE (task->image), task->gdk_pixmap, NULL);
 		
 		cairo_destroy (cr);
+				
 }
 	
 void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
@@ -939,13 +941,13 @@ void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 			&& task->image->allocation.width == task->previous_width)
 		return;
 		
-		lightdash_window_switcher_update_preview (task, task->attr.height, task->image->allocation.height);
+		lightdash_window_switcher_update_preview (task, task->image->allocation.width, task->image->allocation.height);
 		
 		gdk_pixmap_get_size (task->gdk_pixmap, &pixmap_width, NULL);
 		
 		
-		if (task->image->allocation.width < pixmap_width)
-		lightdash_window_switcher_update_preview (task, task->attr.width, task->image->allocation.width);
+		//if (task->image->allocation.width < pixmap_width)
+		//lightdash_window_switcher_update_preview (task, task->image->allocation.width, task->image->allocation.width);
 
 		
 		if (task->button->allocation.height)
@@ -999,13 +1001,13 @@ gboolean lightdash_window_switcher_image_expose (GtkWidget *widget, GdkEvent *ev
 {
 		gint pixmap_width;
 	
-		lightdash_window_switcher_update_preview (task, task->attr.height, task->image->allocation.height);
+		lightdash_window_switcher_update_preview (task, task->image->allocation.width, task->image->allocation.height);
 		
 
 		gdk_pixmap_get_size (task->gdk_pixmap, &pixmap_width, NULL);
 		
-		if (task->image->allocation.width < pixmap_width)
-		lightdash_window_switcher_update_preview (task, task->attr.width, task->image->allocation.width);
+		//if (task->image->allocation.width < pixmap_width)
+		//lightdash_window_switcher_update_preview (task, task->image->allocation.width, task->image->allocation.height);
 		
 		gtk_image_set_from_pixmap (GTK_IMAGE (task->image), task->gdk_pixmap, NULL);
 		
@@ -1089,14 +1091,14 @@ static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTas
 	
 	XDamageSubtract (task->tasklist->dpy, e->damage, None, None);
 	
-	lightdash_window_switcher_update_preview (task, task->attr.height, task->image->allocation.height);
+	lightdash_window_switcher_update_preview (task, task->image->allocation.width, task->image->allocation.height);
 	
 	gdk_pixmap_get_size (task->gdk_pixmap, &pixmap_width, NULL);
 		
-	if (task->image->allocation.width < pixmap_width)
-	lightdash_window_switcher_update_preview (task, task->attr.width, task->image->allocation.width);
+	//if (task->image->allocation.width < pixmap_width)
+	//lightdash_window_switcher_update_preview (task, task->attr.width, task->image->allocation.width);
 	
-	}/*
+	}
 	else if (ev->type == ConfigureNotify && task->preview_created)
 	{
 		ce = &ev->xconfigure;
@@ -1106,8 +1108,8 @@ static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTas
 			
 		g_print ("%s", "configure");
 		
-		//lightdash_window_switcher_update_preview (task, ce->width, ce->height, TRUE);
-	}*/
+		lightdash_window_switcher_update_preview (task, ce->width, ce->height);
+	}
 	
 	
 }
