@@ -154,6 +154,9 @@ skipped_window * get_skipped_window (MyTasklist *tasklist, WnckWindow *window);
 
 void lightdash_window_switcher_update_preview (LightTask *task, gint width, gint height);
 
+cairo_surface_t *
+lightdash_window_switcher_get_window_picture (LightTask *task);
+
 //****************
 
 
@@ -1047,11 +1050,28 @@ my_tasklist_drag_data_get_handl
      
         
 }
-static void
-lightdash_window_switcher_redirect_window (LightTask *task)
+
+cairo_surface_t *
+lightdash_window_switcher_get_window_picture (LightTask *task)
 {
+	cairo_surface_t *surface;
+	XRenderPictFormat *format;
+	
 	XCompositeRedirectWindow (task->tasklist->dpy, task->xid,
 		CompositeRedirectAutomatic);
+		
+	format = None;
+			
+	format = XRenderFindVisualFormat (task->tasklist->dpy, task->attr.visual);	
+
+	surface = cairo_xlib_surface_create_with_xrender_format (task->tasklist->dpy,
+			task->xid,
+			task->attr.screen,
+			format,
+			task->attr.width,
+			task->attr.height);
+			
+	return surface;
 }
 
 static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTask *task)
@@ -1093,17 +1113,6 @@ static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTas
 }
 static void light_task_create_widgets (LightTask *task)
 {
-	XRenderPictFormat *format;
-	
-	GtkWidget *parent_gtk_widget;
-	
-	parent_gtk_widget = gtk_widget_get_toplevel (GTK_WIDGET (task->tasklist));
-	
-	if (gtk_widget_is_toplevel (parent_gtk_widget))
-	{
-		task->tasklist->parent_gdk_window = gtk_widget_get_window (parent_gtk_widget);
-	}
-	
 	static const GtkTargetEntry targets [] = { {"application/x-wnck-window-id",0,0} };
 	
 	task->tasklist->unique_id_counter++;
@@ -1141,26 +1150,12 @@ static void light_task_create_widgets (LightTask *task)
 		&& !wnck_window_is_minimized (task->window)
 		&& task->attr.height != 0)
 		{
-			lightdash_window_switcher_redirect_window (task);
-			
-			
-			format = None;
-			
-			format = XRenderFindVisualFormat (task->tasklist->dpy, task->attr.visual);	
 			
 			task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 1, 1, -1);
 			
-
-			task->surface = cairo_xlib_surface_create_with_xrender_format (task->tasklist->dpy,
-				task->xid,
-				task->attr.screen,
-				format,
-				task->attr.width,
-				task->attr.height);
+			task->surface = lightdash_window_switcher_get_window_picture (task);
 			
-					
 			task->image = gtk_image_new_from_pixmap (task->gdk_pixmap, NULL);
-			
 			
 			
 			if (task->tasklist->parent_gdk_window && task->gdk_window != task->tasklist->parent_gdk_window)
