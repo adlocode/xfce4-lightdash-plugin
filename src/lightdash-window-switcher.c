@@ -460,14 +460,6 @@ static void my_tasklist_init (MyTasklist *tasklist)
 	
 	tasklist->composited = gdk_screen_is_composited (tasklist->gdk_screen);
 	
-	
-			for (int i = 0; i < ScreenCount (tasklist->dpy); i++)
-	{
-		XCompositeRedirectSubwindows (tasklist->dpy, RootWindow (tasklist->dpy, i),
-			CompositeRedirectAutomatic);
-	}
-	
-	
 	XDamageQueryExtension (tasklist->dpy, &dv, &dr);
 	gdk_x11_register_standard_event_type (gdk_screen_get_display (tasklist->gdk_screen),
 		dv, dv + XDamageNotify);
