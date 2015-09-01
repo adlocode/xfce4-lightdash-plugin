@@ -157,6 +157,8 @@ void lightdash_window_switcher_update_preview (LightTask *task, gint width, gint
 cairo_surface_t *
 lightdash_window_switcher_get_window_picture (LightTask *task);
 
+void lightdash_window_switcher_redirect_window (LightTask *task);
+
 //****************
 
 
@@ -1043,14 +1045,17 @@ my_tasklist_drag_data_get_handl
         
 }
 
+void lightdash_window_switcher_redirect_window (LightTask *task)
+{	
+	XCompositeRedirectWindow (task->tasklist->dpy, task->xid,
+		CompositeRedirectAutomatic);
+}
+
 cairo_surface_t *
 lightdash_window_switcher_get_window_picture (LightTask *task)
 {
 	cairo_surface_t *surface;
 	XRenderPictFormat *format;
-	
-	XCompositeRedirectWindow (task->tasklist->dpy, task->xid,
-		CompositeRedirectAutomatic);
 		
 	format = None;
 			
@@ -1097,6 +1102,7 @@ static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTas
 			
 		task->attr.width = ce->width;
 		task->attr.height = ce->height;
+		task->surface = lightdash_window_switcher_get_window_picture (task);
 		lightdash_window_switcher_update_preview (task, task->image->allocation.width, task->image->allocation.height);
 
 	}
@@ -1144,6 +1150,8 @@ static void light_task_create_widgets (LightTask *task)
 		{
 			
 			task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 1, 1, -1);
+			
+			lightdash_window_switcher_redirect_window (task);
 			
 			task->surface = lightdash_window_switcher_get_window_picture (task);
 			
