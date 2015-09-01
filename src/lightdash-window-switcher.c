@@ -881,11 +881,11 @@ void lightdash_window_switcher_update_preview (LightTask *task, gint width, gint
 		
 		g_object_unref (task->gdk_pixmap);
 		
-		if ((gint)dest_width == 0 || (gint)dest_height == 0)
-		{
+		if ((gint)dest_width == 0)
 			dest_width = 1;
+		
+		if ((gint)dest_height == 0)
 			dest_height = 1;
-		}
 		
 		task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 
 			dest_width, 
