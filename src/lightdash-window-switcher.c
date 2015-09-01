@@ -1009,12 +1009,23 @@ static void my_tasklist_drag_begin_handl
 (GtkWidget *widget, GdkDragContext *context, LightTask *task)
 {
 	g_signal_emit_by_name (task->tasklist, "task-button-drag-begin");
+	
+	gtk_widget_hide (task->button);
+	
+	if (!(task->tasklist->composited) ||
+		(wnck_window_is_minimized (task->window)))
+		return;
+	
+	gtk_drag_set_icon_pixmap (context,
+		gdk_drawable_get_colormap (GDK_DRAWABLE (task->gdk_pixmap)),
+		task->gdk_pixmap, NULL, -2, -2);
 }
 
 static void my_tasklist_drag_end_handl
 (GtkWidget *widget, GdkDragContext *context, LightTask *task)
 {
 	g_signal_emit_by_name (task->tasklist, "task-button-drag-end");
+	gtk_widget_show (task->button);
 }
 
 static void
