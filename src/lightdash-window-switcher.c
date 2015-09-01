@@ -1102,6 +1102,7 @@ static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTas
 			
 		task->attr.width = ce->width;
 		task->attr.height = ce->height;
+		cairo_surface_destroy (task->surface);
 		task->surface = lightdash_window_switcher_get_window_picture (task);
 		lightdash_window_switcher_update_preview (task, task->image->allocation.width, task->image->allocation.height);
 
