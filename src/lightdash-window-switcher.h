@@ -35,6 +35,7 @@ G_BEGIN_DECLS
 
 typedef struct _MyTasklist MyTasklist;
 typedef struct _MyTasklistClass MyTasklistClass;
+typedef MyTasklist LightdashWindowSwitcher;
 
 struct _MyTasklist
 {

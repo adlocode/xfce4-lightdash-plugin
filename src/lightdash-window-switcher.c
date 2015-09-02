@@ -52,7 +52,13 @@ static void my_tasklist_button_emit_click_signal (GtkButton *button, MyTasklist 
 static void my_tasklist_free_skipped_windows (MyTasklist *tasklist);
 static int lightdash_window_switcher_xhandler_xerror (Display *dpy, XErrorEvent *e);
 static gint my_tasklist_button_compare (gconstpointer a, gconstpointer b, gpointer data);
-
+static gboolean
+lightdash_window_switcher_drag_drop_handl
+(GtkWidget *widget, GdkDragContext *context, gint x, gint y, guint time);
+static void
+lightdash_window_switcher_drag_data_received_handl
+(GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *selection_data, 
+	guint target_type, guint time);
 
 
 
@@ -426,6 +432,8 @@ static void my_tasklist_init (MyTasklist *tasklist)
 {
 	int dv, dr;
 	
+	static const GtkTargetEntry targets [] = { {"application/x-wnck-window-id",0,0} };
+	
 	tasklist->tasks = NULL;
 	tasklist->skipped_windows = NULL;
 	tasklist->adjusted = FALSE;
@@ -451,6 +459,17 @@ static void my_tasklist_init (MyTasklist *tasklist)
 	gtk_event_box_set_visible_window (GTK_EVENT_BOX (tasklist), FALSE);
 	tasklist->table = gtk_table_new (tasklist->table_rows, tasklist->table_columns, TRUE);
 	gtk_container_add (GTK_CONTAINER(tasklist), tasklist->table);
+	
+	gtk_drag_dest_set (GTK_WIDGET (tasklist), 
+		GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_HIGHLIGHT
+		|GTK_DEST_DEFAULT_DROP, 
+		targets, G_N_ELEMENTS (targets), GDK_ACTION_MOVE);
+	
+	g_signal_connect (GTK_WIDGET (tasklist), "drag-drop",
+		G_CALLBACK (lightdash_window_switcher_drag_drop_handl), NULL);
+		
+	g_signal_connect (GTK_WIDGET (tasklist), "drag-data-received",
+		G_CALLBACK (lightdash_window_switcher_drag_data_received_handl), NULL);
 	
 	
 	gtk_widget_show (tasklist->table);
@@ -1054,6 +1073,56 @@ my_tasklist_drag_data_get_handl
                
      
         
+}
+
+static gboolean
+lightdash_window_switcher_drag_drop_handl
+(GtkWidget *widget, GdkDragContext *context, gint x, gint y, guint time)
+{
+	GdkAtom target;
+	
+	target = gtk_drag_dest_find_target (widget, context, NULL);
+	
+	if (target !=GDK_NONE)
+	gtk_drag_get_data (widget, context, target, time);
+	else
+	gtk_drag_finish (context, FALSE, FALSE, time);
+	
+	return TRUE;
+}
+
+static void
+lightdash_window_switcher_drag_data_received_handl
+(GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *selection_data, 
+	guint target_type, guint time)
+{	
+	LightdashWindowSwitcher *window_switcher;
+	gulong xid;
+	GList *tmp;
+	WnckWindow *win;
+	
+	window_switcher = MY_TASKLIST (widget);
+	
+	if ((gtk_selection_data_get_length (selection_data) != sizeof (gulong)) ||
+		(gtk_selection_data_get_format (selection_data) != 8))
+	{
+		gtk_drag_finish (context, FALSE, FALSE, time);
+		return;
+	}
+	
+	xid = *((gulong *) gtk_selection_data_get_data (selection_data));
+	
+	for (tmp = wnck_screen_get_windows_stacked (window_switcher->screen); tmp != NULL; tmp = tmp->next)
+	{
+		if (wnck_window_get_xid (tmp->data) == xid)
+		{
+			win = tmp->data;
+			wnck_window_move_to_workspace (win, wnck_screen_get_active_workspace (window_switcher->screen));
+			gtk_drag_finish (context, TRUE, FALSE, time);
+			return;
+		}
+	}
+	gtk_drag_finish (context, FALSE, FALSE, time);
 }
 
 void lightdash_window_switcher_redirect_window (LightTask *task)
