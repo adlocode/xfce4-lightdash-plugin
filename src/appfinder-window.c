@@ -278,31 +278,6 @@ xfce_lightdash_window_key_press_event_after
 	
 }
 
-static gboolean
-xfce_lightdash_window_window_switcher_key_press_event
-(GtkWidget   *widget, GdkEventKey *event, XfceAppfinderWindow *window)
-{
-	
-	if (event->keyval == GDK_KEY_Tab)
-	{
-		return FALSE;
-	}
-	else if (event->keyval == GDK_KEY_Right
-			|| event->keyval == GDK_KEY_Left
-			|| event->keyval == GDK_KEY_Up
-			|| event->keyval == GDK_KEY_Down
-			|| event->keyval == GDK_KEY_Return)
-	{
-		return FALSE;
-	}
-	else
-	{
-		gtk_widget_grab_focus (window->entry);
-		gtk_window_propagate_key_event (GTK_WINDOW (window), event);
-		return TRUE;
-	}
-}
-
 void
 xfce_lightdash_window_screen_changed (GtkWidget *widget, GdkScreen *wscreen, XfceAppfinderWindow *window)
 {
@@ -592,9 +567,6 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
       G_CALLBACK (gtk_widget_grab_focus), entry);
   g_signal_connect (G_OBJECT (sidepane), "key-press-event",
       G_CALLBACK (xfce_appfinder_window_treeview_key_press_event), window);
-      
-  g_signal_connect (G_OBJECT (window->window_switcher), "key-press-event",
-      G_CALLBACK (xfce_lightdash_window_window_switcher_key_press_event), window);
   
    g_signal_connect_after (G_OBJECT (window), "key-press-event",
       G_CALLBACK (xfce_lightdash_window_key_press_event_after), window);
