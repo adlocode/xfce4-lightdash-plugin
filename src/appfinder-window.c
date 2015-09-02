@@ -263,7 +263,23 @@ xfce_lightdash_window_show (GtkWidget *widget, XfceAppfinderWindow *window)
 }
 
 static gboolean
-xfce_lightdash_window_window_switcher_key_press_event 
+xfce_lightdash_window_key_press_event_after
+(GtkWidget   *widget, GdkEventKey *event, XfceAppfinderWindow *window)
+{
+
+	if (widget != window->entry)
+	{
+		gtk_widget_grab_focus (window->entry);
+		gtk_window_propagate_key_event (GTK_WINDOW (window), event);
+		return TRUE;
+	}
+	
+	return FALSE;
+	
+}
+
+static gboolean
+xfce_lightdash_window_window_switcher_key_press_event
 (GtkWidget   *widget, GdkEventKey *event, XfceAppfinderWindow *window)
 {
 	
@@ -535,12 +551,12 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
 	window->taskview_container = gtk_hbox_new (FALSE, 0);
   gtk_box_pack_start (GTK_BOX (vbox), window->taskview_container, TRUE, TRUE, 0);
   
- 
+ gtk_widget_add_events (GTK_WIDGET (window), GDK_KEY_PRESS_MASK);
   
   //Add window switcher  
   window->window_switcher = lightdash_window_switcher_new ();
   gtk_box_pack_start (GTK_BOX (window->taskview_container), window->window_switcher, TRUE, TRUE, 3);
-  //gtk_widget_set_size_request (window->window_switcher, 50, 50);
+  gtk_widget_add_events (window->window_switcher, GDK_KEY_PRESS_MASK);
   gtk_widget_show (window->window_switcher);
 
   
@@ -579,6 +595,9 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
       
   g_signal_connect (G_OBJECT (window->window_switcher), "key-press-event",
       G_CALLBACK (xfce_lightdash_window_window_switcher_key_press_event), window);
+  
+   g_signal_connect_after (G_OBJECT (window), "key-press-event",
+      G_CALLBACK (xfce_lightdash_window_key_press_event_after), window);
       
   gtk_tree_view_set_row_separator_func (GTK_TREE_VIEW (sidepane),
       xfce_appfinder_category_model_row_separator_func, NULL, NULL);
@@ -853,6 +872,8 @@ xfce_appfinder_window_key_press_event (GtkWidget   *widget,
         case GDK_KEY_KP_0:
           g_object_set (G_OBJECT (window->model), "icon-size", icon_size, NULL);
           return TRUE;
+        default:
+        gtk_widget_grab_focus (entry);
 			
         
         }
