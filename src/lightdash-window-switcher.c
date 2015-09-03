@@ -61,7 +61,6 @@ lightdash_window_switcher_drag_data_received_handl
 	guint target_type, guint time);
 
 
-
 #define LIGHT_TASK_TYPE (light_task_get_type())
 #define LIGHT_TASK(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), LIGHT_TASK_TYPE, LightTask))
 #define LIGHT_TASK_CLASS (klass) (G_TYPE_CHECK_CLASS_CAST ((klass), LIGHT_TASK_TYPE, LightTaskClass))
@@ -165,6 +164,8 @@ lightdash_window_switcher_get_window_picture (LightTask *task);
 
 void lightdash_window_switcher_redirect_window (LightTask *task);
 
+void lightdash_window_switcher_draw_symbolic_window_rectangle (LightTask *task, gint width, gint height);
+
 //****************
 
 
@@ -187,16 +188,15 @@ static void light_task_finalize (GObject *object)
 	LightTask *task;
 	task = LIGHT_TASK (object);
 	
-	if (task->image)
+
+	if (task->button_resized_tag)
 	{
-		if (task->button_resized_tag)
-		{
-			g_signal_handler_disconnect (task->button,
-							task->button_resized_tag);
-			task->button_resized_tag = 0;
-		}
-	
+		g_signal_handler_disconnect (task->button,
+						task->button_resized_tag);
+		task->button_resized_tag = 0;
 	}
+	
+
 	
 	if (task->button)
 	{
@@ -461,8 +461,7 @@ static void my_tasklist_init (MyTasklist *tasklist)
 	gtk_container_add (GTK_CONTAINER(tasklist), tasklist->table);
 	
 	gtk_drag_dest_set (GTK_WIDGET (tasklist), 
-		GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_HIGHLIGHT
-		|GTK_DEST_DEFAULT_DROP, 
+		GTK_DEST_DEFAULT_MOTION, 
 		targets, G_N_ELEMENTS (targets), GDK_ACTION_MOVE);
 	
 	g_signal_connect (GTK_WIDGET (tasklist), "drag-drop",
@@ -876,16 +875,6 @@ static void my_tasklist_button_emit_click_signal (GtkButton *button, MyTasklist 
 	
 }
 
-void lightdash_window_switcher_button_check_allocate_signal 
-	(GtkWidget *widget, GdkRectangle *allocation, LightTask *task)
-{
-	if (!g_signal_handler_is_connected (task->image, task->button_resized_tag))
-	{
-		task->button_resized_tag = g_signal_connect (task->image, "size-allocate",
-							G_CALLBACK (lightdash_window_switcher_button_size_changed),
-							task);
-	}
-}
 void lightdash_window_switcher_update_preview (LightTask *task, gint width, gint height)
 {
 		gint dest_width, dest_height;
@@ -942,10 +931,21 @@ void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 		task->scaled = FALSE;
 		return;
 	}
+	
+
 
 		if (task->image->allocation.height == task->previous_height
 			&& task->image->allocation.width == task->previous_width)
 		return;
+		
+		if (wnck_window_is_minimized (task->window))
+		{
+			lightdash_window_switcher_draw_symbolic_window_rectangle (task, task->image->allocation.width,
+				task->image->allocation.height);
+			task->scaled = TRUE;
+			return;
+		}
+		
 		
 		lightdash_window_switcher_update_preview (task, task->image->allocation.width, task->image->allocation.height);
 		
@@ -1030,10 +1030,6 @@ static void my_tasklist_drag_begin_handl
 	g_signal_emit_by_name (task->tasklist, "task-button-drag-begin");
 	
 	gtk_widget_hide (task->button);
-	
-	if (!(task->tasklist->composited) ||
-		(wnck_window_is_minimized (task->window)))
-		return;
 	
 	gtk_drag_set_icon_pixmap (context,
 		gdk_drawable_get_colormap (GDK_DRAWABLE (task->gdk_pixmap)),
@@ -1123,6 +1119,59 @@ lightdash_window_switcher_drag_data_received_handl
 		}
 	}
 	gtk_drag_finish (context, FALSE, FALSE, time);
+}
+
+void lightdash_window_switcher_draw_symbolic_window_rectangle (LightTask *task, gint width, gint height)
+{
+	
+	gint dest_width, dest_height;
+	gint pixbuf_width, pixbuf_height;
+		gfloat factor;
+		cairo_t *cr;
+		
+		factor = (gfloat) MIN ((gfloat)width / (gfloat)task->attr.width,
+						(gfloat)height / (gfloat)task->attr.height);
+				
+		dest_width = task->attr.width*factor;
+		dest_height = task->attr.height*factor;
+		
+		g_object_unref (task->gdk_pixmap);
+		
+		if ((gint)dest_width == 0)
+			dest_width = 1;
+		
+		if ((gint)dest_height == 0)
+			dest_height = 1;
+		
+		task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 
+			dest_width, 
+			dest_height, 
+			-1);
+			
+		cr = gdk_cairo_create (task->gdk_pixmap);
+
+		cairo_rectangle (cr, 0, 0, task->attr.width*factor, task->attr.height*factor);
+			
+		cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
+			
+		cairo_fill (cr);
+		cairo_save (cr);
+		
+		gdk_cairo_set_source_pixbuf (cr, task->pixbuf,
+			dest_width/2 - gdk_pixbuf_get_width (task->pixbuf)/2,
+			dest_height/2 - gdk_pixbuf_get_height (task->pixbuf)/2);
+		
+		pixbuf_width = gdk_pixbuf_get_width (task->pixbuf);
+		pixbuf_height = gdk_pixbuf_get_height (task->pixbuf);
+		
+		cairo_rectangle (cr, 0, 0, pixbuf_width, pixbuf_height);
+		cairo_paint (cr);
+		cairo_restore (cr);
+		
+		gtk_image_set_from_pixmap (GTK_IMAGE (task->image), task->gdk_pixmap, NULL);
+		
+		cairo_destroy (cr);
+	
 }
 
 void lightdash_window_switcher_redirect_window (LightTask *task)
@@ -1223,14 +1272,13 @@ static void light_task_create_widgets (LightTask *task)
 				wnck_screen_get_active_workspace (task->tasklist->screen))) 
 	
 	{
-		
+	
+	task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 1, 1, -1);	
 			
 	if (task->tasklist->composited 
 		&& !wnck_window_is_minimized (task->window)
 		&& task->attr.height != 0)
 		{
-			
-			task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 1, 1, -1);
 			
 			lightdash_window_switcher_redirect_window (task);
 			
@@ -1269,8 +1317,6 @@ static void light_task_create_widgets (LightTask *task)
 	gtk_container_add (GTK_CONTAINER(task->button),task->vbox);
 	gtk_box_pack_start (GTK_BOX (task->vbox), task->image, TRUE, TRUE, 0);
 	gtk_box_pack_start (GTK_BOX (task->vbox), task->label, FALSE, TRUE, 0);
-	//gtk_widget_set_size_request (task->button, 200, 80);
-	//gtk_widget_set_size_request (task->image, 80, 80);
 	
 	task->icon_changed_tag = g_signal_connect (task->window, "icon-changed",
 					G_CALLBACK (my_tasklist_window_icon_changed), task);
@@ -1292,11 +1338,13 @@ static void light_task_create_widgets (LightTask *task)
 							task);
 
 							
-		task->button_resized_tag = g_signal_connect (task->button, "size-allocate",
-							G_CALLBACK (lightdash_window_switcher_button_size_changed),
-							task);
+
 	}
 	
+		task->button_resized_tag = g_signal_connect (task->button, "size-allocate",
+						G_CALLBACK (lightdash_window_switcher_button_size_changed),
+						task);
+							
 	gtk_drag_source_set (task->button,GDK_BUTTON1_MASK,targets,1,GDK_ACTION_MOVE);
 					
 	g_signal_connect_object (task->button, "drag-data-get",
