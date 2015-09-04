@@ -143,7 +143,7 @@ static void my_tasklist_drag_data_get_handl
 		(GtkWidget *widget, GdkDragContext *context, GtkSelectionData *selection_data,
         guint target_type, guint time, LightTask *task);
 
-static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTask *task);
+static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTask *task);
 
 void lightdash_window_switcher_button_check_allocate_signal (GtkWidget *widget, GdkRectangle *allocation,
 LightTask *task);
@@ -1203,7 +1203,7 @@ lightdash_window_switcher_get_window_picture (LightTask *task)
 	return surface;
 }
 
-static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTask *task)
+static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTask *task)
 {
 	int dv, dr;
 	XEvent *ev;
@@ -1231,7 +1231,7 @@ static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTas
 		ce = &ev->xconfigure;
 		
 		if (ce->height == task->attr.height && ce->width == task->attr.width)
-			return;
+			return GDK_FILTER_CONTINUE;
 			
 		task->attr.width = ce->width;
 		task->attr.height = ce->height;
@@ -1242,7 +1242,7 @@ static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTas
 
 	}
 	
-	
+	return GDK_FILTER_CONTINUE;
 }
 static void light_task_create_widgets (LightTask *task)
 {
