@@ -165,6 +165,8 @@ lightdash_new (XfcePanelPlugin *plugin)
 	
 	lightdash->plugin = plugin;
 	
+	lightdash->button_title = NULL;
+	
 	lightdash_read (lightdash);
 		
 	lightdash->button = xfce_panel_create_toggle_button ();
