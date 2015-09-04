@@ -141,7 +141,7 @@ static void lightdash_read (LightdashPlugin *lightdash)
 		
 		if (G_LIKELY (rc != NULL))
 		{
-			value = xfce_rc_read_entry (rc, "button-title", BUTTON_TITLE_DEFAULT);
+			value = xfce_rc_read_entry (rc, "button-title", g_strdup (BUTTON_TITLE_DEFAULT));
 			lightdash->button_title = g_strdup (value);
 			lightdash->opacity = xfce_rc_read_int_entry (rc, "opacity", DEFAULT_OPACITY);
 			
@@ -152,7 +152,7 @@ static void lightdash_read (LightdashPlugin *lightdash)
 		
 	}
 	
-	lightdash->button_title = BUTTON_TITLE_DEFAULT;
+	lightdash->button_title = g_strdup (BUTTON_TITLE_DEFAULT);
 	lightdash->opacity = DEFAULT_OPACITY;
 }
 
