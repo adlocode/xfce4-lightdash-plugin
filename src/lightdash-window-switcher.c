@@ -1291,7 +1291,7 @@ static void light_task_create_widgets (LightTask *task)
 			
 			task->image = gtk_image_new_from_pixmap (task->gdk_pixmap, NULL);
 			
-			
+			/* Ignore damage events on its own window */
 			if (task->tasklist->parent_gdk_window && task->gdk_window != task->tasklist->parent_gdk_window)
 			{
 				task->damage = XDamageCreate (task->tasklist->dpy, 
