@@ -1013,8 +1013,10 @@ gboolean lightdash_window_switcher_image_expose (GtkWidget *widget, GdkEvent *ev
 		gtk_image_set_from_pixmap (GTK_IMAGE (task->image), task->gdk_pixmap, NULL);
 		
 		if (task->expose_tag)
-		g_signal_handler_disconnect (task->image, task->expose_tag);
-		task->expose_tag = 0;
+		{
+			g_signal_handler_disconnect (task->image, task->expose_tag);
+			task->expose_tag = 0;
+		}
 		
 		task->previous_height = task->image->allocation.height;
 		task->previous_width = task->image->allocation.width;
