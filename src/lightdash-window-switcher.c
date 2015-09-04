@@ -37,19 +37,19 @@
  * the parent application to perform actions based on these events.
  */
 
-static void my_tasklist_update_windows (MyTasklist *tasklist);
-static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window, MyTasklist *tasklist);
-static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window, MyTasklist *tasklist);
+static void my_tasklist_update_windows (LightdashWindowSwitcher *tasklist);
+static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window, LightdashWindowSwitcher *tasklist);
+static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window, LightdashWindowSwitcher *tasklist);
 static void my_tasklist_active_workspace_changed
-	(WnckScreen *screen, WnckWorkspace *previously_active_workspace, MyTasklist *tasklist);
+	(WnckScreen *screen, WnckWorkspace *previously_active_workspace, LightdashWindowSwitcher *tasklist);
 static void my_tasklist_on_name_changed (WnckWindow *window, GtkWidget *label);
-static void my_tasklist_window_workspace_changed (WnckWindow *window, MyTasklist *tasklist);
+static void my_tasklist_window_workspace_changed (WnckWindow *window, LightdashWindowSwitcher *tasklist);
 static void my_tasklist_window_state_changed
-	(WnckWindow *window, WnckWindowState changed_mask, WnckWindowState new_state, MyTasklist *tasklist);
-static void my_tasklist_screen_composited_changed (GdkScreen *screen, MyTasklist *tasklist);
+	(WnckWindow *window, WnckWindowState changed_mask, WnckWindowState new_state, LightdashWindowSwitcher *tasklist);
+static void my_tasklist_screen_composited_changed (GdkScreen *screen, LightdashWindowSwitcher *tasklist);
 static void my_tasklist_button_clicked (GtkButton *button, WnckWindow *window);
-static void my_tasklist_button_emit_click_signal (GtkButton *button, MyTasklist *tasklist);
-static void my_tasklist_free_skipped_windows (MyTasklist *tasklist);
+static void my_tasklist_button_emit_click_signal (GtkButton *button, LightdashWindowSwitcher *tasklist);
+static void my_tasklist_free_skipped_windows (LightdashWindowSwitcher *tasklist);
 static int lightdash_window_switcher_xhandler_xerror (Display *dpy, XErrorEvent *e);
 static gint my_tasklist_button_compare (gconstpointer a, gconstpointer b, gpointer data);
 static gboolean
@@ -76,7 +76,7 @@ struct _LightTask
 {
 	GObject parent_instance;
 	
-	MyTasklist *tasklist;
+	LightdashWindowSwitcher *tasklist;
 	
 	GtkWidget *button;
 	GtkWidget *image;
@@ -153,9 +153,9 @@ void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 	
 gboolean lightdash_window_switcher_image_expose (GtkWidget *widget, GdkEvent *event, LightTask *task);
 
-LightTask * get_task_from_window (MyTasklist *tasklist, WnckWindow *window);
+LightTask * get_task_from_window (LightdashWindowSwitcher *tasklist, WnckWindow *window);
 
-skipped_window * get_skipped_window (MyTasklist *tasklist, WnckWindow *window);
+skipped_window * get_skipped_window (LightdashWindowSwitcher *tasklist, WnckWindow *window);
 
 void lightdash_window_switcher_update_preview (LightTask *task, gint width, gint height);
 
@@ -264,7 +264,7 @@ static void light_task_finalize (GObject *object)
 }
 
 static LightTask *
-light_task_new_from_window (MyTasklist *tasklist, WnckWindow *window)
+light_task_new_from_window (LightdashWindowSwitcher *tasklist, WnckWindow *window)
 {
 	LightTask *task;
 	task = g_object_new (LIGHT_TASK_TYPE, NULL);
@@ -302,7 +302,7 @@ static gint my_tasklist_button_compare (gconstpointer task_a, gconstpointer task
 	return a->unique_id - b->unique_id;
 }
 
-static void my_tasklist_sort (MyTasklist *tasklist)
+static void my_tasklist_sort (LightdashWindowSwitcher *tasklist)
 {
 	tasklist->tasks = g_list_sort_with_data (tasklist->tasks,
 				my_tasklist_button_compare, tasklist);
@@ -335,7 +335,7 @@ enum {
 };
 
 static void my_tasklist_class_init (MyTasklistClass *klass);
-static void my_tasklist_init (MyTasklist *tasklist);
+static void my_tasklist_init (LightdashWindowSwitcher *tasklist);
 
 static guint task_button_clicked_signals[LAST_SIGNAL]={0};
 
@@ -357,7 +357,7 @@ GType my_tasklist_get_type (void)
 			(GClassInitFunc) my_tasklist_class_init,
 			NULL, /*class_finalize*/
 			NULL,
-			sizeof(MyTasklist),
+			sizeof(LightdashWindowSwitcher),
 			0,
 			(GInstanceInitFunc) my_tasklist_init,
 		};
@@ -400,7 +400,7 @@ static void my_tasklist_class_init (MyTasklistClass *klass)
 		G_TYPE_NONE, 0);
 	
 }
-static void lightdash_window_switcher_realize (MyTasklist *tasklist)
+static void lightdash_window_switcher_realize (LightdashWindowSwitcher *tasklist)
 {
 	GtkWidget *parent_gtk_widget;
 	
@@ -428,7 +428,7 @@ static void lightdash_window_switcher_realize (MyTasklist *tasklist)
                G_CALLBACK (my_tasklist_screen_composited_changed), tasklist);
 }
 	
-static void my_tasklist_init (MyTasklist *tasklist)
+static void my_tasklist_init (LightdashWindowSwitcher *tasklist)
 {
 	int dv, dr;
 	
@@ -512,7 +512,7 @@ static int lightdash_window_switcher_xhandler_xerror (Display *dpy, XErrorEvent 
 }
 
 static void
-my_tasklist_free_tasks (MyTasklist *tasklist)
+my_tasklist_free_tasks (LightdashWindowSwitcher *tasklist)
 {
 	GList *l;
 	if (tasklist->tasks)
@@ -557,7 +557,7 @@ my_tasklist_free_tasks (MyTasklist *tasklist)
 }
 
 static void
-my_tasklist_free_skipped_windows (MyTasklist *tasklist)
+my_tasklist_free_skipped_windows (LightdashWindowSwitcher *tasklist)
 
 {	
 	
@@ -585,7 +585,7 @@ my_tasklist_free_skipped_windows (MyTasklist *tasklist)
 	
 }
 
-LightTask * get_task_from_window (MyTasklist *tasklist, WnckWindow *window)
+LightTask * get_task_from_window (LightdashWindowSwitcher *tasklist, WnckWindow *window)
 {
 	GList *list;
 	
@@ -601,7 +601,7 @@ LightTask * get_task_from_window (MyTasklist *tasklist, WnckWindow *window)
 	return NULL;
 }
 
-skipped_window * get_skipped_window (MyTasklist *tasklist, WnckWindow *window)
+skipped_window * get_skipped_window (LightdashWindowSwitcher *tasklist, WnckWindow *window)
 {
 	GList *list;
 	
@@ -617,7 +617,7 @@ skipped_window * get_skipped_window (MyTasklist *tasklist, WnckWindow *window)
 	return NULL;
 }
 
-static void my_tasklist_attach_widget (LightTask *task, MyTasklist *tasklist)
+static void my_tasklist_attach_widget (LightTask *task, LightdashWindowSwitcher *tasklist)
 {
 	gtk_table_attach_defaults (GTK_TABLE(tasklist->table), task->button, tasklist->left_attach, 
 						tasklist->right_attach, tasklist->top_attach, tasklist->bottom_attach);
@@ -640,7 +640,7 @@ static void my_tasklist_attach_widget (LightTask *task, MyTasklist *tasklist)
 					}
 }
 
-static void my_tasklist_update_windows (MyTasklist *tasklist)
+static void my_tasklist_update_windows (LightdashWindowSwitcher *tasklist)
 {
 	GList *window_l;
 	WnckWindow *win;
@@ -711,7 +711,7 @@ static void my_tasklist_on_name_changed (WnckWindow *window, GtkWidget *label)
 	gtk_label_set_text (GTK_LABEL(label), name);
 }
 
-static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window, MyTasklist *tasklist)
+static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window, LightdashWindowSwitcher *tasklist)
 {
 	LightTask *task;
 	
@@ -746,7 +746,7 @@ static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window
 }
 
 
-static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window, MyTasklist *tasklist)
+static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window, LightdashWindowSwitcher *tasklist)
 {
 	LightTask *task;
 	skipped_window *skipped;
@@ -832,23 +832,23 @@ static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window
 }
 
 static void my_tasklist_active_workspace_changed
-	(WnckScreen *screen, WnckWorkspace *previously_active_workspace, MyTasklist *tasklist)
+	(WnckScreen *screen, WnckWorkspace *previously_active_workspace, LightdashWindowSwitcher *tasklist)
 {
 	my_tasklist_update_windows (tasklist);
 }
 
-static void my_tasklist_window_workspace_changed (WnckWindow *window, MyTasklist *tasklist)
+static void my_tasklist_window_workspace_changed (WnckWindow *window, LightdashWindowSwitcher *tasklist)
 {
 	my_tasklist_update_windows (tasklist);
 }
 
-static void my_tasklist_screen_composited_changed (GdkScreen *screen, MyTasklist *tasklist)
+static void my_tasklist_screen_composited_changed (GdkScreen *screen, LightdashWindowSwitcher *tasklist)
 {
 	tasklist->composited = gdk_screen_is_composited (tasklist->gdk_screen);
 }
 
 static void my_tasklist_window_state_changed
-	(WnckWindow *window, WnckWindowState changed_mask, WnckWindowState new_state, MyTasklist *tasklist)
+	(WnckWindow *window, WnckWindowState changed_mask, WnckWindowState new_state, LightdashWindowSwitcher *tasklist)
 {
 	if (changed_mask & WNCK_WINDOW_STATE_SKIP_TASKLIST)
 	{
@@ -869,7 +869,7 @@ static void my_tasklist_button_clicked (GtkButton *button, WnckWindow *window)
 	
 }
 
-static void my_tasklist_button_emit_click_signal (GtkButton *button, MyTasklist *tasklist)
+static void my_tasklist_button_emit_click_signal (GtkButton *button, LightdashWindowSwitcher *tasklist)
 {
 	g_signal_emit_by_name (tasklist, "task-button-clicked");
 	

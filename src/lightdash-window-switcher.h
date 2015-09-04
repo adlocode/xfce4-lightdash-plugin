@@ -33,9 +33,9 @@ G_BEGIN_DECLS
 #define IS_MY_TASKLIST (obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), MY_TASKLIST_TYPE))
 #define IS_MY_TASKLIST_CLASS(klass), (G_TYPE_CHECK_CLASS_TYPE ((klass), MY_TASKLIST_TYPE))
 
-typedef struct _MyTasklist MyTasklist;
+typedef struct _MyTasklist LightdashWindowSwitcher;
 typedef struct _MyTasklistClass MyTasklistClass;
-typedef MyTasklist LightdashWindowSwitcher;
+typedef LightdashWindowSwitcher MyTasklist;
 
 struct _MyTasklist
 {
