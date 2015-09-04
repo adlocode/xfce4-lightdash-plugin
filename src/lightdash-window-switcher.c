@@ -947,7 +947,8 @@ void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 		}
 		
 		
-		lightdash_window_switcher_update_preview (task, task->image->allocation.width, task->image->allocation.height);
+		lightdash_window_switcher_update_preview (task, task->image->allocation.width,
+							task->image->allocation.height);
 		
 		gdk_pixmap_get_size (task->gdk_pixmap, &pixmap_width, NULL);
 
@@ -981,7 +982,8 @@ void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 				
 
 		
-		if (table_area != 0 && task->tasklist->update_complete && task->tasklist->table_columns > DEFAULT_TABLE_COLUMNS 
+		if (table_area != 0 && task->tasklist->update_complete 
+			&& task->tasklist->table_columns > DEFAULT_TABLE_COLUMNS 
 			&& (total_buttons_area / table_area < 0.4))
 
 			{
@@ -1002,7 +1004,8 @@ gboolean lightdash_window_switcher_image_expose (GtkWidget *widget, GdkEvent *ev
 {
 		gint pixmap_width;
 	
-		lightdash_window_switcher_update_preview (task, task->image->allocation.width, task->image->allocation.height);
+		lightdash_window_switcher_update_preview (task, task->image->allocation.width,
+							task->image->allocation.height);
 		
 
 		gdk_pixmap_get_size (task->gdk_pixmap, &pixmap_width, NULL);
@@ -1217,7 +1220,8 @@ static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTas
 	
 	XDamageSubtract (task->tasklist->dpy, e->damage, None, None);
 	
-	lightdash_window_switcher_update_preview (task, task->image->allocation.width, task->image->allocation.height);
+	lightdash_window_switcher_update_preview (task, task->image->allocation.width,
+										task->image->allocation.height);
 	
 	gdk_pixmap_get_size (task->gdk_pixmap, &pixmap_width, NULL);
 	
@@ -1233,7 +1237,8 @@ static void lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTas
 		task->attr.height = ce->height;
 		cairo_surface_destroy (task->surface);
 		task->surface = lightdash_window_switcher_get_window_picture (task);
-		lightdash_window_switcher_update_preview (task, task->image->allocation.width, task->image->allocation.height);
+		lightdash_window_switcher_update_preview (task, task->image->allocation.width,
+							task->image->allocation.height);
 
 	}
 	
@@ -1289,7 +1294,9 @@ static void light_task_create_widgets (LightTask *task)
 			
 			if (task->tasklist->parent_gdk_window && task->gdk_window != task->tasklist->parent_gdk_window)
 			{
-				task->damage = XDamageCreate (task->tasklist->dpy, task->xid, XDamageReportDeltaRectangles);
+				task->damage = XDamageCreate (task->tasklist->dpy, 
+									task->xid, 
+									XDamageReportDeltaRectangles);
 				XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
 				gdk_window_add_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
 			}
