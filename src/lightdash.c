@@ -40,6 +40,9 @@
 #include <src/appfinder-private.h>
 #include <src/appfinder-model.h>
 
+#define BUTTON_TITLE_DEFAULT _("Activities")
+#define DEFAULT_OPACITY 94
+
 static gboolean            opt_collapsed = FALSE;
 
 
@@ -95,6 +98,64 @@ lightdash_construct (XfcePanelPlugin *plugin);
 
 XFCE_PANEL_PLUGIN_REGISTER (lightdash_construct);
 
+void lightdash_save (XfcePanelPlugin *plugin, LightdashPlugin *lightdash)
+{
+	XfceRc *rc;
+	gchar *file;
+	
+	file = xfce_panel_plugin_save_location (plugin, TRUE);
+	
+	if (G_UNLIKELY (file == NULL))
+	{
+		return;
+	}
+	
+	rc = xfce_rc_simple_open (file, FALSE);
+	g_free (file);
+	
+	if (G_LIKELY (rc != NULL))
+	{
+		if (lightdash->button_title)
+			xfce_rc_write_entry (rc, "button-title", lightdash->button_title);
+				
+			xfce_rc_write_int_entry (rc, "opacity", lightdash->opacity);
+			
+			xfce_rc_close (rc);
+		
+	}
+}
+
+static void lightdash_read (LightdashPlugin *lightdash)
+{
+	XfceRc *rc;
+	gchar *file;
+	const gchar *value;
+	
+	file = xfce_panel_plugin_save_location (lightdash->plugin, TRUE);
+	
+	if (G_LIKELY (file != NULL))
+	{
+		rc = xfce_rc_simple_open (file, TRUE);
+		
+		g_free (file);
+		
+		if (G_LIKELY (rc != NULL))
+		{
+			value = xfce_rc_read_entry (rc, "button-title", BUTTON_TITLE_DEFAULT);
+			lightdash->button_title = g_strdup (value);
+			lightdash->opacity = xfce_rc_read_int_entry (rc, "opacity", DEFAULT_OPACITY);
+			
+			xfce_rc_close (rc);
+			
+			return;
+		}
+		
+	}
+	
+	lightdash->button_title = BUTTON_TITLE_DEFAULT;
+	lightdash->opacity = DEFAULT_OPACITY;
+}
+
 static LightdashPlugin *
 lightdash_new (XfcePanelPlugin *plugin)
 {
@@ -104,15 +165,15 @@ lightdash_new (XfcePanelPlugin *plugin)
 	
 	lightdash->plugin = plugin;
 	
+	lightdash_read (lightdash);
+		
 	lightdash->button = xfce_panel_create_toggle_button ();
+	lightdash->button_label = gtk_label_new (lightdash->button_title);
 	
-	lightdash->button_label = gtk_label_new (_("Activities"));
-	
-	lightdash->opacity = 94;
+	lightdash->opacity = DEFAULT_OPACITY;
 	
 	gtk_container_add (GTK_CONTAINER (lightdash->button), (lightdash->button_label));
 	gtk_widget_show (lightdash->button_label);
-	
 	gtk_container_add (GTK_CONTAINER (plugin), lightdash->button);
 	
 	gtk_widget_show_all (lightdash->button);
@@ -124,8 +185,10 @@ static void
 lightdash_free (XfcePanelPlugin *plugin,
 				LightdashPlugin *lightdash)
 {
-	panel_slice_free (LightdashPlugin, lightdash);
+	if (G_LIKELY (lightdash->button_title != NULL))
+		g_free (lightdash->button_title);
 	
+	panel_slice_free (LightdashPlugin, lightdash);
 }
 
 static gboolean
@@ -207,10 +270,13 @@ lightdash_construct (XfcePanelPlugin *plugin)
 	xfce_panel_plugin_menu_show_configure (plugin);
 	
 	g_signal_connect (G_OBJECT (plugin), "free-data",
-						G_CALLBACK (lightdash_free), lightdash);
+					G_CALLBACK (lightdash_free), lightdash);
+						
+	g_signal_connect (G_OBJECT (plugin), "save",
+					G_CALLBACK (lightdash_save), lightdash);
 						
 	g_signal_connect (G_OBJECT (lightdash->button), "toggled",
-						G_CALLBACK (lightdash_button_clicked), lightdash);
+					G_CALLBACK (lightdash_button_clicked), lightdash);
 						
 	g_signal_connect (G_OBJECT (plugin), "size-changed",
                     G_CALLBACK (lightdash_size_changed), lightdash);

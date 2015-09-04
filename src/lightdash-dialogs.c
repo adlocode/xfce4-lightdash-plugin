@@ -44,6 +44,7 @@ static void lightdash_preferences_entry_changed (GtkEditable *editable, Lightdas
 {
 	const gchar *text = gtk_entry_get_text (GTK_ENTRY (editable));
 	gtk_label_set_text (GTK_LABEL (lightdash->button_label), text);
+	lightdash->button_title = g_strdup (text);
 }
 				
 void lightdash_configure (XfcePanelPlugin *plugin,

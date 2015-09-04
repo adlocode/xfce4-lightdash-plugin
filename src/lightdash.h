@@ -33,6 +33,7 @@ typedef struct
 	GtkWidget *lightdash_window;
 	
 	guint opacity;
+	char *button_title;
 	
 }LightdashPlugin;
 
