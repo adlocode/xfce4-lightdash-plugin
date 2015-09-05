@@ -1045,13 +1045,13 @@ xfce_appfinder_window_view (XfceAppfinderWindow *window)
   else
     {
       #if GTK_CHECK_VERSION (3, 0, 0)
-      window->view = view = gtk_tree_view_new ();
+      window->view = view = gtk_tree_view_new_with_model (filter_model);
       gtk_tree_view_set_activate_on_single_click (GTK_TREE_VIEW (view), TRUE);
       #else
       window->view = view = GTK_WIDGET (exo_tree_view_new ());
+      gtk_tree_view_set_model (GTK_TREE_VIEW (view), filter_model);
       exo_tree_view_set_single_click (EXO_TREE_VIEW (view), TRUE);
       #endif
-      gtk_tree_view_set_model (GTK_TREE_VIEW (view), filter_model);
       gtk_tree_view_set_hover_selection (GTK_TREE_VIEW (view), TRUE);
       gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (view), FALSE);
       gtk_tree_view_set_enable_search (GTK_TREE_VIEW (view), FALSE);
