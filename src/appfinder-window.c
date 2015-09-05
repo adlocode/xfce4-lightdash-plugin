@@ -1024,8 +1024,13 @@ xfce_appfinder_window_view (XfceAppfinderWindow *window)
 
   if (icon_view)
     {
+      #if GTK_CHECK_VERSION (3, 0, 0)
+      window->view = view = gtk_icon_view_new_with_model (filter_model);
+      gtk_icon_view_set_activate_on_single_click (GTK_ICON_VIEW (view), TRUE);
+      #else
       window->view = view = exo_icon_view_new_with_model (filter_model);
       exo_icon_view_set_single_click (EXO_ICON_VIEW (view), TRUE);
+      #endif
       gtk_icon_view_set_selection_mode (GTK_ICON_VIEW (view), GTK_SELECTION_BROWSE);
       gtk_icon_view_set_pixbuf_column (GTK_ICON_VIEW (view), XFCE_APPFINDER_MODEL_COLUMN_ICON);
       gtk_icon_view_set_text_column (GTK_ICON_VIEW (view), XFCE_APPFINDER_MODEL_COLUMN_TITLE);
@@ -1039,9 +1044,14 @@ xfce_appfinder_window_view (XfceAppfinderWindow *window)
     }
   else
     {
+      #if GTK_CHECK_VERSION (3, 0, 0)
+      window->view = view = gtk_tree_view_new ();
+      gtk_tree_view_set_activate_on_single_click (GTK_TREE_VIEW (view), TRUE);
+      #else
       window->view = view = GTK_WIDGET (exo_tree_view_new ());
-      gtk_tree_view_set_model (GTK_TREE_VIEW (view), filter_model);
       exo_tree_view_set_single_click (EXO_TREE_VIEW (view), TRUE);
+      #endif
+      gtk_tree_view_set_model (GTK_TREE_VIEW (view), filter_model);
       gtk_tree_view_set_hover_selection (GTK_TREE_VIEW (view), TRUE);
       gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (view), FALSE);
       gtk_tree_view_set_enable_search (GTK_TREE_VIEW (view), FALSE);
