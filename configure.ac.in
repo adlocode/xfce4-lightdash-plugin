@@ -73,6 +73,9 @@ AC_DEFINE([WNCK_I_KNOW_THIS_IS_UNSTABLE], [1], [wnck])
 dnl ***********************************
 dnl *** Check for required packages ***
 dnl ***********************************
+AC_CHECK_LIBM
+AC_SUBST(LIBM)
+
 XDT_CHECK_PACKAGE([GLIB], [glib-2.0], [2.30.0])
 XDT_CHECK_PACKAGE([GTHREAD], [gthread-2.0], [2.30.0])
 XDT_CHECK_PACKAGE([GIO], [gio-2.0], [2.30.0])

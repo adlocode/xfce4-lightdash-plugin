@@ -41,7 +41,7 @@
 #include <src/appfinder-model.h>
 
 #define BUTTON_TITLE_DEFAULT _("Activities")
-#define DEFAULT_OPACITY 94
+#define DEFAULT_OPACITY 93
 
 static gboolean            opt_collapsed = FALSE;
 

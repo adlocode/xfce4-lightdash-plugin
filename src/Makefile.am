@@ -71,6 +71,7 @@ liblightdash_la_LIBADD = \
 	$(XCOMPOSITE_LIBS) \
 	$(XRENDER_LIBS) \
 	$(XDAMAGE_LIBS) \
+	$(LIBM) \
 	$(CAIRO_XLIB_XRENDER_LIBS)
 
 liblightdash_la_LDFLAGS = \

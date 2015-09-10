@@ -9,7 +9,7 @@
 /* always defined to indicate that i18n is enabled */
 #undef ENABLE_NLS
 
-/* "UTF-8" */
+/* Name of default gettext domain */
 #undef GETTEXT_PACKAGE
 
 /* Define to 1 if you have the `bind_textdomain_codeset' function. */
@@ -35,6 +35,9 @@
 
 /* Define if your <locale.h> file defines LC_MESSAGES. */
 #undef HAVE_LC_MESSAGES
+
+/* Define to 1 if you have the `m' library (-lm). */
+#undef HAVE_LIBM
 
 /* Define to 1 if you have the <locale.h> header file. */
 #undef HAVE_LOCALE_H

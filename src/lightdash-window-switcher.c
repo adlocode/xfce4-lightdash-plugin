@@ -27,6 +27,7 @@
 #include <cairo/cairo-xlib.h>
 #include <cairo/cairo-xlib-xrender.h>
 #include <stdlib.h>
+#include <math.h>
 #include "lightdash-window-switcher.h"
 
 #define DEFAULT_TABLE_COLUMNS 3
@@ -59,7 +60,8 @@ static void
 lightdash_window_switcher_drag_data_received_handl
 (GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *selection_data, 
 	guint target_type, guint time);
-
+void lightdash_window_switcher_update_rows_and_columns (LightdashWindowSwitcher *tasklist);
+void lightdash_window_switcher_reattach_widgets (LightdashWindowSwitcher *tasklist);
 
 #define LIGHT_TASK_TYPE (light_task_get_type())
 #define LIGHT_TASK(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), LIGHT_TASK_TYPE, LightTask))
@@ -714,6 +716,7 @@ static void my_tasklist_on_name_changed (WnckWindow *window, GtkWidget *label)
 static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window, LightdashWindowSwitcher *tasklist)
 {
 	LightTask *task;
+	gint rows, columns;
 	
 	if (wnck_window_is_skip_tasklist (window))
 	{
@@ -739,7 +742,18 @@ static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window
 		
 		tasklist->window_counter++;
 		
-		g_print ("%d", tasklist->window_counter);
+		rows = tasklist->table_rows;
+		columns = tasklist->table_columns;
+		
+		lightdash_window_switcher_update_rows_and_columns (tasklist);
+		
+		if (tasklist->table_columns != columns)
+		{
+			my_tasklist_sort (tasklist);
+			lightdash_window_switcher_reattach_widgets (tasklist);
+		}
+		
+		//g_print ("%d", tasklist->window_counter);
 	}
 						
 
@@ -750,7 +764,7 @@ static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window
 {
 	LightTask *task;
 	skipped_window *skipped;
-	GList *li;
+
 	
 	if (wnck_window_is_skip_tasklist (window))
 	{
@@ -762,7 +776,7 @@ static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window
 			tasklist->skipped_windows = g_list_remove (tasklist->skipped_windows, 
 				(gconstpointer) skipped);		
 					
-			g_print ("%s", wnck_window_get_name (skipped->window));
+			//g_print ("%s", wnck_window_get_name (skipped->window));
 			g_signal_handler_disconnect (skipped->window, skipped->tag);
 			g_object_unref (skipped->window);
 			g_free (skipped);
@@ -770,7 +784,7 @@ static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window
 			
 
 		
-			g_print ("%s", "free skipped window \n");
+			//g_print ("%s", "free skipped window \n");
 			return;
 		}	
 	}
@@ -800,29 +814,12 @@ static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window
 			task = NULL;
 		
 			my_tasklist_sort (tasklist);
+			
+			lightdash_window_switcher_update_rows_and_columns (tasklist);
+			
+			lightdash_window_switcher_reattach_widgets (tasklist);
 		
-			tasklist->left_attach =0;	
-			tasklist->right_attach=1;		
-			tasklist->top_attach=0;		
-			tasklist->bottom_attach=1;
-		
-			for (li = tasklist->tasks; li != NULL; li = li->next)
-			{
-				task = (LightTask *)li->data;
-				g_print ("%s", "\n id:");
-				g_print ("%d", task->unique_id);
-				if (wnck_window_is_on_workspace (task->window, wnck_screen_get_active_workspace (tasklist->screen)))
-				{
-					g_object_ref (task->button);
-					gtk_container_remove (GTK_CONTAINER (tasklist->table), task->button);
-					
-					my_tasklist_attach_widget (task, tasklist);
-					g_object_unref (task->button);
-				}
-				
-				
-	
-			}
+			
 		gtk_table_resize (GTK_TABLE(tasklist->table), tasklist->table_rows, tasklist->table_columns);
 		gtk_widget_queue_resize (GTK_WIDGET(tasklist));
 	}
@@ -917,6 +914,51 @@ void lightdash_window_switcher_update_preview (LightTask *task, gint width, gint
 		cairo_destroy (cr);
 				
 }
+
+void lightdash_window_switcher_update_rows_and_columns (LightdashWindowSwitcher *tasklist)
+{
+	gint rows, columns;
+	
+	columns = ceil (sqrt ((double)tasklist->window_counter));
+	rows = ceil ((double)tasklist->window_counter / (double)tasklist->table_columns);
+	
+	if (columns == 1)
+		columns = 2;
+	if (rows == 1)
+		rows = 2;
+	
+	tasklist->table_columns = columns;
+	tasklist->table_rows = rows;
+}
+
+void lightdash_window_switcher_reattach_widgets (LightdashWindowSwitcher *tasklist)
+{
+		GList *li;
+		LightTask *task;
+		
+		tasklist->left_attach =0;	
+		tasklist->right_attach=1;		
+		tasklist->top_attach=0;		
+		tasklist->bottom_attach=1;
+		
+		for (li = tasklist->tasks; li != NULL; li = li->next)
+		{
+			task = (LightTask *)li->data;
+			g_print ("%s", "\n id:");
+			g_print ("%d", task->unique_id);
+			if (wnck_window_is_on_workspace (task->window, wnck_screen_get_active_workspace (tasklist->screen)))
+			{
+				g_object_ref (task->button);
+				gtk_container_remove (GTK_CONTAINER (tasklist->table), task->button);
+					
+				my_tasklist_attach_widget (task, tasklist);
+				g_object_unref (task->button);
+			}
+				
+				
+	
+			}
+}
 	
 void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 	GdkRectangle *allocation, LightTask *task)
@@ -950,52 +992,7 @@ void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 		lightdash_window_switcher_update_preview (task, task->image->allocation.width,
 							task->image->allocation.height);
 		
-		gdk_pixmap_get_size (task->gdk_pixmap, &pixmap_width, NULL);
-
-		
-		if (task->button->allocation.height)
-		aspect_ratio = (gfloat)task->button->allocation.width/(gfloat)task->button->allocation.height;
-		else
-		aspect_ratio = 0;
-		
-		if ((aspect_ratio >= 4.0) 
-			&!task->tasklist->adjusted)
-			{
-				task->tasklist->table_columns++;
-				task->tasklist->adjusted = TRUE;
-			}
-
-		
-		
-			
-		total_buttons_area = (gfloat)task->button->allocation.width 
-			* (gfloat)task->button->allocation.height
-			* (gfloat)task->tasklist->window_counter;
-			
-		table_area = (gfloat)task->tasklist->table->allocation.width 
-			* (gfloat)task->tasklist->table->allocation.height;	
-		
-		//g_print ("%s", wnck_window_get_name (task->window));
-		//g_print ("%s", " ");
-		//g_print ("%f", total_buttons_area / table_area);
-		//g_print ("%s", " ");	
-				
-
-		
-		if (table_area != 0 && task->tasklist->update_complete 
-			&& task->tasklist->table_columns > DEFAULT_TABLE_COLUMNS 
-			&& (total_buttons_area / table_area < 0.4))
-
-			{
-				task->tasklist->table_columns--;
-				task->tasklist->adjusted = FALSE;		
-				
-				
-			}
-		
-		task->previous_height = task->image->allocation.height;
-		task->previous_width = task->image->allocation.width;
-		
+		gtk_widget_queue_resize (GTK_WIDGET (task->tasklist));
 		task->scaled = TRUE;
 			
 }
@@ -1249,16 +1246,16 @@ static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *even
 static void light_task_create_widgets (LightTask *task)
 {
 	static const GtkTargetEntry targets [] = { {"application/x-wnck-window-id",0,0} };
-	
+	gfloat aspect_ratio;
 	task->tasklist->unique_id_counter++;
 	
 	task->gdk_pixmap = NULL;
 	
 	task->unique_id = task->tasklist->unique_id_counter;
 	
-	g_print ("%s", "id:");
-	g_print ("%d", task->unique_id);
-	g_print ("%s", "\n");
+	//g_print ("%s", "id:");
+	//g_print ("%d", task->unique_id);
+	//g_print ("%s", "\n");
 	
 	task->label = gtk_label_new (wnck_window_get_name (task->window));
 	
@@ -1303,7 +1300,8 @@ static void light_task_create_widgets (LightTask *task)
 				gdk_window_add_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
 			}
 			
-			
+	
+
 			
 		}
 		
