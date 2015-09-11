@@ -922,9 +922,9 @@ void lightdash_window_switcher_update_rows_and_columns (LightdashWindowSwitcher 
 	columns = ceil (sqrt ((double)tasklist->window_counter));
 	rows = ceil ((double)tasklist->window_counter / (double)tasklist->table_columns);
 	
-	if (columns == 1)
+	if (columns < 2)
 		columns = 2;
-	if (rows == 1)
+	if (rows < 2)
 		rows = 2;
 	
 	tasklist->table_columns = columns;
