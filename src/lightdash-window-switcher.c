@@ -700,7 +700,10 @@ static void my_tasklist_update_windows (LightdashWindowSwitcher *tasklist)
 		
 
 	}
-	
+	my_tasklist_sort (tasklist);
+	lightdash_window_switcher_update_rows_and_columns (tasklist);
+	lightdash_window_switcher_reattach_widgets (tasklist);
+	gtk_table_resize (GTK_TABLE (tasklist->table), tasklist->table_rows, tasklist->table_columns);
 	tasklist->update_complete = TRUE;
 	
 	
@@ -751,6 +754,7 @@ static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window
 		{
 			my_tasklist_sort (tasklist);
 			lightdash_window_switcher_reattach_widgets (tasklist);
+			gtk_table_resize (GTK_TABLE (tasklist->table), tasklist->table_rows, tasklist->table_columns);
 		}
 		
 		//g_print ("%d", tasklist->window_counter);
