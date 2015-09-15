@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "lightdash-window-switcher.h"
+#include "table-layout.h"
 
 #define DEFAULT_TABLE_COLUMNS 3
 #define DEFAULT_TABLE_ROWS 2
@@ -38,30 +39,29 @@
  * the parent application to perform actions based on these events.
  */
 
-static void my_tasklist_update_windows (LightdashWindowSwitcher *tasklist);
-static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window, LightdashWindowSwitcher *tasklist);
-static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window, LightdashWindowSwitcher *tasklist);
+static void my_tasklist_update_windows (LightdashWindowsView *tasklist);
+static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window, LightdashWindowsView *tasklist);
+static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window, LightdashWindowsView *tasklist);
 static void my_tasklist_active_workspace_changed
-	(WnckScreen *screen, WnckWorkspace *previously_active_workspace, LightdashWindowSwitcher *tasklist);
+	(WnckScreen *screen, WnckWorkspace *previously_active_workspace, LightdashWindowsView *tasklist);
 static void my_tasklist_on_name_changed (WnckWindow *window, GtkWidget *label);
-static void my_tasklist_window_workspace_changed (WnckWindow *window, LightdashWindowSwitcher *tasklist);
+static void my_tasklist_window_workspace_changed (WnckWindow *window, LightdashWindowsView *tasklist);
 static void my_tasklist_window_state_changed
-	(WnckWindow *window, WnckWindowState changed_mask, WnckWindowState new_state, LightdashWindowSwitcher *tasklist);
-static void my_tasklist_screen_composited_changed (GdkScreen *screen, LightdashWindowSwitcher *tasklist);
+	(WnckWindow *window, WnckWindowState changed_mask, WnckWindowState new_state, LightdashWindowsView *tasklist);
+static void my_tasklist_screen_composited_changed (GdkScreen *screen, LightdashWindowsView *tasklist);
 static void my_tasklist_button_clicked (GtkButton *button, WnckWindow *window);
-static void my_tasklist_button_emit_click_signal (GtkButton *button, LightdashWindowSwitcher *tasklist);
-static void my_tasklist_free_skipped_windows (LightdashWindowSwitcher *tasklist);
-static int lightdash_window_switcher_xhandler_xerror (Display *dpy, XErrorEvent *e);
+static void my_tasklist_button_emit_click_signal (GtkButton *button, LightdashWindowsView *tasklist);
+static void my_tasklist_free_skipped_windows (LightdashWindowsView *tasklist);
+static int lightdash_windows_view_xhandler_xerror (Display *dpy, XErrorEvent *e);
 static gint my_tasklist_button_compare (gconstpointer a, gconstpointer b, gpointer data);
 static gboolean
-lightdash_window_switcher_drag_drop_handl
+lightdash_windows_view_drag_drop_handl
 (GtkWidget *widget, GdkDragContext *context, gint x, gint y, guint time);
 static void
-lightdash_window_switcher_drag_data_received_handl
+lightdash_windows_view_drag_data_received_handl
 (GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *selection_data, 
 	guint target_type, guint time);
-void lightdash_window_switcher_update_rows_and_columns (LightdashWindowSwitcher *tasklist);
-void lightdash_window_switcher_reattach_widgets (LightdashWindowSwitcher *tasklist);
+void lightdash_windows_view_reattach_widgets (LightdashWindowsView *tasklist);
 
 #define LIGHT_TASK_TYPE (light_task_get_type())
 #define LIGHT_TASK(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), LIGHT_TASK_TYPE, LightTask))
@@ -78,7 +78,7 @@ struct _LightTask
 {
 	GObject parent_instance;
 	
-	LightdashWindowSwitcher *tasklist;
+	LightdashWindowsView *tasklist;
 	
 	GtkWidget *button;
 	GtkWidget *image;
@@ -90,8 +90,6 @@ struct _LightTask
 	Window xid;
 	const GtkTargetEntry target;
 	GdkPixbuf *pixbuf;
-	
-	Picture picture;
 	
 	gboolean preview_created;
 	gboolean scaled;
@@ -147,26 +145,26 @@ static void my_tasklist_drag_data_get_handl
 
 static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTask *task);
 
-void lightdash_window_switcher_button_check_allocate_signal (GtkWidget *widget, GdkRectangle *allocation,
+void lightdash_windows_view_button_check_allocate_signal (GtkWidget *widget, GdkRectangle *allocation,
 LightTask *task);
 
-void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
+void lightdash_windows_view_button_size_changed (GtkWidget *widget,
 	GdkRectangle *allocation, LightTask *task);
 	
-gboolean lightdash_window_switcher_image_expose (GtkWidget *widget, GdkEvent *event, LightTask *task);
+gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEvent *event, LightTask *task);
 
-LightTask * get_task_from_window (LightdashWindowSwitcher *tasklist, WnckWindow *window);
+LightTask * get_task_from_window (LightdashWindowsView *tasklist, WnckWindow *window);
 
-skipped_window * get_skipped_window (LightdashWindowSwitcher *tasklist, WnckWindow *window);
+skipped_window * get_skipped_window (LightdashWindowsView *tasklist, WnckWindow *window);
 
-void lightdash_window_switcher_update_preview (LightTask *task, gint width, gint height);
+void lightdash_windows_view_update_preview (LightTask *task, gint width, gint height);
 
 cairo_surface_t *
-lightdash_window_switcher_get_window_picture (LightTask *task);
+lightdash_windows_view_get_window_picture (LightTask *task);
 
-void lightdash_window_switcher_redirect_window (LightTask *task);
+void lightdash_windows_view_redirect_window (LightTask *task);
 
-void lightdash_window_switcher_draw_symbolic_window_rectangle (LightTask *task, gint width, gint height);
+void lightdash_windows_view_draw_symbolic_window_rectangle (LightTask *task, gint width, gint height);
 
 //****************
 
@@ -266,7 +264,7 @@ static void light_task_finalize (GObject *object)
 }
 
 static LightTask *
-light_task_new_from_window (LightdashWindowSwitcher *tasklist, WnckWindow *window)
+light_task_new_from_window (LightdashWindowsView *tasklist, WnckWindow *window)
 {
 	LightTask *task;
 	task = g_object_new (LIGHT_TASK_TYPE, NULL);
@@ -304,7 +302,7 @@ static gint my_tasklist_button_compare (gconstpointer task_a, gconstpointer task
 	return a->unique_id - b->unique_id;
 }
 
-static void my_tasklist_sort (LightdashWindowSwitcher *tasklist)
+static void my_tasklist_sort (LightdashWindowsView *tasklist)
 {
 	tasklist->tasks = g_list_sort_with_data (tasklist->tasks,
 				my_tasklist_button_compare, tasklist);
@@ -337,7 +335,7 @@ enum {
 };
 
 static void my_tasklist_class_init (MyTasklistClass *klass);
-static void my_tasklist_init (LightdashWindowSwitcher *tasklist);
+static void my_tasklist_init (LightdashWindowsView *tasklist);
 
 static guint task_button_clicked_signals[LAST_SIGNAL]={0};
 
@@ -359,7 +357,7 @@ GType my_tasklist_get_type (void)
 			(GClassInitFunc) my_tasklist_class_init,
 			NULL, /*class_finalize*/
 			NULL,
-			sizeof(LightdashWindowSwitcher),
+			sizeof(LightdashWindowsView),
 			0,
 			(GInstanceInitFunc) my_tasklist_init,
 		};
@@ -402,7 +400,7 @@ static void my_tasklist_class_init (MyTasklistClass *klass)
 		G_TYPE_NONE, 0);
 	
 }
-static void lightdash_window_switcher_realize (LightdashWindowSwitcher *tasklist)
+static void lightdash_windows_view_realize (LightdashWindowsView *tasklist)
 {
 	GtkWidget *parent_gtk_widget;
 	
@@ -430,7 +428,7 @@ static void lightdash_window_switcher_realize (LightdashWindowSwitcher *tasklist
                G_CALLBACK (my_tasklist_screen_composited_changed), tasklist);
 }
 	
-static void my_tasklist_init (LightdashWindowSwitcher *tasklist)
+static void my_tasklist_init (LightdashWindowsView *tasklist)
 {
 	int dv, dr;
 	
@@ -467,10 +465,10 @@ static void my_tasklist_init (LightdashWindowSwitcher *tasklist)
 		targets, G_N_ELEMENTS (targets), GDK_ACTION_MOVE);
 	
 	g_signal_connect (GTK_WIDGET (tasklist), "drag-drop",
-		G_CALLBACK (lightdash_window_switcher_drag_drop_handl), NULL);
+		G_CALLBACK (lightdash_windows_view_drag_drop_handl), NULL);
 		
 	g_signal_connect (GTK_WIDGET (tasklist), "drag-data-received",
-		G_CALLBACK (lightdash_window_switcher_drag_data_received_handl), NULL);
+		G_CALLBACK (lightdash_windows_view_drag_data_received_handl), NULL);
 	
 	
 	gtk_widget_show (tasklist->table);
@@ -478,7 +476,7 @@ static void my_tasklist_init (LightdashWindowSwitcher *tasklist)
 	tasklist->gdk_screen = gdk_screen_get_default ();
 	tasklist->dpy = gdk_x11_get_default_xdisplay ();
 	
-	XSetErrorHandler (lightdash_window_switcher_xhandler_xerror);
+	XSetErrorHandler (lightdash_windows_view_xhandler_xerror);
 	
 	tasklist->composited = gdk_screen_is_composited (tasklist->gdk_screen);
 	
@@ -489,7 +487,7 @@ static void my_tasklist_init (LightdashWindowSwitcher *tasklist)
 	wnck_screen_force_update (tasklist->screen);
 	
 	g_signal_connect (G_OBJECT (tasklist), "realize",
-                G_CALLBACK (lightdash_window_switcher_realize), tasklist);
+                G_CALLBACK (lightdash_windows_view_realize), tasklist);
            
 
 }
@@ -499,7 +497,7 @@ GtkWidget* lightdash_window_switcher_new (void)
 	return GTK_WIDGET(g_object_new (my_tasklist_get_type (), NULL));
 }
 
-static int lightdash_window_switcher_xhandler_xerror (Display *dpy, XErrorEvent *e)
+static int lightdash_windows_view_xhandler_xerror (Display *dpy, XErrorEvent *e)
 {
 	gchar text [64];
 	
@@ -514,7 +512,7 @@ static int lightdash_window_switcher_xhandler_xerror (Display *dpy, XErrorEvent 
 }
 
 static void
-my_tasklist_free_tasks (LightdashWindowSwitcher *tasklist)
+my_tasklist_free_tasks (LightdashWindowsView *tasklist)
 {
 	GList *l;
 	if (tasklist->tasks)
@@ -559,7 +557,7 @@ my_tasklist_free_tasks (LightdashWindowSwitcher *tasklist)
 }
 
 static void
-my_tasklist_free_skipped_windows (LightdashWindowSwitcher *tasklist)
+my_tasklist_free_skipped_windows (LightdashWindowsView *tasklist)
 
 {	
 	
@@ -587,7 +585,7 @@ my_tasklist_free_skipped_windows (LightdashWindowSwitcher *tasklist)
 	
 }
 
-LightTask * get_task_from_window (LightdashWindowSwitcher *tasklist, WnckWindow *window)
+LightTask * get_task_from_window (LightdashWindowsView *tasklist, WnckWindow *window)
 {
 	GList *list;
 	
@@ -603,7 +601,7 @@ LightTask * get_task_from_window (LightdashWindowSwitcher *tasklist, WnckWindow 
 	return NULL;
 }
 
-skipped_window * get_skipped_window (LightdashWindowSwitcher *tasklist, WnckWindow *window)
+skipped_window * get_skipped_window (LightdashWindowsView *tasklist, WnckWindow *window)
 {
 	GList *list;
 	
@@ -619,30 +617,9 @@ skipped_window * get_skipped_window (LightdashWindowSwitcher *tasklist, WnckWind
 	return NULL;
 }
 
-static void my_tasklist_attach_widget (LightTask *task, LightdashWindowSwitcher *tasklist)
-{
-	gtk_table_attach_defaults (GTK_TABLE(tasklist->table), task->button, tasklist->left_attach, 
-						tasklist->right_attach, tasklist->top_attach, tasklist->bottom_attach);
-					
-					gtk_widget_show_all (task->button);
-					
-					
-					if (tasklist->right_attach % tasklist->table_columns == 0)
-					{
-						tasklist->top_attach++;
-						tasklist->bottom_attach++;
-						tasklist->left_attach=0;
-						tasklist->right_attach=1;
-					}
-				
-					else
-					{
-						tasklist->left_attach++;
-						tasklist->right_attach++;
-					}
-}
 
-static void my_tasklist_update_windows (LightdashWindowSwitcher *tasklist)
+
+static void my_tasklist_update_windows (LightdashWindowsView *tasklist)
 {
 	GList *window_l;
 	WnckWindow *win;
@@ -676,7 +653,7 @@ static void my_tasklist_update_windows (LightdashWindowSwitcher *tasklist)
 			if(wnck_window_is_on_workspace(task->window, wnck_screen_get_active_workspace(tasklist->screen)))
 			{
 				
-				my_tasklist_attach_widget (task, tasklist);
+				lightdash_table_layout_attach_widget (task->button, tasklist);
 				
 				tasklist->window_counter++;
 				
@@ -701,8 +678,8 @@ static void my_tasklist_update_windows (LightdashWindowSwitcher *tasklist)
 
 	}
 	my_tasklist_sort (tasklist);
-	lightdash_window_switcher_update_rows_and_columns (tasklist);
-	lightdash_window_switcher_reattach_widgets (tasklist);
+	lightdash_windows_view_update_rows_and_columns (tasklist);
+	lightdash_windows_view_reattach_widgets (tasklist);
 	gtk_table_resize (GTK_TABLE (tasklist->table), tasklist->table_rows, tasklist->table_columns);
 	tasklist->update_complete = TRUE;
 	
@@ -716,7 +693,7 @@ static void my_tasklist_on_name_changed (WnckWindow *window, GtkWidget *label)
 	gtk_label_set_text (GTK_LABEL(label), name);
 }
 
-static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window, LightdashWindowSwitcher *tasklist)
+static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window, LightdashWindowsView *tasklist)
 {
 	LightTask *task;
 	gint rows, columns;
@@ -741,19 +718,19 @@ static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window
 	
 	if(wnck_window_is_on_workspace(task->window, wnck_screen_get_active_workspace(tasklist->screen)))
 	{
-		my_tasklist_attach_widget (task, tasklist);
+		lightdash_table_layout_attach_widget (task->button, tasklist);
 		
 		tasklist->window_counter++;
 		
 		rows = tasklist->table_rows;
 		columns = tasklist->table_columns;
 		
-		lightdash_window_switcher_update_rows_and_columns (tasklist);
+		lightdash_windows_view_update_rows_and_columns (tasklist);
 		
 		if (tasklist->table_columns != columns)
 		{
 			my_tasklist_sort (tasklist);
-			lightdash_window_switcher_reattach_widgets (tasklist);
+			lightdash_windows_view_reattach_widgets (tasklist);
 			gtk_table_resize (GTK_TABLE (tasklist->table), tasklist->table_rows, tasklist->table_columns);
 		}
 		
@@ -764,7 +741,7 @@ static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window
 }
 
 
-static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window, LightdashWindowSwitcher *tasklist)
+static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window, LightdashWindowsView *tasklist)
 {
 	LightTask *task;
 	skipped_window *skipped;
@@ -819,9 +796,9 @@ static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window
 		
 			my_tasklist_sort (tasklist);
 			
-			lightdash_window_switcher_update_rows_and_columns (tasklist);
+			lightdash_windows_view_update_rows_and_columns (tasklist);
 			
-			lightdash_window_switcher_reattach_widgets (tasklist);
+			lightdash_windows_view_reattach_widgets (tasklist);
 		
 			
 		gtk_table_resize (GTK_TABLE(tasklist->table), tasklist->table_rows, tasklist->table_columns);
@@ -833,23 +810,23 @@ static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window
 }
 
 static void my_tasklist_active_workspace_changed
-	(WnckScreen *screen, WnckWorkspace *previously_active_workspace, LightdashWindowSwitcher *tasklist)
+	(WnckScreen *screen, WnckWorkspace *previously_active_workspace, LightdashWindowsView *tasklist)
 {
 	my_tasklist_update_windows (tasklist);
 }
 
-static void my_tasklist_window_workspace_changed (WnckWindow *window, LightdashWindowSwitcher *tasklist)
+static void my_tasklist_window_workspace_changed (WnckWindow *window, LightdashWindowsView *tasklist)
 {
 	my_tasklist_update_windows (tasklist);
 }
 
-static void my_tasklist_screen_composited_changed (GdkScreen *screen, LightdashWindowSwitcher *tasklist)
+static void my_tasklist_screen_composited_changed (GdkScreen *screen, LightdashWindowsView *tasklist)
 {
 	tasklist->composited = gdk_screen_is_composited (tasklist->gdk_screen);
 }
 
 static void my_tasklist_window_state_changed
-	(WnckWindow *window, WnckWindowState changed_mask, WnckWindowState new_state, LightdashWindowSwitcher *tasklist)
+	(WnckWindow *window, WnckWindowState changed_mask, WnckWindowState new_state, LightdashWindowsView *tasklist)
 {
 	if (changed_mask & WNCK_WINDOW_STATE_SKIP_TASKLIST)
 	{
@@ -870,13 +847,13 @@ static void my_tasklist_button_clicked (GtkButton *button, WnckWindow *window)
 	
 }
 
-static void my_tasklist_button_emit_click_signal (GtkButton *button, LightdashWindowSwitcher *tasklist)
+static void my_tasklist_button_emit_click_signal (GtkButton *button, LightdashWindowsView *tasklist)
 {
 	g_signal_emit_by_name (tasklist, "task-button-clicked");
 	
 }
 
-void lightdash_window_switcher_update_preview (LightTask *task, gint width, gint height)
+void lightdash_windows_view_update_preview (LightTask *task, gint width, gint height)
 {
 		gint dest_width, dest_height;
 		gfloat factor;
@@ -919,23 +896,7 @@ void lightdash_window_switcher_update_preview (LightTask *task, gint width, gint
 				
 }
 
-void lightdash_window_switcher_update_rows_and_columns (LightdashWindowSwitcher *tasklist)
-{
-	gint rows, columns;
-	
-	columns = ceil (sqrt ((double)tasklist->window_counter));
-	rows = ceil ((double)tasklist->window_counter / (double)tasklist->table_columns);
-	
-	if (columns < 2)
-		columns = 2;
-	if (rows < 2)
-		rows = 2;
-	
-	tasklist->table_columns = columns;
-	tasklist->table_rows = rows;
-}
-
-void lightdash_window_switcher_reattach_widgets (LightdashWindowSwitcher *tasklist)
+void lightdash_windows_view_reattach_widgets (LightdashWindowsView *tasklist)
 {
 		GList *li;
 		LightTask *task;
@@ -955,7 +916,7 @@ void lightdash_window_switcher_reattach_widgets (LightdashWindowSwitcher *taskli
 				g_object_ref (task->button);
 				gtk_container_remove (GTK_CONTAINER (tasklist->table), task->button);
 					
-				my_tasklist_attach_widget (task, tasklist);
+				lightdash_table_layout_attach_widget (task->button, tasklist);
 				g_object_unref (task->button);
 			}
 				
@@ -964,7 +925,7 @@ void lightdash_window_switcher_reattach_widgets (LightdashWindowSwitcher *taskli
 			}
 }
 	
-void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
+void lightdash_windows_view_button_size_changed (GtkWidget *widget,
 	GdkRectangle *allocation, LightTask *task)
 {
 	
@@ -986,14 +947,14 @@ void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 		
 		if (wnck_window_is_minimized (task->window))
 		{
-			lightdash_window_switcher_draw_symbolic_window_rectangle (task, task->image->allocation.width,
+			lightdash_windows_view_draw_symbolic_window_rectangle (task, task->image->allocation.width,
 				task->image->allocation.height);
 			task->scaled = TRUE;
 			return;
 		}
 		
 		
-		lightdash_window_switcher_update_preview (task, task->image->allocation.width,
+		lightdash_windows_view_update_preview (task, task->image->allocation.width,
 							task->image->allocation.height);
 		
 		gtk_widget_queue_resize (GTK_WIDGET (task->tasklist));
@@ -1001,11 +962,11 @@ void lightdash_window_switcher_button_size_changed (GtkWidget *widget,
 			
 }
 
-gboolean lightdash_window_switcher_image_expose (GtkWidget *widget, GdkEvent *event, LightTask *task)
+gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEvent *event, LightTask *task)
 {
 		gint pixmap_width;
 	
-		lightdash_window_switcher_update_preview (task, task->image->allocation.width,
+		lightdash_windows_view_update_preview (task, task->image->allocation.width,
 							task->image->allocation.height);
 		
 
@@ -1078,7 +1039,7 @@ my_tasklist_drag_data_get_handl
 }
 
 static gboolean
-lightdash_window_switcher_drag_drop_handl
+lightdash_windows_view_drag_drop_handl
 (GtkWidget *widget, GdkDragContext *context, gint x, gint y, guint time)
 {
 	GdkAtom target;
@@ -1094,11 +1055,11 @@ lightdash_window_switcher_drag_drop_handl
 }
 
 static void
-lightdash_window_switcher_drag_data_received_handl
+lightdash_windows_view_drag_data_received_handl
 (GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *selection_data, 
 	guint target_type, guint time)
 {	
-	LightdashWindowSwitcher *window_switcher;
+	LightdashWindowsView *window_switcher;
 	gulong xid;
 	GList *tmp;
 	WnckWindow *win;
@@ -1127,7 +1088,7 @@ lightdash_window_switcher_drag_data_received_handl
 	gtk_drag_finish (context, FALSE, FALSE, time);
 }
 
-void lightdash_window_switcher_draw_symbolic_window_rectangle (LightTask *task, gint width, gint height)
+void lightdash_windows_view_draw_symbolic_window_rectangle (LightTask *task, gint width, gint height)
 {
 	
 	gint dest_width, dest_height;
@@ -1180,14 +1141,14 @@ void lightdash_window_switcher_draw_symbolic_window_rectangle (LightTask *task, 
 	
 }
 
-void lightdash_window_switcher_redirect_window (LightTask *task)
+void lightdash_windows_view_redirect_window (LightTask *task)
 {	
 	XCompositeRedirectWindow (task->tasklist->dpy, task->xid,
 		CompositeRedirectAutomatic);
 }
 
 cairo_surface_t *
-lightdash_window_switcher_get_window_picture (LightTask *task)
+lightdash_windows_view_get_window_picture (LightTask *task)
 {
 	cairo_surface_t *surface;
 	XRenderPictFormat *format;
@@ -1223,7 +1184,7 @@ static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *even
 	
 	XDamageSubtract (task->tasklist->dpy, e->damage, None, None);
 	
-	lightdash_window_switcher_update_preview (task, task->image->allocation.width,
+	lightdash_windows_view_update_preview (task, task->image->allocation.width,
 										task->image->allocation.height);
 	
 	gdk_pixmap_get_size (task->gdk_pixmap, &pixmap_width, NULL);
@@ -1239,8 +1200,8 @@ static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *even
 		task->attr.width = ce->width;
 		task->attr.height = ce->height;
 		cairo_surface_destroy (task->surface);
-		task->surface = lightdash_window_switcher_get_window_picture (task);
-		lightdash_window_switcher_update_preview (task, task->image->allocation.width,
+		task->surface = lightdash_windows_view_get_window_picture (task);
+		lightdash_windows_view_update_preview (task, task->image->allocation.width,
 							task->image->allocation.height);
 
 	}
@@ -1288,9 +1249,9 @@ static void light_task_create_widgets (LightTask *task)
 		&& task->attr.height != 0)
 		{
 			
-			lightdash_window_switcher_redirect_window (task);
+			lightdash_windows_view_redirect_window (task);
 			
-			task->surface = lightdash_window_switcher_get_window_picture (task);
+			task->surface = lightdash_windows_view_get_window_picture (task);
 			
 			task->image = gtk_image_new_from_pixmap (task->gdk_pixmap, NULL);
 			
@@ -1345,7 +1306,7 @@ static void light_task_create_widgets (LightTask *task)
 	if (!wnck_window_is_minimized (task->window))
 	{
 		task->expose_tag = g_signal_connect (task->image, "expose-event",
-							G_CALLBACK (lightdash_window_switcher_image_expose),
+							G_CALLBACK (lightdash_windows_view_image_expose),
 							task);
 
 							
@@ -1353,7 +1314,7 @@ static void light_task_create_widgets (LightTask *task)
 	}
 	
 		task->button_resized_tag = g_signal_connect (task->button, "size-allocate",
-						G_CALLBACK (lightdash_window_switcher_button_size_changed),
+						G_CALLBACK (lightdash_windows_view_button_size_changed),
 						task);
 							
 	gtk_drag_source_set (task->button,GDK_BUTTON1_MASK,targets,1,GDK_ACTION_MOVE);

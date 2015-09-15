@@ -1,0 +1,9 @@
+[Xfce Panel]
+Type=X-XFCE-PanelPlugin
+Encoding=UTF-8
+Name=Lightdash
+Comment=Sample plugin for the Xfce panel
+Icon=xfce4-appfinder
+X-XFCE-Module=lightdash
+X-XFCE-Internal=false
+X-XFCE-Unique=false
