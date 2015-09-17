@@ -16,13 +16,45 @@
  
 #ifndef LIGHTDASH_TABLE_LAYOUT_H
 #define LIGHTDASH_TABLE_LAYOUT_H
- 
+
+#include <glib.h>
+#include <glib-object.h>
+#include <gtk/gtk.h>
 #include "lightdash-window-switcher.h"
 
 G_BEGIN_DECLS
+
+#define LIGHTDASH_TABLE_LAYOUT_TYPE (lightdash_table_layout_get_type())
+#define LIGHTDASH_TABLE_LAYOUT(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), LIGHTDASH_TABLE_LAYOUT_TYPE, LightdashTableLayout))
+#define LIGHTDASH_TABLE_LAYOUT_CLASS (klass) (G_TYPE_CHECK_CLASS_CAST ((klass), LIGHTDASH_TABLE_LAYOUT_TYPE, LightdashTableLayoutClass))
+#define IS_LIGHTDASH_TABLE_LAYOUT (obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LIGHTDASH_TABLE_LAYOUT_TYPE))
+#define IS_LIGHTDASH_TABLE_LAYOUT_CLASS(klass), (G_TYPE_CHECK_CLASS_TYPE ((klass), LIGHTDASH_TABLE_LAYOUT_TYPE))
+
+typedef struct _LightdashTableLayout LightdashTableLayout;
+typedef struct _LightdashTableLayoutClass LightdashTableLayoutClass;
+
+struct _LightdashTableLayout
+{
+	GtkTable parent;
+	
+	guint left_attach;
+	guint right_attach;
+	guint top_attach;
+	guint bottom_attach;
+};
+
+struct _LightdashTableLayoutClass
+{
+	GtkTableClass parent_class;
+};
+
+GType lightdash_table_layout_get_type (void);
+GtkWidget* lightdash_table_layout_new (guint rows, guint columns, gboolean homogeneous);
  
-void lightdash_table_layout_attach_widget (GtkWidget *widget, LightdashWindowsView *tasklist);
+void lightdash_table_layout_attach_next (GtkWidget *widget, LightdashTableLayout *table_layout);
+void lightdash_table_layout_resize (LightdashTableLayout *table_layout, guint rows, guint columns);
 void lightdash_windows_view_update_rows_and_columns (LightdashWindowsView *tasklist);
+void lightdash_table_layout_reset_values (LightdashTableLayout *table_layout);
  
 G_END_DECLS
  

@@ -67,11 +67,6 @@ struct _MyTasklist
 	guint table_columns;
 	guint table_rows;
 	
-	guint left_attach;	
-	guint right_attach;		
-	guint top_attach;		
-	guint bottom_attach;
-	
 	GHashTable *win_hash;
 	
 	
