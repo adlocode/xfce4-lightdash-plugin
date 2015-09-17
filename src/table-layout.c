@@ -94,8 +94,13 @@ void lightdash_table_layout_reset_values (LightdashTableLayout *table_layout)
 
 void lightdash_table_layout_attach_next (GtkWidget *widget, LightdashTableLayout *table_layout)
 {
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	gtk_grid_attach (GTK_GRID (table_layout), widget, table_layout->left_attach, 
+				table_layout->top_attach, 1, 1);
+	#else
 	gtk_table_attach_defaults (GTK_TABLE(table_layout), widget, table_layout->left_attach, 
 						table_layout->right_attach, table_layout->top_attach, table_layout->bottom_attach);
+	#endif
 					
 					gtk_widget_show_all (widget);
 					

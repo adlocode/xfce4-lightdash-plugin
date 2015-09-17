@@ -35,7 +35,11 @@ typedef struct _LightdashTableLayoutClass LightdashTableLayoutClass;
 
 struct _LightdashTableLayout
 {
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	GtkGrid parent;
+	#else
 	GtkTable parent;
+	#endif
 	
 	guint left_attach;
 	guint right_attach;
@@ -45,7 +49,11 @@ struct _LightdashTableLayout
 
 struct _LightdashTableLayoutClass
 {
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	GtkGridClass parent_class;
+	#else
 	GtkTableClass parent_class;
+	#endif
 };
 
 GType lightdash_table_layout_get_type (void);
