@@ -31,6 +31,12 @@ msgstr ""
 msgid "Activities"
 msgstr "Aktivitäten"
 
+msgid "_Title:"
+msgstr "_Titel:"
+
+msgid "Background opacit_y:"
+msgstr "_Hintergrunddeckkraft:"
+
 #. close all windows and quit
 #: ../src/appfinder-gdbus.c:84
 msgid "Forced to quit"

@@ -82,7 +82,7 @@ void lightdash_configure (XfcePanelPlugin *plugin,
 	hbox = gtk_hbox_new (FALSE, 0);
 	#endif
 	
-	label = gtk_label_new (_("Title:"));
+	label = gtk_label_new_with_mnemonic (_("_Title:"));
 	
 	entry = gtk_entry_new ();
 	gtk_entry_set_text (GTK_ENTRY (entry), gtk_label_get_text (GTK_LABEL (lightdash->button_label)));
@@ -101,19 +101,20 @@ void lightdash_configure (XfcePanelPlugin *plugin,
 	
 	
 	#if GTK_CHECK_VERSION (3, 0, 0)
-	hbox = gtk_box_new (GTK_ORIENTATION_VERTICAL);
+	hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL);
 	#else
 	hbox = gtk_hbox_new (FALSE, 0);
 	#endif
 	
 	opacity_slider = gtk_hscale_new_with_range (0.0, 100.0, 1.0);
-	
+	gtk_scale_set_value_pos (GTK_SCALE (opacity_slider), GTK_POS_RIGHT);
+	gtk_widget_set_size_request (GTK_WIDGET (opacity_slider), 200, -1);
 	gtk_range_set_value (GTK_RANGE (opacity_slider), lightdash->opacity);
 	
 	gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), 
 		hbox, TRUE, TRUE, 6);
 	
-	label = gtk_label_new (_("Opacity:"));
+	label = gtk_label_new_with_mnemonic (_("Background opacit_y:"));
 	
 	gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 6);
 	

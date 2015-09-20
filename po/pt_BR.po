@@ -28,6 +28,9 @@ msgstr ""
 msgid "Activities"
 msgstr "Atividades"
 
+msgid "_Title:"
+msgstr "_Título:"
+
 #. close all windows and quit
 #: ../src/appfinder-gdbus.c:84
 msgid "Forced to quit"
