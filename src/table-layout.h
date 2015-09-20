@@ -41,6 +41,9 @@ struct _LightdashTableLayout
 	GtkTable parent;
 	#endif
 	
+	guint nrows;
+	guint ncols;
+	
 	guint left_attach;
 	guint right_attach;
 	guint top_attach;

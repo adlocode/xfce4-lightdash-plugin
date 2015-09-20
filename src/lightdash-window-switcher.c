@@ -765,7 +765,9 @@ static void my_tasklist_on_window_closed
 		
 			//g_print ("%s", "free skipped window \n");
 			return;
-		}	
+		}
+		
+		return;
 	}
 		
 	task = get_task_from_window (tasklist, window);

@@ -73,10 +73,14 @@ GtkWidget* lightdash_table_layout_new (guint rows, guint columns, gboolean homog
 	
 	table_layout = g_object_new (lightdash_table_layout_get_type (), NULL);
 	
-	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	gtk_grid_set_row_homogeneous (GTK_GRID (table_layout), homogeneous);
+	gtk_grid_set_column_homogeneous (GTK_GRID (table_layout), homogeneous);
+	#else
 	GTK_TABLE  (table_layout)->homogeneous = (homogeneous ? TRUE : FALSE);
+	#endif
 	
-	gtk_table_resize (GTK_TABLE (table_layout), rows, columns);
+	lightdash_table_layout_resize (LIGHTDASH_TABLE_LAYOUT (table_layout), rows, columns);
 	
 	return GTK_WIDGET (table_layout);
 	
@@ -105,7 +109,7 @@ void lightdash_table_layout_attach_next (GtkWidget *widget, LightdashTableLayout
 					gtk_widget_show_all (widget);
 					
 					
-					if (table_layout->right_attach % GTK_TABLE (table_layout)->ncols == 0)
+					if (table_layout->right_attach % table_layout->ncols == 0)
 					{
 						table_layout->top_attach++;
 						table_layout->bottom_attach++;
@@ -122,7 +126,18 @@ void lightdash_table_layout_attach_next (GtkWidget *widget, LightdashTableLayout
 
 void lightdash_table_layout_resize (LightdashTableLayout *table_layout, guint rows, guint columns)
 {
+	if (rows == 0)
+		rows = 1;
+	if (columns == 0)
+		columns = 1;
+	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	#else	
 	gtk_table_resize (GTK_TABLE (table_layout), rows, columns);
+	#endif
+	
+	table_layout->nrows = rows;
+	table_layout->ncols = columns;
 }
 
 void lightdash_windows_view_update_rows_and_columns (LightdashWindowsView *windows_view)
