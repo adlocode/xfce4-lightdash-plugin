@@ -84,6 +84,7 @@ struct _LightTask
 	GtkWidget *image;
 	GtkWidget *label;
 	GtkWidget *vbox;
+	GtkWidget *action_menu;
 	
 	WnckWindow *window;
 	GdkWindow *gdk_window;
@@ -166,6 +167,9 @@ void lightdash_windows_view_redirect_window (LightTask *task);
 
 void lightdash_windows_view_draw_symbolic_window_rectangle (LightTask *task, gint width, gint height);
 
+static gint
+lightdash_popup_handler (GtkWidget *widget, GdkEventButton *event, LightTask *task);
+
 //****************
 
 
@@ -180,6 +184,8 @@ static void light_task_class_init (LightTaskClass *klass)
 static void light_task_init (LightTask *task)
 
 {
+	
+	task->action_menu = NULL;
 	
 }
 
@@ -196,6 +202,11 @@ static void light_task_finalize (GObject *object)
 		task->button_resized_tag = 0;
 	}
 	
+	if (task->action_menu)
+	{
+		gtk_widget_destroy (task->action_menu);
+		task->action_menu = NULL;
+	}
 
 	
 	if (task->button)
@@ -841,6 +852,33 @@ static void my_tasklist_window_state_changed
 	}
 }
 
+static gboolean
+lightdash_popup_handler (GtkWidget *widget, GdkEventButton *event, LightTask *task)
+{
+	if (event->button == 3)
+	{
+		if (!task->action_menu)
+		{
+			task->action_menu = wnck_action_menu_new (task->window);
+			gtk_menu_attach_to_widget (GTK_MENU (task->action_menu), task->button, NULL);
+			
+		}
+		
+		GdkEventButton *event_button = (GdkEventButton *) event;
+		gtk_menu_popup (GTK_MENU (task->action_menu), NULL, NULL, 
+					NULL,
+					task->button,
+					event_button->button, event_button->time);
+					
+		return TRUE;
+	}
+	
+	else
+	{
+		return FALSE;
+		
+	}			
+}
 
 static void my_tasklist_button_clicked (GtkButton *button, WnckWindow *window)
 	
@@ -1351,5 +1389,9 @@ static void light_task_create_widgets (LightTask *task)
 	
 	g_signal_connect_object (GTK_BUTTON(task->button), "clicked", 
 					G_CALLBACK (my_tasklist_button_emit_click_signal), task->tasklist,
+					0);
+					
+	g_signal_connect_object (task->button, "button-press-event", 
+					G_CALLBACK (lightdash_popup_handler), G_OBJECT (task),
 					0);
 }
