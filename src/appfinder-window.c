@@ -35,7 +35,7 @@
 #include <xfconf/xfconf.h>
 #include <glib/gstdio.h>
 #include <libwnck/libwnck.h>
-#include <exo/exo.h>
+
 #include <cairo/cairo.h>
 
 #include <src/appfinder-window.h>
@@ -46,6 +46,11 @@
 #include <src/appfinder-private.h>
 #include "lightdash.h"
 #include "lightdash-window-switcher.h"
+
+#if GTK_CHECK_VERSION (3, 0, 0)
+#else
+#include <exo/exo.h>
+#endif
 
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
