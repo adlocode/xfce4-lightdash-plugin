@@ -633,7 +633,7 @@ static void my_tasklist_update_windows (LightdashWindowsView *tasklist)
 	//Table attachment values
 	tasklist->unique_id_counter = 0;
 	
-	lightdash_table_layout_reset_values (LIGHTDASH_TABLE_LAYOUT (tasklist->table));
+	lightdash_table_layout_start_from_beginning (LIGHTDASH_TABLE_LAYOUT (tasklist->table));
 	
 	my_tasklist_free_tasks (tasklist);
 	lightdash_table_layout_resize (LIGHTDASH_TABLE_LAYOUT(tasklist->table), 
@@ -941,7 +941,7 @@ void lightdash_windows_view_reattach_widgets (LightdashWindowsView *tasklist)
 		GList *li;
 		LightTask *task;
 		
-		lightdash_table_layout_reset_values (LIGHTDASH_TABLE_LAYOUT (tasklist->table));
+		lightdash_table_layout_start_from_beginning (LIGHTDASH_TABLE_LAYOUT (tasklist->table));
 		
 		/* Remove widgets */
 		for (li = tasklist->tasks; li != NULL; li = li->next)

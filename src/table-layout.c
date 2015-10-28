@@ -60,7 +60,7 @@ static void lightdash_table_layout_class_init (LightdashTableLayoutClass *klass)
 static void lightdash_table_layout_init (LightdashTableLayout *table_layout)
 {
   
-  lightdash_table_layout_reset_values (table_layout);
+  lightdash_table_layout_start_from_beginning (table_layout);
 
 }
 
@@ -91,7 +91,7 @@ GtkWidget* lightdash_table_layout_new (guint rows, guint columns, gboolean homog
 	
 }
 
-void lightdash_table_layout_reset_values (LightdashTableLayout *table_layout)
+void lightdash_table_layout_start_from_beginning (LightdashTableLayout *table_layout)
 {
 	table_layout->left_attach =0;	
 	table_layout->right_attach=1;		
