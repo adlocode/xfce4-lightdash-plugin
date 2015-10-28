@@ -42,7 +42,11 @@ GType lightdash_table_layout_get_type (void)
 			0,
 			(GInstanceInitFunc) lightdash_table_layout_init,
 		};
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		lightdash_table_layout_type = g_type_register_static (GTK_TYPE_GRID, "LightdashTableLayout", &lightdash_table_layout_info, 0);
+		#else
 		lightdash_table_layout_type = g_type_register_static (GTK_TYPE_TABLE, "LightdashTableLayout", &lightdash_table_layout_info, 0);
+		#endif
 	}
 	return lightdash_table_layout_type;
 }
