@@ -1341,6 +1341,8 @@ xfce_appfinder_window_popup_menu (GtkWidget           *view,
   gchar        *uri;
   GtkWidget    *mi;
   GtkWidget    *image;
+  GtkWidget    *box;
+  GtkWidget    *label;
   gchar        *path;
   gboolean      uri_is_local;
   gboolean      is_bookmark;
@@ -1394,17 +1396,38 @@ xfce_appfinder_window_popup_menu (GtkWidget           *view,
       gtk_menu_shell_append (GTK_MENU_SHELL (menu), mi);
       gtk_widget_show (mi);
 
-      mi = gtk_menu_item_new_with_mnemonic (_("_Execute"));
+      mi = gtk_menu_item_new ();
       gtk_menu_shell_append (GTK_MENU_SHELL (menu), mi);
       g_signal_connect (G_OBJECT (mi), "activate",
           G_CALLBACK (xfce_appfinder_window_popup_menu_execute), window);
-      gtk_widget_show (mi);
+      
+      #if GTK_CHECK_VERSION (3, 0, 0)    
+      box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
+      #else
+      box = gtk_hbox_new (FALSE, 6);
+      #endif
+      label = gtk_label_new_with_mnemonic (_("La_unch"));
+      image = gtk_image_new_from_icon_name (XFCE_APPFINDER_STOCK_EXECUTE, GTK_ICON_SIZE_MENU);
+      gtk_container_add (GTK_CONTAINER (box), image);
+      gtk_container_add (GTK_CONTAINER (box), label);
+      gtk_container_add (GTK_CONTAINER (mi), box);
+      gtk_widget_show_all (mi);
 
-      mi = gtk_menu_item_new_with_mnemonic (_("_Edit"));
+      mi = gtk_menu_item_new ();
+      #if GTK_CHECK_VERSION (3, 0, 0)    
+      box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
+      #else
+      box = gtk_hbox_new (FALSE, 6);
+      #endif
+      label = gtk_label_new_with_mnemonic (_("_Edit"));
+      image = gtk_image_new_from_icon_name (XFCE_APPFINDER_STOCK_EDIT, GTK_ICON_SIZE_MENU);
+      gtk_container_add (GTK_CONTAINER (box), image);
+      gtk_container_add (GTK_CONTAINER (box), label);
+      gtk_container_add (GTK_CONTAINER (mi), box);
+      gtk_widget_show_all (mi);
       gtk_menu_shell_append (GTK_MENU_SHELL (menu), mi);
       g_signal_connect (G_OBJECT (mi), "activate",
           G_CALLBACK (xfce_appfinder_window_popup_menu_edit), window);
-      gtk_widget_show (mi);
 
       mi = gtk_menu_item_new_with_mnemonic (_("_Revert"));
       gtk_menu_shell_append (GTK_MENU_SHELL (menu), mi);
