@@ -1528,8 +1528,6 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
   gchar               *normalized;
   GtkTreeModel        *model;
 
-  GDK_THREADS_ENTER ();
-
   text = gtk_entry_get_text (GTK_ENTRY (window->entry));
 
   if (gtk_widget_get_visible (window->paned))
@@ -1581,8 +1579,6 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
         g_object_unref (G_OBJECT (pixbuf));
     }
 
-  GDK_THREADS_LEAVE ();
-
   return FALSE;
 }
 
@@ -1603,7 +1599,7 @@ xfce_appfinder_window_entry_changed (XfceAppfinderWindow *window)
     g_source_remove (window->idle_entry_changed_id);
 
   window->idle_entry_changed_id =
-      g_idle_add_full (G_PRIORITY_DEFAULT, xfce_appfinder_window_entry_changed_idle,
+      gdk_threads_add_idle_full (G_PRIORITY_DEFAULT, xfce_appfinder_window_entry_changed_idle,
                        window, xfce_appfinder_window_entry_changed_idle_destroyed);
 }
 
