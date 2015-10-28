@@ -1429,16 +1429,26 @@ xfce_appfinder_window_popup_menu (GtkWidget           *view,
       g_signal_connect (G_OBJECT (mi), "activate",
           G_CALLBACK (xfce_appfinder_window_popup_menu_edit), window);
 
-      mi = gtk_menu_item_new_with_mnemonic (_("_Revert"));
+      mi = gtk_menu_item_new ();
+      #if GTK_CHECK_VERSION (3, 0, 0)    
+      box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
+      #else
+      box = gtk_hbox_new (FALSE, 6);
+      #endif
+      label = gtk_label_new_with_mnemonic (_("_Revert"));
+      image = gtk_image_new_from_icon_name (XFCE_APPFINDER_STOCK_REVERT_TO_SAVED, GTK_ICON_SIZE_MENU);
+      gtk_container_add (GTK_CONTAINER (box), image);
+      gtk_container_add (GTK_CONTAINER (box), label);
+      gtk_container_add (GTK_CONTAINER (mi), box);
+      gtk_widget_show_all (mi);
       gtk_menu_shell_append (GTK_MENU_SHELL (menu), mi);
       g_signal_connect (G_OBJECT (mi), "activate",
           G_CALLBACK (xfce_appfinder_window_popup_menu_revert), window);
       path = xfce_resource_save_location (XFCE_RESOURCE_DATA, "applications/", FALSE);
       gtk_widget_set_sensitive (mi, uri_is_local && g_str_has_prefix (uri + 7, path));
-      gtk_widget_show (mi);
       g_free (path);
 
-      mi = gtk_image_menu_item_new_with_mnemonic (_("_Hide"));
+      mi = gtk_menu_item_new_with_mnemonic (_("_Hide"));
       gtk_menu_shell_append (GTK_MENU_SHELL (menu), mi);
       gtk_widget_set_sensitive (mi, uri_is_local);
       g_signal_connect (G_OBJECT (mi), "activate",
