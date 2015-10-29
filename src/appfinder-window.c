@@ -1703,7 +1703,6 @@ xfce_appfinder_window_entry_key_press_event (GtkWidget           *entry,
               return FALSE;
             }
 
-          xfce_appfinder_window_set_expanded (window, expand);
           return TRUE;
         }
     }
@@ -1811,8 +1810,7 @@ xfce_appfinder_window_entry_icon_released (GtkEntry             *entry,
                                            GdkEvent             *event,
                                            XfceAppfinderWindow  *window)
 {
-  if (icon_pos == GTK_ENTRY_ICON_SECONDARY)
-    xfce_appfinder_window_set_expanded (window, !gtk_widget_get_visible (window->paned));
+	gtk_entry_set_text (entry, "");
 }
 
 
@@ -2169,38 +2167,24 @@ xfce_appfinder_window_set_expanded (XfceAppfinderWindow *window,
   APPFINDER_DEBUG ("set expand = %s", expanded ? "true" : "false");
 
   /* force window geomentry */
-  if (expanded)
-    {
-      gtk_window_set_geometry_hints (GTK_WINDOW (window), NULL, NULL, 0);
-      gtk_window_get_size (GTK_WINDOW (window), &width, NULL);
-      gtk_window_resize (GTK_WINDOW (window), width, window->last_window_height);
-    }
-  else
-    {
-      if (gtk_widget_get_visible (GTK_WIDGET (window)))
-        gtk_window_get_size (GTK_WINDOW (window), NULL, &window->last_window_height);
 
-      hints.max_height = -1;
-      hints.max_width = G_MAXINT;
-      gtk_window_set_geometry_hints (GTK_WINDOW (window), NULL, &hints, GDK_HINT_MAX_SIZE);
-    }
+   gtk_window_set_geometry_hints (GTK_WINDOW (window), NULL, NULL, 0);
+   gtk_window_get_size (GTK_WINDOW (window), &width, NULL);
+   gtk_window_resize (GTK_WINDOW (window), width, window->last_window_height);
+
+
 
   /* repack the button box */
   g_object_ref (G_OBJECT (window->bbox));
   parent = gtk_widget_get_parent (window->bbox);
   if (parent != NULL)
     gtk_container_remove (GTK_CONTAINER (parent), window->bbox);
-  if (expanded)
+
     gtk_container_add (GTK_CONTAINER (window->bin_expanded), window->bbox);
-  else
-    gtk_container_add (GTK_CONTAINER (window->bin_collapsed), window->bbox);
-  gtk_widget_set_visible (window->bin_expanded, expanded);
-  gtk_widget_set_visible (window->bin_collapsed, !expanded);
-  gtk_widget_set_visible (window->button_preferences, expanded);
-  g_object_unref (G_OBJECT (window->bbox));
+
 
   /* show/hide pane with treeviews */
-  gtk_widget_set_visible (window->paned, expanded);
+  gtk_widget_set_visible (window->paned, TRUE);
 
   /* toggle icon */
   gtk_entry_set_icon_from_icon_name (GTK_ENTRY (window->entry), GTK_ENTRY_ICON_SECONDARY,
