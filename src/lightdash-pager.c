@@ -37,6 +37,8 @@ static void lightdash_pager_init (LightdashPager *pager)
 		};
 		
 	pager->priv = LIGHTDASH_PAGER_GET_PRIVATE (pager);
+	
+	pager->priv->screen = NULL;
 }
 
 static void lightdash_pager_class_init (LightdashPagerClass *klass)
@@ -102,7 +104,8 @@ static void lightdash_pager_realize (GtkWidget *widget)
 	
 	gtk_style_set_background (style, window, GTK_STATE_NORMAL);
 	
-	pager->priv->screen = wnck_screen_get_default ();
+	if (pager->priv->screen == NULL)
+		pager->priv->screen = wnck_screen_get_default ();
 	
 }
 
