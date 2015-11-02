@@ -23,6 +23,7 @@ struct _LightdashPagerPrivate
 {
 	WnckScreen *screen;
 	
+	int n_rows;
 	int prelight;
 	gboolean prelight_dnd;
 	
@@ -46,6 +47,10 @@ static void lightdash_pager_init (LightdashPager *pager)
 	pager->priv = LIGHTDASH_PAGER_GET_PRIVATE (pager);
 	
 	pager->priv->screen = NULL;
+	pager->priv->prelight = -1;
+	pager->priv->prelight_dnd = FALSE;
+	pager->priv->dragging = FALSE;
+	pager->priv->drag_window = NULL;
 }
 
 static void lightdash_pager_class_init (LightdashPagerClass *klass)
@@ -114,6 +119,126 @@ static void lightdash_pager_realize (GtkWidget *widget)
 	if (pager->priv->screen == NULL)
 		pager->priv->screen = wnck_screen_get_default ();
 	
+}
+
+static void
+get_workspace_rect (LightdashPager    *pager,
+                    int           space,
+                    GdkRectangle *rect)
+{
+  int hsize, vsize;
+  int n_spaces;
+  int spaces_per_row;
+  GtkWidget *widget;
+  int col, row;
+  GtkAllocation allocation;
+  GtkStyle *style;
+  int focus_width;
+
+  widget = GTK_WIDGET (pager);
+
+  gtk_widget_get_allocation (widget, &allocation);
+
+  style = gtk_widget_get_style (widget);
+  gtk_widget_style_get (widget,
+			"focus-line-width", &focus_width,
+			NULL);
+
+  if (!pager->priv->show_all_workspaces)
+    {
+      WnckWorkspace *active_space;
+  
+      active_space = wnck_screen_get_active_workspace (pager->priv->screen);
+
+      if (active_space && space == wnck_workspace_get_number (active_space))
+	{
+	  rect->x = focus_width;
+	  rect->y = focus_width;
+	  rect->width = allocation.width - 2 * focus_width;
+	  rect->height = allocation.height - 2 * focus_width;
+
+	  if (pager->priv->shadow_type != GTK_SHADOW_NONE)
+	    {
+	      rect->x += style->xthickness;
+	      rect->y += style->ythickness;
+	      rect->width -= 2 * style->xthickness;
+	      rect->height -= 2 * style->ythickness;
+	    }
+	}
+      else
+	{
+	  rect->x = 0;
+	  rect->y = 0;
+	  rect->width = 0;
+	  rect->height = 0;
+	}
+
+      return;
+    }
+
+  hsize = allocation.width - 2 * focus_width;
+  vsize = allocation.height - 2 * focus_width;
+
+  if (pager->priv->shadow_type != GTK_SHADOW_NONE)
+    {
+      hsize -= 2 * style->xthickness;
+      vsize -= 2 * style->ythickness;
+    }
+  
+  n_spaces = wnck_screen_get_workspace_count (pager->priv->screen);
+
+  g_assert (pager->priv->n_rows > 0);
+  spaces_per_row = (n_spaces + pager->priv->n_rows - 1) / pager->priv->n_rows;
+  
+  if (pager->priv->orientation == GTK_ORIENTATION_VERTICAL)
+    {      
+      rect->width = (hsize - (pager->priv->n_rows - 1)) / pager->priv->n_rows;
+      rect->height = (vsize - (spaces_per_row - 1)) / spaces_per_row;
+
+      col = space / spaces_per_row;
+      row = space % spaces_per_row;
+
+      if (gtk_widget_get_direction (widget) == GTK_TEXT_DIR_RTL)
+        col = pager->priv->n_rows - col - 1;
+
+      rect->x = (rect->width + 1) * col; 
+      rect->y = (rect->height + 1) * row;
+      
+      if (col == pager->priv->n_rows - 1)
+	rect->width = hsize - rect->x;
+      
+      if (row  == spaces_per_row - 1)
+	rect->height = vsize - rect->y;
+    }
+  else
+    {
+      rect->width = (hsize - (spaces_per_row - 1)) / spaces_per_row;
+      rect->height = (vsize - (pager->priv->n_rows - 1)) / pager->priv->n_rows;
+      
+      col = space % spaces_per_row;
+      row = space / spaces_per_row;
+
+      if (gtk_widget_get_direction (widget) == GTK_TEXT_DIR_RTL)
+        col = spaces_per_row - col - 1;
+
+      rect->x = (rect->width + 1) * col; 
+      rect->y = (rect->height + 1) * row;
+
+      if (col == spaces_per_row - 1)
+	rect->width = hsize - rect->x;
+      
+      if (row  == pager->priv->n_rows - 1)
+	rect->height = vsize - rect->y;
+    }
+
+  rect->x += focus_width;
+  rect->y += focus_width;
+
+  if (pager->priv->shadow_type != GTK_SHADOW_NONE)
+    {
+      rect->x += style->xthickness;
+      rect->y += style->ythickness;
+    }
 }
 
 static gboolean
@@ -574,6 +699,34 @@ static gboolean lightdash_pager_expose_event (GtkWidget *widget, GdkEventExpose 
 						allocation.width,
 						allocation.height);
 	#endif
+	
+	  i = 0;
+  while (i < n_spaces)
+    {
+      GdkRectangle rect, intersect;
+
+
+	  get_workspace_rect (pager, i, &rect);
+
+          /* We only want to do this once, even if w/h change,
+           * for efficiency. width/height will only change by
+           * one pixel at most.
+           */
+
+              bg_pixbuf = wnck_pager_get_background (pager,
+                                                     rect.width,
+                                                     rect.height);
+              first = FALSE;
+
+          
+	  if (gdk_rectangle_intersect (&event->area, &rect, &intersect))
+	    wnck_pager_draw_workspace (pager, i, &rect, bg_pixbuf);
+
+ 
+      ++i;
+    }
+
+  return FALSE;
 	
 }
 
