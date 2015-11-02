@@ -67,7 +67,13 @@ lightdash_pager_drag_drop  (GtkWidget        *widget,
 static gboolean lightdash_pager_button_release (GtkWidget *widget, GdkEventButton *event);
 
 static void lightdash_pager_active_workspace_changed
-	(WnckScreen *screen, WnckWorkspace *previously_active_workspace, LightdashPager *pager);		       	       
+	(WnckScreen *screen, WnckWorkspace *previously_active_workspace, LightdashPager *pager);
+	
+static void lightdash_pager_workspace_created_callback
+	(WnckScreen *screen, WnckWorkspace *space, LightdashPager *pager);
+
+static void lightdash_pager_workspace_destroyed_callback
+	(WnckScreen *screen, WnckWorkspace *space, LightdashPager *pager);		       	       
 
 #if GTK_CHECK_VERSION (3, 0, 0)
 static gboolean lightdash_pager_draw (GtkWidget *widget, cairo_t *cr);
@@ -173,6 +179,14 @@ static void lightdash_pager_realize (GtkWidget *widget)
 		
 	g_signal_connect (pager->priv->screen, "active-workspace-changed",
             G_CALLBACK (lightdash_pager_active_workspace_changed), pager);
+            
+	g_signal_connect (pager->priv->screen, "workspace-created",
+            G_CALLBACK (lightdash_pager_workspace_created_callback), pager);
+            
+	g_signal_connect (pager->priv->screen, "workspace-destroyed",
+            G_CALLBACK (lightdash_pager_workspace_destroyed_callback), pager);                         
+            
+    gtk_widget_queue_draw (widget);
 	
 }
 
@@ -749,6 +763,17 @@ static void lightdash_pager_active_workspace_changed
 	gtk_widget_queue_draw (GTK_WIDGET (pager));
 }
 
+static void lightdash_pager_workspace_created_callback
+	(WnckScreen *screen, WnckWorkspace *space, LightdashPager *pager)
+{
+	gtk_widget_queue_draw (GTK_WIDGET (pager));
+}
+
+static void lightdash_pager_workspace_destroyed_callback
+	(WnckScreen *screen, WnckWorkspace *space, LightdashPager *pager)
+{
+	gtk_widget_queue_draw (GTK_WIDGET (pager));
+}
 
 GtkWidget * lightdash_pager_new ()
 {
