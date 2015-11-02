@@ -46,6 +46,7 @@
 #include <src/appfinder-private.h>
 #include "lightdash.h"
 #include "lightdash-window-switcher.h"
+#include "lightdash-pager.h"
 
 #if GTK_CHECK_VERSION (3, 0, 0)
 #else
@@ -548,7 +549,7 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
 							G_CALLBACK (gtk_widget_hide), GTK_WIDGET (window));
 						
 	//Add pager
-	window->pager = wnck_pager_new (NULL);
+	window->pager = lightdash_pager_new ();
 	gtk_box_pack_start (GTK_BOX (window->taskview_container), window->pager, FALSE, FALSE, 3);
 	gtk_widget_set_size_request (window->pager, 100, 5);
 	gtk_widget_show (window->pager);

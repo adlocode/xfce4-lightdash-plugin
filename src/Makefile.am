@@ -34,6 +34,10 @@ liblightdash_la_SOURCES = \
 	table-layout.h \
 	lightdash.c \
 	lightdash.h \
+	lightdash-pager.c \
+	lightdash-pager.h \
+	lightdash-xutils.c \
+	lightdash-xutils.h \
 	lightdash-dialogs.c \
 	lightdash-dialogs.h
 

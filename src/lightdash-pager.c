@@ -244,6 +244,106 @@ static void get_workspace_rect (LightdashPager *pager,
   
 }
 
+static void
+draw_window (GdkDrawable        *drawable,
+             GtkWidget          *widget,
+             WnckWindow         *win,
+             const GdkRectangle *winrect,
+             GtkStateType        state,
+             gboolean            translucent)
+{
+  GtkStyle *style;
+  cairo_t *cr;
+  GdkPixbuf *icon;
+  int icon_x, icon_y, icon_w, icon_h;
+  gboolean is_active;
+  GdkColor *color;
+  gdouble translucency;
+
+  style = gtk_widget_get_style (widget);
+
+  is_active = wnck_window_is_active (win);
+  translucency = translucent ? 0.4 : 1.0;
+
+  cr = gdk_cairo_create (drawable);
+  cairo_rectangle (cr, winrect->x, winrect->y, winrect->width, winrect->height);
+  cairo_clip (cr);
+
+  if (is_active)
+    color = &style->light[state];
+  else
+    color = &style->bg[state];
+  cairo_set_source_rgba (cr,
+                         color->red / 65535.,
+                         color->green / 65535.,
+                         color->blue / 65535.,
+                         translucency);
+  cairo_rectangle (cr,
+                   winrect->x + 1, winrect->y + 1,
+                   MAX (0, winrect->width - 2), MAX (0, winrect->height - 2));
+  cairo_fill (cr);
+
+  icon = wnck_window_get_icon (win);
+
+  icon_w = icon_h = 0;
+          
+  if (icon)
+    {              
+      icon_w = gdk_pixbuf_get_width (icon);
+      icon_h = gdk_pixbuf_get_height (icon);
+
+      /* If the icon is too big, fall back to mini icon.
+       * We don't arbitrarily scale the icon, because it's
+       * just too slow on my Athlon 850.
+       */
+      if (icon_w > (winrect->width - 2) ||
+          icon_h > (winrect->height - 2))
+        {
+          icon = wnck_window_get_mini_icon (win);
+          if (icon)
+            {
+              icon_w = gdk_pixbuf_get_width (icon);
+              icon_h = gdk_pixbuf_get_height (icon);
+
+              /* Give up. */
+              if (icon_w > (winrect->width - 2) ||
+                  icon_h > (winrect->height - 2))
+                icon = NULL;
+            }
+        }
+    }
+
+  if (icon)
+    {
+      icon_x = winrect->x + (winrect->width - icon_w) / 2;
+      icon_y = winrect->y + (winrect->height - icon_h) / 2;
+                
+      cairo_save (cr);
+      gdk_cairo_set_source_pixbuf (cr, icon, icon_x, icon_y);
+      cairo_rectangle (cr, icon_x, icon_y, icon_w, icon_h);
+      cairo_clip (cr);
+      cairo_paint_with_alpha (cr, translucency);
+      cairo_restore (cr);
+    }
+          
+  if (is_active)
+    color = &style->fg[state];
+  else
+    color = &style->fg[state];
+  cairo_set_source_rgba (cr,
+                         color->red / 65535.,
+                         color->green / 65535.,
+                         color->blue / 65535.,
+                         translucency);
+  cairo_set_line_width (cr, 1.0);
+  cairo_rectangle (cr,
+                   winrect->x + 0.5, winrect->y + 0.5,
+                   MAX (0, winrect->width - 1), MAX (0, winrect->height - 1));
+  cairo_stroke (cr);
+
+  cairo_destroy (cr);
+}
+
 static int
 workspace_at_point (LightdashPager *pager,
                     int        x,
@@ -457,9 +557,8 @@ static void lightdash_pager_draw_workspace (LightdashPager *pager,
 	gboolean is_current;
 	GtkStyle *style;
 	GtkWidget *widget;
-	GtkStateType *state;
+	GtkStateType state;
 	
-	g_print ("%s", "entering lightdash_pager_draw_workspace");
 	space = wnck_screen_get_workspace (pager->priv->screen, workspace);
 	widget = GTK_WIDGET (pager);
 	is_current = (space == wnck_screen_get_active_workspace (pager->priv->screen));
@@ -475,7 +574,7 @@ static void lightdash_pager_draw_workspace (LightdashPager *pager,
 	if (bg_pixbuf)
 	{
 		gdk_draw_pixbuf (window,
-			style->dark_gc[(int)state],
+			style->dark_gc[state],
 			bg_pixbuf,
 			0, 0,
 			rect->x, rect->y,
@@ -491,7 +590,7 @@ static void lightdash_pager_draw_workspace (LightdashPager *pager,
 
       if (!wnck_workspace_is_virtual (space))
         {
-          gdk_cairo_set_source_color (cr, &style->dark[(int)state]);
+          gdk_cairo_set_source_color (cr, &style->dark[state]);
           cairo_rectangle (cr, rect->x, rect->y, rect->width, rect->height);
           cairo_fill (cr);
         }
@@ -599,8 +698,6 @@ static void lightdash_pager_draw_workspace (LightdashPager *pager,
       cairo_destroy (cr);
     }
 		
-		
-		g_print ("%s", "leaving lightdash_pager_draw_workspace \n");
 }
 	
 #if GTK_CHECK_VERSION (3, 0, 0)
@@ -712,10 +809,8 @@ lightdash_pager_get_background (LightdashPager *pager,
     }
 
   if (pager->priv->screen == NULL)
-  {
-	  g_print ("%s", "screen is null");
     return NULL;
-	}
+
 
   /* FIXME this just globally disables the thumbnailing feature */
   return NULL;
@@ -734,10 +829,6 @@ lightdash_pager_get_background (LightdashPager *pager,
                                               0, 0, 0, 0,
                                               -1, -1);
   }
-  else
-  {
-	  g_print ("%s", "p is none");
-  }
 
 
   if (pix)
@@ -749,10 +840,6 @@ lightdash_pager_get_background (LightdashPager *pager,
 
       g_object_unref (G_OBJECT (pix));
     }
-  else
-  {
-	  g_print ("%s", "pix is null");
-  }
 
   return pager->priv->bg_cache;
 }
