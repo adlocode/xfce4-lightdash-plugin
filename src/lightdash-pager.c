@@ -62,7 +62,12 @@ lightdash_pager_drag_drop  (GtkWidget        *widget,
 		       GdkDragContext   *context,
 		       gint              x,
 		       gint              y,
-		       guint             time)	;		       
+		       guint             time);	
+		       
+static gboolean lightdash_pager_button_release (GtkWidget *widget, GdkEventButton *event);
+
+static void lightdash_pager_active_workspace_changed
+	(WnckScreen *screen, WnckWorkspace *previously_active_workspace, LightdashPager *pager);		       	       
 
 #if GTK_CHECK_VERSION (3, 0, 0)
 static gboolean lightdash_pager_draw (GtkWidget *widget, cairo_t *cr);
@@ -93,6 +98,11 @@ static void lightdash_pager_init (LightdashPager *pager)
 	
 	g_signal_connect (GTK_WIDGET (pager), "drag-drop",
 		G_CALLBACK (lightdash_pager_drag_drop), NULL);
+		
+	g_signal_connect (GTK_WIDGET (pager), "button-release-event",
+		G_CALLBACK (lightdash_pager_button_release), NULL);
+		
+		
 }
 
 static void lightdash_pager_class_init (LightdashPagerClass *klass)
@@ -160,6 +170,9 @@ static void lightdash_pager_realize (GtkWidget *widget)
 	
 	if (pager->priv->screen == NULL)
 		pager->priv->screen = wnck_screen_get_default ();
+		
+	g_signal_connect (pager->priv->screen, "active-workspace-changed",
+            G_CALLBACK (lightdash_pager_active_workspace_changed), pager);
 	
 }
 
@@ -392,6 +405,34 @@ lightdash_pager_drag_data_received (GtkWidget          *widget,
     }
 
   gtk_drag_finish (context, FALSE, FALSE, time);
+}
+
+static gboolean lightdash_pager_button_release (GtkWidget *widget, GdkEventButton *event)
+{
+	WnckWorkspace *space;
+	LightdashPager *pager;
+	int i;
+	int j;
+	int viewport_x;
+	int viewport_y;
+	
+	if (event->button !=1)
+		return FALSE;
+		
+	pager = LIGHTDASH_PAGER (widget);
+	
+	      i = workspace_at_point (pager,
+                      event->x, event->y,
+                      &viewport_x, &viewport_y);
+                              
+     if (space = wnck_screen_get_workspace (pager->priv->screen, i))
+     { 
+		 if (space != wnck_screen_get_active_workspace (pager->priv->screen))
+			wnck_workspace_activate (space, event->time);
+	}
+		
+	return FALSE;
+		
 }
 			
 static void lightdash_pager_draw_workspace (LightdashPager *pager,
@@ -700,6 +741,12 @@ lightdash_pager_get_background (LightdashPager *pager,
   }
 
   return pager->priv->bg_cache;
+}
+
+static void lightdash_pager_active_workspace_changed
+	(WnckScreen *screen, WnckWorkspace *previously_active_workspace, LightdashPager *pager)
+{
+	gtk_widget_queue_draw (GTK_WIDGET (pager));
 }
 
 
