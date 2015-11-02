@@ -32,6 +32,12 @@ G_DEFINE_TYPE (LightdashPager, lightdash_pager, GTK_TYPE_WIDGET);
 
 static void lightdash_pager_realize (GtkWidget *widget);
 
+#if GTK_CHECK_VERSION (3, 0, 0)
+static gboolean lightdash_pager_draw (GtkWidget *widget, cairo_t *cr);
+#else
+static gboolean lightdash_pager_expose_event (GtkWidget *widget, GdkEventExpose *event);
+#endif
+
 static void lightdash_pager_init (LightdashPager *pager)
 {
 	static const GtkTargetEntry targets [] = {
@@ -41,6 +47,10 @@ static void lightdash_pager_init (LightdashPager *pager)
 	pager->priv = LIGHTDASH_PAGER_GET_PRIVATE (pager);
 	
 	pager->priv->screen = NULL;
+	pager->priv->n_rows = 1;
+	
+	g_signal_connect (G_OBJECT(pager), "expose-event", 
+		G_CALLBACK (lightdash_pager_expose_event), NULL);
 }
 
 static void lightdash_pager_class_init (LightdashPagerClass *klass)
@@ -164,9 +174,6 @@ static void get_workspace_rect (LightdashPager *pager,
   rect->y += focus_width;
   
 }
-  
-  			
-
 			
 static void lightdash_pager_draw_workspace (LightdashPager *pager,
 	int workspace, GdkRectangle *rect, GdkPixbuf *bg_pixbuf)
@@ -215,6 +222,8 @@ static gboolean lightdash_pager_expose_event (GtkWidget *widget, GdkEventExpose 
 	GtkStyle *style;
 	int focus_width;
 	
+	bg_pixbuf = NULL;
+	
 	pager = LIGHTDASH_PAGER (widget);
 	
 	n_spaces = wnck_screen_get_workspace_count (pager->priv->screen);
@@ -259,6 +268,9 @@ static gboolean lightdash_pager_expose_event (GtkWidget *widget, GdkEventExpose 
 	while (i < n_spaces)
 	{
 		GdkRectangle rect, intersect;
+		
+		get_workspace_rect (pager, i, &rect);
+		lightdash_pager_draw_workspace (pager, i, &rect, bg_pixbuf);
 	}
 		
 	
