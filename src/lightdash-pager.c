@@ -22,6 +22,8 @@
 struct _LightdashPagerPrivate
 {
 	WnckScreen *screen;
+	
+	int n_rows;
 };
 
 G_DEFINE_TYPE (LightdashPager, lightdash_pager, GTK_TYPE_WIDGET);
@@ -108,21 +110,83 @@ static void lightdash_pager_realize (GtkWidget *widget)
 		pager->priv->screen = wnck_screen_get_default ();
 	
 }
+
+static void get_workspace_rect (LightdashPager *pager,
+	int space, GdkRectangle *rect)
+{
+  int hsize, vsize;
+  int n_spaces;
+  int spaces_per_row;
+  GtkWidget *widget;
+  int col, row;
+  GtkAllocation allocation;
+  GtkStyle *style;
+  int focus_width;
+
+  widget = GTK_WIDGET (pager);
+
+  gtk_widget_get_allocation (widget, &allocation);
+
+  style = gtk_widget_get_style (widget);
+  gtk_widget_style_get (widget,
+			"focus-line-width", &focus_width,
+			NULL);
+  
+  hsize = allocation.width - 2 * focus_width;
+  vsize = allocation.height - 2 * focus_width;
+  
+  
+  n_spaces = wnck_screen_get_workspace_count (pager->priv->screen);
+
+  g_assert (pager->priv->n_rows > 0);
+  spaces_per_row = (n_spaces + pager->priv->n_rows - 1) / pager->priv->n_rows;
+      
+      rect->width = (hsize - (pager->priv->n_rows - 1)) / pager->priv->n_rows;
+      rect->height = (vsize - (spaces_per_row - 1)) / spaces_per_row;
+
+      col = space / spaces_per_row;
+      row = space % spaces_per_row;
+
+      if (gtk_widget_get_direction (widget) == GTK_TEXT_DIR_RTL)
+        col = pager->priv->n_rows - col - 1;
+
+      rect->x = (rect->width + 1) * col; 
+      rect->y = (rect->height + 1) * row;
+      
+      if (col == pager->priv->n_rows - 1)
+	rect->width = hsize - rect->x;
+      
+      if (row  == spaces_per_row - 1)
+	rect->height = vsize - rect->y;
+	
+	
+  rect->x += focus_width;
+  rect->y += focus_width;
+  
+}
+  
+  			
+
+			
 static void lightdash_pager_draw_workspace (LightdashPager *pager,
 	int workspace, GdkRectangle *rect, GdkPixbuf *bg_pixbuf)
 {
 	GdkWindow *window;
 	WnckWorkspace *space;
 	GtkStyle *style;
+	GtkWidget *widget;
+	GtkStateType *state;
 	
 	space = wnck_screen_get_workspace (pager->priv->screen, workspace);
 	widget = GTK_WIDGET (pager);
+	
+	state = GTK_STATE_NORMAL;
 	
 	window = gtk_widget_get_window (widget);
 	style = gtk_widget_get_style (widget);
 	
 	gdk_draw_pixbuf (window,
-		style->dark_gc[state],
+		style->dark_gc[(int)state],
 		bg_pixbuf,
 		0, 0,
 		rect->x, rect->y,
