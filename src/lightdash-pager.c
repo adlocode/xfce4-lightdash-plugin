@@ -244,6 +244,48 @@ static void get_workspace_rect (LightdashPager *pager,
   
 }
 
+static gint
+wnck_pager_window_get_workspace (WnckWindow *window,
+                                 gboolean    is_state_relevant)
+{
+  gint state;
+  WnckWorkspace *workspace;
+
+  state = wnck_window_get_state (window);
+  if (state == WNCK_WINDOW_STATE_HIDDEN || state == WNCK_WINDOW_STATE_SKIP_PAGER)
+    return -1;
+  workspace = wnck_window_get_workspace (window);
+  if (workspace == NULL && wnck_window_is_pinned (window))
+    workspace = wnck_screen_get_active_workspace (wnck_window_get_screen (window));
+
+  return workspace ? wnck_workspace_get_number (workspace) : -1;
+}
+
+static GList*
+get_windows_for_workspace_in_bottom_to_top (WnckScreen    *screen,
+                                            WnckWorkspace *workspace)
+{
+  GList *result;
+  GList *windows;
+  GList *tmp;
+  int workspace_num;
+  
+  result = NULL;
+  workspace_num = wnck_workspace_get_number (workspace);
+
+  windows = wnck_screen_get_windows_stacked (screen);
+  for (tmp = windows; tmp != NULL; tmp = tmp->next)
+    {
+      WnckWindow *win = WNCK_WINDOW (tmp->data);
+      if (wnck_pager_window_get_workspace (win, TRUE) == workspace_num)
+	result = g_list_prepend (result, win);
+    }
+
+  result = g_list_reverse (result);
+
+  return result;
+}
+
 static void
 draw_window (GdkDrawable        *drawable,
              GtkWidget          *widget,
