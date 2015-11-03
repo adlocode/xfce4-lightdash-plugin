@@ -89,7 +89,15 @@ draw_window (GdkDrawable        *drawable,
              
 static void window_opened_callback (WnckScreen *screen, WnckWindow *window, gpointer data);
 
-static void window_workspace_changed_callback (WnckWindow *window, gpointer data);                                            
+static void window_closed_callback (WnckScreen *screen, WnckWindow *window, gpointer data);
+
+static void window_workspace_changed_callback (WnckWindow *window, gpointer data);   
+
+static void
+window_state_changed_callback     (WnckWindow      *window,
+                                   WnckWindowState  changed,
+                                   WnckWindowState  new,
+                                   gpointer         data);                                         
 
 #if GTK_CHECK_VERSION (3, 0, 0)
 static gboolean lightdash_pager_draw (GtkWidget *widget, cairo_t *cr);
@@ -205,7 +213,10 @@ static void lightdash_pager_realize (GtkWidget *widget)
             G_CALLBACK (lightdash_pager_workspace_destroyed_callback), pager);  
             
     g_signal_connect (pager->priv->screen, "window-opened",
-            G_CALLBACK (window_opened_callback), pager);                       
+            G_CALLBACK (window_opened_callback), pager);
+            
+    g_signal_connect (pager->priv->screen, "window-closed",
+            G_CALLBACK (window_closed_callback), pager);                         
             
     gtk_widget_queue_draw (widget);
 	
@@ -558,6 +569,34 @@ workspace_at_point (LightdashPager *pager,
     }
 
   return -1;
+}
+
+static void
+lightdash_pager_queue_draw_workspace (LightdashPager *pager,
+                                 gint       i)
+{
+  GdkRectangle rect;
+  
+  if (i < 0)
+    return;
+
+  get_workspace_rect (pager, i, &rect);
+  gtk_widget_queue_draw_area (GTK_WIDGET (pager), 
+                              rect.x, rect.y, 
+			      rect.width, rect.height);
+}
+
+static void
+lightdash_pager_queue_draw_window (LightdashPager  *pager,
+                              WnckWindow *window)
+{
+  gint workspace;
+
+  workspace = lightdash_pager_window_get_workspace (window, TRUE);
+  if (workspace == -1)
+    return;
+
+  lightdash_pager_queue_draw_workspace (pager, workspace);
 }
 
 static gboolean
@@ -981,6 +1020,10 @@ static void lightdash_pager_connect_window (LightdashPager *pager, WnckWindow *w
 	g_signal_connect (G_OBJECT (window), "workspace-changed",
 						G_CALLBACK (window_workspace_changed_callback),
 						pager);
+						
+	g_signal_connect (G_OBJECT (window), "state-changed",
+					G_CALLBACK (window_state_changed_callback),
+					pager);
 }
 
 static void lightdash_pager_active_workspace_changed
@@ -1006,12 +1049,39 @@ static void window_opened_callback (WnckScreen *screen, WnckWindow *window, gpoi
 	LightdashPager *pager = LIGHTDASH_PAGER (data);
 	
 	lightdash_pager_connect_window (pager, window);
+	lightdash_pager_queue_draw_window (pager, window);
+}
+
+static void window_closed_callback (WnckScreen *screen, WnckWindow *window, gpointer data)
+{
+	LightdashPager *pager = LIGHTDASH_PAGER (data);
+	
+	lightdash_pager_queue_draw_window (pager, window);
 }
 
 static void window_workspace_changed_callback (WnckWindow *window, gpointer data)
 {
 	LightdashPager *pager = LIGHTDASH_PAGER (data);
 	gtk_widget_queue_draw (GTK_WIDGET (pager));
+}
+
+static void
+window_state_changed_callback     (WnckWindow      *window,
+                                   WnckWindowState  changed,
+                                   WnckWindowState  new,
+                                   gpointer         data)
+{
+  LightdashPager *pager = LIGHTDASH_PAGER (data);
+
+  /* if the changed state changes the visibility in the pager, we need to
+   * redraw the whole workspace. lightdash_pager_queue_draw_window() might not be
+   * enough */
+  if (!lightdash_pager_window_state_is_relevant (changed))
+    lightdash_pager_queue_draw_workspace (pager,
+                                     lightdash_pager_window_get_workspace (window,
+                                                                      FALSE));
+  else
+    lightdash_pager_queue_draw_window (pager, window);
 }
 
 GtkWidget * lightdash_pager_new ()
