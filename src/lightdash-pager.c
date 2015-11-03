@@ -75,6 +75,22 @@ static void lightdash_pager_workspace_created_callback
 static void lightdash_pager_workspace_destroyed_callback
 	(WnckScreen *screen, WnckWorkspace *space, LightdashPager *pager);		       	       
 
+static GList*
+get_windows_for_workspace_in_bottom_to_top (WnckScreen    *screen,
+                                            WnckWorkspace *workspace);
+                                            
+static void
+draw_window (GdkDrawable        *drawable,
+             GtkWidget          *widget,
+             WnckWindow         *win,
+             const GdkRectangle *winrect,
+             GtkStateType        state,
+             gboolean            translucent);
+             
+static void window_opened_callback (WnckScreen *screen, WnckWindow *window, gpointer data);
+
+static void window_workspace_changed_callback (WnckWindow *window, gpointer data);                                            
+
 #if GTK_CHECK_VERSION (3, 0, 0)
 static gboolean lightdash_pager_draw (GtkWidget *widget, cairo_t *cr);
 #else
@@ -95,6 +111,8 @@ static void lightdash_pager_init (LightdashPager *pager)
 	
 	gtk_drag_dest_set (GTK_WIDGET (pager), GTK_DEST_DEFAULT_MOTION, 
 		targets, G_N_ELEMENTS (targets), GDK_ACTION_MOVE);
+	
+	gtk_widget_set_can_focus (GTK_WIDGET(pager), TRUE);
 	
 	g_signal_connect (G_OBJECT(pager), "expose-event", 
 		G_CALLBACK (lightdash_pager_expose_event), NULL);
@@ -184,7 +202,10 @@ static void lightdash_pager_realize (GtkWidget *widget)
             G_CALLBACK (lightdash_pager_workspace_created_callback), pager);
             
 	g_signal_connect (pager->priv->screen, "workspace-destroyed",
-            G_CALLBACK (lightdash_pager_workspace_destroyed_callback), pager);                         
+            G_CALLBACK (lightdash_pager_workspace_destroyed_callback), pager);  
+            
+    g_signal_connect (pager->priv->screen, "window-opened",
+            G_CALLBACK (window_opened_callback), pager);                       
             
     gtk_widget_queue_draw (widget);
 	
@@ -243,16 +264,19 @@ static void get_workspace_rect (LightdashPager *pager,
   rect->y += focus_width;
   
 }
-
+static gboolean lightdash_pager_window_state_is_relevant (int state)
+{
+	return (state & (WNCK_WINDOW_STATE_HIDDEN | WNCK_WINDOW_STATE_SKIP_PAGER)) ? FALSE : TRUE;
+}
 static gint
-wnck_pager_window_get_workspace (WnckWindow *window,
+lightdash_pager_window_get_workspace (WnckWindow *window,
                                  gboolean    is_state_relevant)
 {
   gint state;
   WnckWorkspace *workspace;
 
   state = wnck_window_get_state (window);
-  if (state == WNCK_WINDOW_STATE_HIDDEN || state == WNCK_WINDOW_STATE_SKIP_PAGER)
+  if (is_state_relevant && !lightdash_pager_window_state_is_relevant (state))
     return -1;
   workspace = wnck_window_get_workspace (window);
   if (workspace == NULL && wnck_window_is_pinned (window))
@@ -277,13 +301,56 @@ get_windows_for_workspace_in_bottom_to_top (WnckScreen    *screen,
   for (tmp = windows; tmp != NULL; tmp = tmp->next)
     {
       WnckWindow *win = WNCK_WINDOW (tmp->data);
-      if (wnck_pager_window_get_workspace (win, TRUE) == workspace_num)
+      if (lightdash_pager_window_get_workspace (win, TRUE) == workspace_num)
 	result = g_list_prepend (result, win);
     }
 
   result = g_list_reverse (result);
 
   return result;
+}
+
+static void
+get_window_rect (WnckWindow         *window,
+                 const GdkRectangle *workspace_rect,
+                 GdkRectangle       *rect)
+{
+  double width_ratio, height_ratio;
+  int x, y, width, height;
+  WnckWorkspace *workspace;
+  GdkRectangle unclipped_win_rect;
+  
+  workspace = wnck_window_get_workspace (window);
+  if (workspace == NULL)
+    workspace = wnck_screen_get_active_workspace (wnck_window_get_screen (window));
+
+  /* scale window down by same ratio we scaled workspace down */
+  width_ratio = (double) workspace_rect->width / (double) wnck_workspace_get_width (workspace);
+  height_ratio = (double) workspace_rect->height / (double) wnck_workspace_get_height (workspace);
+  
+  wnck_window_get_geometry (window, &x, &y, &width, &height);
+  
+  x += wnck_workspace_get_viewport_x (workspace);
+  y += wnck_workspace_get_viewport_y (workspace);
+  x = x * width_ratio + 0.5;
+  y = y * height_ratio + 0.5;
+  width = width * width_ratio + 0.5;
+  height = height * height_ratio + 0.5;
+  
+  x += workspace_rect->x;
+  y += workspace_rect->y;
+  
+  if (width < 3)
+    width = 3;
+  if (height < 3)
+    height = 3;
+
+  unclipped_win_rect.x = x;
+  unclipped_win_rect.y = y;
+  unclipped_win_rect.width = width;
+  unclipped_win_rect.height = height;
+
+  gdk_rectangle_intersect ((GdkRectangle *) workspace_rect, &unclipped_win_rect, rect);
 }
 
 static void
@@ -595,6 +662,7 @@ static void lightdash_pager_draw_workspace (LightdashPager *pager,
 	int workspace, GdkRectangle *rect, GdkPixbuf *bg_pixbuf)
 {
 	GdkWindow *window;
+	GList *windows;
 	WnckWorkspace *space;
 	gboolean is_current;
 	GtkStyle *style;
@@ -739,6 +807,28 @@ static void lightdash_pager_draw_workspace (LightdashPager *pager,
 
       cairo_destroy (cr);
     }
+    
+    windows = get_windows_for_workspace_in_bottom_to_top (pager->priv->screen, 
+										wnck_screen_get_workspace (pager->priv->screen, workspace));
+	
+	GList *tmp = windows;
+	while (tmp != NULL)
+	{
+		WnckWindow *win = tmp->data;
+		GdkRectangle winrect;
+		
+		get_window_rect (win, rect, &winrect);
+		
+		draw_window (window,
+					widget,
+					win,
+					&winrect,
+					state,
+					FALSE);
+		tmp = tmp->next;
+	}
+	
+	g_list_free (windows);
 		
 }
 	
@@ -886,6 +976,13 @@ lightdash_pager_get_background (LightdashPager *pager,
   return pager->priv->bg_cache;
 }
 
+static void lightdash_pager_connect_window (LightdashPager *pager, WnckWindow *window)
+{
+	g_signal_connect (G_OBJECT (window), "workspace-changed",
+						G_CALLBACK (window_workspace_changed_callback),
+						pager);
+}
+
 static void lightdash_pager_active_workspace_changed
 	(WnckScreen *screen, WnckWorkspace *previously_active_workspace, LightdashPager *pager)
 {
@@ -901,6 +998,19 @@ static void lightdash_pager_workspace_created_callback
 static void lightdash_pager_workspace_destroyed_callback
 	(WnckScreen *screen, WnckWorkspace *space, LightdashPager *pager)
 {
+	gtk_widget_queue_draw (GTK_WIDGET (pager));
+}
+
+static void window_opened_callback (WnckScreen *screen, WnckWindow *window, gpointer data)
+{
+	LightdashPager *pager = LIGHTDASH_PAGER (data);
+	
+	lightdash_pager_connect_window (pager, window);
+}
+
+static void window_workspace_changed_callback (WnckWindow *window, gpointer data)
+{
+	LightdashPager *pager = LIGHTDASH_PAGER (data);
 	gtk_widget_queue_draw (GTK_WIDGET (pager));
 }
 
