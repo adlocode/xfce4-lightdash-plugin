@@ -93,6 +93,8 @@ static void window_closed_callback (WnckScreen *screen, WnckWindow *window, gpoi
 
 static void window_workspace_changed_callback (WnckWindow *window, gpointer data);   
 
+static void window_geometry_changed_callback (WnckWindow *window, gpointer data);
+
 static void
 window_state_changed_callback     (WnckWindow      *window,
                                    WnckWindowState  changed,
@@ -1024,6 +1026,10 @@ static void lightdash_pager_connect_window (LightdashPager *pager, WnckWindow *w
 	g_signal_connect (G_OBJECT (window), "state-changed",
 					G_CALLBACK (window_state_changed_callback),
 					pager);
+					
+	g_signal_connect (G_OBJECT (window), "geometry-changed",
+					G_CALLBACK (window_geometry_changed_callback),
+					pager);				
 }
 
 static void lightdash_pager_active_workspace_changed
@@ -1063,6 +1069,13 @@ static void window_workspace_changed_callback (WnckWindow *window, gpointer data
 {
 	LightdashPager *pager = LIGHTDASH_PAGER (data);
 	gtk_widget_queue_draw (GTK_WIDGET (pager));
+}
+
+static void window_geometry_changed_callback (WnckWindow *window, gpointer data)
+{
+	LightdashPager *pager = LIGHTDASH_PAGER (data);
+	
+	lightdash_pager_queue_draw_window (pager, window);
 }
 
 static void
