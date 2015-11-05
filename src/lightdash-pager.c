@@ -99,8 +99,10 @@ static void
 window_state_changed_callback     (WnckWindow      *window,
                                    WnckWindowState  changed,
                                    WnckWindowState  new,
-                                   gpointer         data);                                         
-
+                                   gpointer         data);
+                                   
+static void lightdash_pager_connect_window (LightdashPager *pager, WnckWindow *window);
+                                                                                                             
 #if GTK_CHECK_VERSION (3, 0, 0)
 static gboolean lightdash_pager_draw (GtkWidget *widget, cairo_t *cr);
 #else
@@ -159,6 +161,7 @@ static void lightdash_pager_realize (GtkWidget *widget)
 	GdkWindow *window;
 	GtkStyle *style;
 	GtkStyle *new_style;
+	GList *tmp;
 	
 	pager = LIGHTDASH_PAGER (widget);
 	
@@ -204,6 +207,11 @@ static void lightdash_pager_realize (GtkWidget *widget)
 	
 	if (pager->priv->screen == NULL)
 		pager->priv->screen = wnck_screen_get_default ();
+		
+	for (tmp = wnck_screen_get_windows (pager->priv->screen); tmp; tmp = tmp->next)
+	{
+		lightdash_pager_connect_window (pager, WNCK_WINDOW (tmp->data));
+	}
 		
 	g_signal_connect (pager->priv->screen, "active-workspace-changed",
             G_CALLBACK (lightdash_pager_active_workspace_changed), pager);
