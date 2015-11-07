@@ -28,6 +28,8 @@ struct _LightdashPagerPrivate
 {
 	WnckScreen *screen;
 	
+	WnckWindow *drag_window;
+	
 	GdkPixbuf *bg_cache;
 	
 	int n_rows;
@@ -472,6 +474,45 @@ draw_window (GdkDrawable        *drawable,
   cairo_stroke (cr);
 
   cairo_destroy (cr);
+}
+
+static WnckWindow *
+window_at_point (LightdashPager     *pager,
+                 WnckWorkspace *space,
+                 GdkRectangle  *space_rect,
+                 int            x,
+                 int            y)
+{
+  WnckWindow *window;
+  GList *windows;
+  GList *tmp;
+
+  window = NULL;
+
+  windows = get_windows_for_workspace_in_bottom_to_top (pager->priv->screen,
+                                                        space);
+
+  /* clicks on top windows first */
+  windows = g_list_reverse (windows);
+
+  for (tmp = windows; tmp != NULL; tmp = tmp->next)
+    {
+      WnckWindow *win = WNCK_WINDOW (tmp->data);
+      GdkRectangle winrect;
+
+      get_window_rect (win, space_rect, &winrect);
+
+      if (POINT_IN_RECT (x, y, winrect))
+        {
+          /* wnck_window_activate (win); */
+          window = win;
+          break;
+        }
+    }
+
+  g_list_free (windows);
+
+  return window;
 }
 
 static int
