@@ -170,6 +170,9 @@ void lightdash_windows_view_draw_symbolic_window_rectangle (LightTask *task, gin
 static gint
 lightdash_popup_handler (GtkWidget *widget, GdkEventButton *event, LightTask *task);
 
+gboolean lightdash_windows_view_drag_motion (GtkWidget *widget, GdkDragContext *drag_context,
+	gint x, gint y, guint time, LightTask *task);
+
 //****************
 
 
@@ -380,6 +383,11 @@ GType my_tasklist_get_type (void)
 static void my_tasklist_class_init (MyTasklistClass *klass)
 
 {	
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+	
+	widget_class->drag_motion = lightdash_windows_view_drag_motion;
+	
 	task_button_clicked_signals [TASK_BUTTON_CLICKED_SIGNAL] = 
 		g_signal_new ("task-button-clicked",
 		G_TYPE_FROM_CLASS(klass),
@@ -1137,6 +1145,26 @@ lightdash_windows_view_drag_data_received_handl
 		}
 	}
 	gtk_drag_finish (context, FALSE, FALSE, time);
+}
+
+gboolean lightdash_windows_view_drag_motion (GtkWidget *widget, GdkDragContext *drag_context,
+	gint x, gint y, guint time, LightTask *task)
+{
+	GdkAtom target;
+	LightdashWindowsView *windows_view;
+	GtkWidget *source_widget, *parent_widget;
+	
+	windows_view = MY_TASKLIST (widget);
+	
+	source_widget = gtk_drag_get_source_widget (drag_context);
+	parent_widget = gtk_widget_get_parent (source_widget);
+	
+	target = gtk_drag_dest_find_target (widget, drag_context, NULL);
+	if (target == GDK_NONE || parent_widget == windows_view->table)
+		gdk_drag_status (drag_context, 0, time);
+
+		
+	return TRUE;
 }
 
 void lightdash_windows_view_draw_symbolic_window_rectangle (LightTask *task, gint width, gint height)
