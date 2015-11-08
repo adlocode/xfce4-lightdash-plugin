@@ -28,6 +28,8 @@ struct _LightdashPagerPrivate
 {
 	WnckScreen *screen;
 	
+	int drag_start_x;
+	int drag_start_y;
 	WnckWindow *drag_window;
 	
 	GdkPixbuf *bg_cache;
@@ -64,7 +66,14 @@ lightdash_pager_drag_drop  (GtkWidget        *widget,
 		       GdkDragContext   *context,
 		       gint              x,
 		       gint              y,
-		       guint             time);	
+		       guint             time);
+		       
+static void 
+lightdash_pager_drag_data_get (GtkWidget        *widget,
+                          GdkDragContext   *context,
+                          GtkSelectionData *selection_data,
+                          guint             info,
+                          guint             time);		       
 		       
 static gboolean lightdash_pager_button_release (GtkWidget *widget, GdkEventButton *event);
 
@@ -122,6 +131,8 @@ static void lightdash_pager_init (LightdashPager *pager)
 	pager->priv->screen = NULL;
 	pager->priv->n_rows = 1;
 	pager->priv->bg_cache = NULL;
+	pager->priv->drag_start_x = 0;
+	pager->priv->drag_start_y = 0;
 	
 	gtk_drag_dest_set (GTK_WIDGET (pager), GTK_DEST_DEFAULT_MOTION, 
 		targets, G_N_ELEMENTS (targets), GDK_ACTION_MOVE);
@@ -720,6 +731,25 @@ lightdash_pager_drag_data_received (GtkWidget          *widget,
   gtk_drag_finish (context, FALSE, FALSE, time);
 }
 
+static void 
+lightdash_pager_drag_data_get (GtkWidget        *widget,
+                          GdkDragContext   *context,
+                          GtkSelectionData *selection_data,
+                          guint             info,
+                          guint             time)
+{
+  LightdashPager *pager = LIGHTDASH_PAGER (widget);
+  gulong xid;
+
+  if (pager->priv->drag_window == NULL)
+    return;
+
+  xid = wnck_window_get_xid (pager->priv->drag_window);
+  gtk_selection_data_set (selection_data,
+			  gtk_selection_data_get_target (selection_data),
+			  8, (guchar *)&xid, sizeof (gulong));
+}			  
+
 static gboolean lightdash_pager_button_release (GtkWidget *widget, GdkEventButton *event)
 {
 	WnckWorkspace *space;
@@ -746,6 +776,45 @@ static gboolean lightdash_pager_button_release (GtkWidget *widget, GdkEventButto
 		
 	return FALSE;
 		
+}
+
+static gboolean
+lightdash_pager_button_press (GtkWidget      *widget,
+                         GdkEventButton *event)
+{
+  LightdashPager *pager;
+  int space_number;
+  WnckWorkspace *space = NULL;
+  GdkRectangle workspace_rect;
+						    
+  if (event->button != 1)
+    return FALSE;
+
+  pager = LIGHTDASH_PAGER (widget);
+
+  space_number = workspace_at_point (pager, event->x, event->y, NULL, NULL);
+
+  if (space_number != -1)
+  {
+    get_workspace_rect (pager, space_number, &workspace_rect);
+    space = wnck_screen_get_workspace (pager->priv->screen, space_number);
+  }
+
+  if (space)
+    {
+      /* always save the start coordinates so we can know if we need to change
+       * workspace when the button is released (ie, start and end coordinates
+       * should be in the same workspace) */
+      pager->priv->drag_start_x = event->x;
+      pager->priv->drag_start_y = event->y;
+    }
+
+
+      pager->priv->drag_window = window_at_point (pager, space,
+                                                  &workspace_rect,
+                                                  event->x, event->y);
+
+  return TRUE;
 }
 			
 static void lightdash_pager_draw_workspace (LightdashPager *pager,
