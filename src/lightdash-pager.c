@@ -816,9 +816,13 @@ lightdash_pager_button_press (GtkWidget      *widget,
 
   return TRUE;
 }
-			
+#if GTK_CHECK_VERSION (3, 0, 0)
+static void lightdash_pager_draw_workspace (LightdashPager *pager,
+	cairo_t *cr, int workspace, GdkRectangle *rect, GdkPixbuf *bg_pixbuf)
+#else		
 static void lightdash_pager_draw_workspace (LightdashPager *pager,
 	int workspace, GdkRectangle *rect, GdkPixbuf *bg_pixbuf)
+#endif	
 {
 	GdkWindow *window;
 	GList *windows;
@@ -837,11 +841,18 @@ static void lightdash_pager_draw_workspace (LightdashPager *pager,
 	else
 		state = GTK_STATE_NORMAL;
 	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	#else
 	window = gtk_widget_get_window (widget);
+	#endif
 	style = gtk_widget_get_style (widget);
 	
 	if (bg_pixbuf)
 	{
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		gdk_cairo_set_source_pixbuf (cr, bg_pixbuf, rect->x, rect->y);
+		cairo_paint (cr);
+		#else
 		gdk_draw_pixbuf (window,
 			style->dark_gc[state],
 			bg_pixbuf,
@@ -850,12 +861,16 @@ static void lightdash_pager_draw_workspace (LightdashPager *pager,
 			-1, -1,
 			GDK_RGB_DITHER_MAX,
 			0, 0);
+		#endif
 	}
 	else
     {
+	  #if GTK_CHECK_VERSION (3, 0, 0)
+	  #else
       cairo_t *cr;
 
       cr = gdk_cairo_create (window);
+      #endif
 
       if (!wnck_workspace_is_virtual (space))
         {
@@ -963,8 +978,10 @@ static void lightdash_pager_draw_workspace (LightdashPager *pager,
                 }
             }
         }
-
+      #if GTK_CHECK_VERSION (3, 0, 0)
+      #else
       cairo_destroy (cr);
+      #endif
     }
     
     windows = get_windows_for_workspace_in_bottom_to_top (pager->priv->screen, 
@@ -978,12 +995,22 @@ static void lightdash_pager_draw_workspace (LightdashPager *pager,
 		
 		get_window_rect (win, rect, &winrect);
 		
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		draw_window (cr,
+					widget,
+					win,
+					&winrect,
+					state,
+					FALSE);
+		#else
 		draw_window (window,
 					widget,
 					win,
 					&winrect,
 					state,
 					FALSE);
+		#endif
+		
 		tmp = tmp->next;
 	}
 	
@@ -1066,7 +1093,11 @@ static gboolean lightdash_pager_expose_event (GtkWidget *widget, GdkEventExpose 
 														rect.height);
 			first = FALSE;
 		}
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		lightdash_pager_draw_workspace (pager, cr, i, &rect, bg_pixbuf);
+		#else
 		lightdash_pager_draw_workspace (pager, i, &rect, bg_pixbuf);
+		#endif
 		
 		++i;
 	}
