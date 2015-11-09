@@ -28,6 +28,7 @@ struct _LightdashPagerPrivate
 {
 	WnckScreen *screen;
 	
+	guint dragging :1;
 	int drag_start_x;
 	int drag_start_y;
 	WnckWindow *drag_window;
@@ -133,6 +134,7 @@ static void lightdash_pager_init (LightdashPager *pager)
 	pager->priv->bg_cache = NULL;
 	pager->priv->drag_start_x = 0;
 	pager->priv->drag_start_y = 0;
+	pager->priv->dragging = FALSE;
 	
 	gtk_drag_dest_set (GTK_WIDGET (pager), GTK_DEST_DEFAULT_MOTION, 
 		targets, G_N_ELEMENTS (targets), GDK_ACTION_MOVE);
@@ -754,6 +756,43 @@ lightdash_pager_drag_data_get (GtkWidget        *widget,
 			  gtk_selection_data_get_target (selection_data),
 			  8, (guchar *)&xid, sizeof (gulong));
 }			  
+
+static gboolean
+wnck_pager_motion (GtkWidget        *widget,
+                   GdkEventMotion   *event)
+{
+  LightdashPager *pager;
+  GdkWindow *window;
+  int x, y;
+
+  pager = LIGHTDASH_PAGER (widget);
+
+  window = gtk_widget_get_window (widget);
+  gdk_window_get_pointer (window, &x, &y, NULL);
+
+  if (!pager->priv->dragging &&
+      pager->priv->drag_window != NULL &&
+      gtk_drag_check_threshold (widget,
+                                pager->priv->drag_start_x,
+                                pager->priv->drag_start_y,
+                                x, y))
+    {
+      GdkDragContext *context;
+      context = gtk_drag_begin (widget, 
+				gtk_drag_dest_get_target_list (widget),
+				GDK_ACTION_MOVE,
+				1, (GdkEvent *)event);
+      pager->priv->dragging = TRUE;
+      //pager->priv->prelight_dnd = TRUE;
+     // _wnck_window_set_as_drag_icon (pager->priv->drag_window, 
+				     //context,
+				     //GTK_WIDGET (pager));
+    }
+
+  //wnck_pager_check_prelight (pager, x, y, pager->priv->prelight_dnd);
+
+  return TRUE;
+}
 
 static gboolean lightdash_pager_button_release (GtkWidget *widget, GdkEventButton *event)
 {
