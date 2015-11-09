@@ -139,8 +139,13 @@ static void lightdash_pager_init (LightdashPager *pager)
 	
 	gtk_widget_set_can_focus (GTK_WIDGET(pager), TRUE);
 	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	g_signal_connect (G_OBJECT(pager), "draw", 
+		G_CALLBACK (lightdash_pager_expose_event), NULL);
+	#else
 	g_signal_connect (G_OBJECT(pager), "expose-event", 
 		G_CALLBACK (lightdash_pager_expose_event), NULL);
+	#endif
 		
 	g_signal_connect (GTK_WIDGET (pager), "drag-data-received",
 		G_CALLBACK (lightdash_pager_drag_data_received), NULL);
@@ -816,10 +821,13 @@ lightdash_pager_button_press (GtkWidget      *widget,
 
   return TRUE;
 }
+
 #if GTK_CHECK_VERSION (3, 0, 0)
+
 static void lightdash_pager_draw_workspace (LightdashPager *pager,
 	cairo_t *cr, int workspace, GdkRectangle *rect, GdkPixbuf *bg_pixbuf)
-#else		
+#else
+		
 static void lightdash_pager_draw_workspace (LightdashPager *pager,
 	int workspace, GdkRectangle *rect, GdkPixbuf *bg_pixbuf)
 #endif	
@@ -1019,8 +1027,10 @@ static void lightdash_pager_draw_workspace (LightdashPager *pager,
 }
 	
 #if GTK_CHECK_VERSION (3, 0, 0)
+
 static gboolean lightdash_pager_draw (GtkWidget *widget, cairo_t *cr)
 #else
+
 static gboolean lightdash_pager_expose_event (GtkWidget *widget, GdkEventExpose *event)
 #endif
 {
