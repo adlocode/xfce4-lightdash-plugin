@@ -28,6 +28,9 @@ struct _LightdashPagerPrivate
 {
 	WnckScreen *screen;
 	
+	int prelight;
+	gboolean prelight_dnd;
+	
 	guint dragging :1;
 	int drag_start_x;
 	int drag_start_y;
@@ -36,9 +39,14 @@ struct _LightdashPagerPrivate
 	GdkPixbuf *bg_cache;
 	
 	int n_rows;
+	
+	guint dnd_activate;
+	guint dnd_time;
 };
 
 G_DEFINE_TYPE (LightdashPager, lightdash_pager, GTK_TYPE_WIDGET);
+
+#define LIGHTDASH_ACTIVATE_TIMEOUT 1000
 
 #define LIGHTDASH_PAGER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), LIGHTDASH_PAGER_TYPE, LightdashPagerPrivate))
 
@@ -74,7 +82,18 @@ lightdash_pager_drag_data_get (GtkWidget        *widget,
                           GdkDragContext   *context,
                           GtkSelectionData *selection_data,
                           guint             info,
-                          guint             time);		       
+                          guint             time);
+
+static gboolean 
+lightdash_pager_drag_motion (GtkWidget          *widget,
+                        GdkDragContext     *context,
+                        gint                x,
+                        gint                y,
+                        guint               time);
+
+static gboolean
+lightdash_pager_motion (GtkWidget        *widget,
+                   GdkEventMotion   *event);      
 		       
 static gboolean lightdash_pager_button_release (GtkWidget *widget, GdkEventButton *event);
 
@@ -114,6 +133,16 @@ window_state_changed_callback     (WnckWindow      *window,
                                    gpointer         data);
                                    
 static void lightdash_pager_connect_window (LightdashPager *pager, WnckWindow *window);
+static void lightdash_pager_clear_drag (LightdashPager *pager);
+static gboolean
+lightdash_pager_button_press (GtkWidget      *widget,
+                         GdkEventButton *event);
+
+static void
+lightdash_pager_check_prelight (LightdashPager *pager,
+                           gint       x,
+                           gint       y,
+                           gboolean   prelight_dnd);                         
                                                                                                              
 #if GTK_CHECK_VERSION (3, 0, 0)
 static gboolean lightdash_pager_draw (GtkWidget *widget, cairo_t *cr);
@@ -135,6 +164,10 @@ static void lightdash_pager_init (LightdashPager *pager)
 	pager->priv->drag_start_x = 0;
 	pager->priv->drag_start_y = 0;
 	pager->priv->dragging = FALSE;
+	pager->priv->prelight = -1;
+	pager->priv->prelight_dnd = FALSE;
+	pager->priv->dnd_activate = 0;
+	pager->priv->dnd_time = 0;
 	
 	gtk_drag_dest_set (GTK_WIDGET (pager), GTK_DEST_DEFAULT_MOTION, 
 		targets, G_N_ELEMENTS (targets), GDK_ACTION_MOVE);
@@ -169,6 +202,10 @@ static void lightdash_pager_class_init (LightdashPagerClass *klass)
 	g_type_class_add_private (klass, sizeof (LightdashPagerPrivate));
 	
 	widget_class->realize = lightdash_pager_realize;
+	widget_class->button_press_event = lightdash_pager_button_press;
+	widget_class->motion_notify_event = lightdash_pager_motion;
+	widget_class->drag_motion = lightdash_pager_drag_motion;
+	widget_class->drag_data_get = lightdash_pager_drag_data_get;
 	
 }
 
@@ -639,6 +676,24 @@ workspace_at_point (LightdashPager *pager,
 
   return -1;
 }
+/*
+static gboolean
+lightdash_pager_drag_motion_timeout (gpointer data)
+{
+  LightdashPager *pager = LIGHTDASH_PAGER (data);
+  WnckWorkspace *active_workspace, *dnd_workspace;
+
+  pager->priv->dnd_activate = 0;
+  active_workspace = wnck_screen_get_active_workspace (pager->priv->screen);
+  dnd_workspace    = wnck_screen_get_workspace (pager->priv->screen,
+                                                pager->priv->prelight);
+
+  if (dnd_workspace &&
+      (pager->priv->prelight != wnck_workspace_get_number (active_workspace)))
+    wnck_workspace_activate (dnd_workspace, pager->priv->dnd_time);
+
+  return FALSE;
+}*/
 
 static void
 lightdash_pager_queue_draw_workspace (LightdashPager *pager,
@@ -668,6 +723,82 @@ lightdash_pager_queue_draw_window (LightdashPager  *pager,
   lightdash_pager_queue_draw_workspace (pager, workspace);
 }
 
+static void
+lightdash_pager_check_prelight (LightdashPager *pager,
+                           gint       x,
+                           gint       y,
+                           gboolean   prelight_dnd)
+{
+  gint id;
+
+  if (x < 0 || y < 0)
+    id = -1;
+  else
+    id = workspace_at_point (pager, x, y, NULL, NULL);
+  
+  if (id != pager->priv->prelight)
+    {
+      lightdash_pager_queue_draw_workspace (pager, pager->priv->prelight);
+      lightdash_pager_queue_draw_workspace (pager, id);
+      pager->priv->prelight = id;
+      pager->priv->prelight_dnd = prelight_dnd;
+    }
+  else if (prelight_dnd != pager->priv->prelight_dnd)
+    {
+      lightdash_pager_queue_draw_workspace (pager, pager->priv->prelight);
+      pager->priv->prelight_dnd = prelight_dnd;
+    }
+}
+
+static gboolean 
+lightdash_pager_drag_motion (GtkWidget          *widget,
+                        GdkDragContext     *context,
+                        gint                x,
+                        gint                y,
+                        guint               time)
+{
+  LightdashPager *pager;
+  gint previous_workspace;
+
+  pager = LIGHTDASH_PAGER (widget);
+
+  previous_workspace = pager->priv->prelight;
+  lightdash_pager_check_prelight (pager, x, y, TRUE);
+
+  if (gtk_drag_dest_find_target (widget, context, NULL))
+    {
+#if GTK_CHECK_VERSION(2,21,0)
+       gdk_drag_status (context,
+                        gdk_drag_context_get_suggested_action (context), time);
+#else
+       gdk_drag_status (context, context->suggested_action, time);
+#endif
+    }
+  else 
+    {
+      gdk_drag_status (context, 0, time);
+
+    /*if (pager->priv->prelight != previous_workspace &&
+	  pager->priv->dnd_activate != 0)
+	{
+	  /* remove timeout, the window we hover over changed * /
+	  g_source_remove (pager->priv->dnd_activate);
+	  pager->priv->dnd_activate = 0;
+	  pager->priv->dnd_time = 0;
+	}
+
+      if (pager->priv->dnd_activate == 0 && pager->priv->prelight > -1)   
+	{
+	  pager->priv->dnd_activate = g_timeout_add (LIGHTDASH_ACTIVATE_TIMEOUT,
+                                                   lightdash_pager_drag_motion_timeout,
+                                                   pager);
+	  pager->priv->dnd_time = time;
+	}*/
+    }    
+
+  return (pager->priv->prelight != -1);
+}
+
 static gboolean
 lightdash_pager_drag_drop  (GtkWidget        *widget,
 		       GdkDragContext   *context,
@@ -685,7 +816,7 @@ lightdash_pager_drag_drop  (GtkWidget        *widget,
   else 
     gtk_drag_finish (context, FALSE, FALSE, time);
 
-  //wnck_pager_clear_drag (pager);
+  lightdash_pager_clear_drag (pager);
   
   return TRUE;
 }
@@ -758,7 +889,7 @@ lightdash_pager_drag_data_get (GtkWidget        *widget,
 }			  
 
 static gboolean
-wnck_pager_motion (GtkWidget        *widget,
+lightdash_pager_motion (GtkWidget        *widget,
                    GdkEventMotion   *event)
 {
   LightdashPager *pager;
@@ -789,7 +920,7 @@ wnck_pager_motion (GtkWidget        *widget,
 				     //GTK_WIDGET (pager));
     }
 
-  //wnck_pager_check_prelight (pager, x, y, pager->priv->prelight_dnd);
+  lightdash_pager_check_prelight (pager, x, y, pager->priv->prelight_dnd);
 
   return TRUE;
 }
@@ -808,14 +939,24 @@ static gboolean lightdash_pager_button_release (GtkWidget *widget, GdkEventButto
 		
 	pager = LIGHTDASH_PAGER (widget);
 	
+	if (!pager->priv->dragging)
+	{
 	      i = workspace_at_point (pager,
                       event->x, event->y,
                       &viewport_x, &viewport_y);
+          j = workspace_at_point (pager,
+                      pager->priv->drag_start_x,
+                      pager->priv->drag_start_y,
+                      NULL, NULL);
                               
-     if (space = wnck_screen_get_workspace (pager->priv->screen, i))
+     if (i == j && i >= 0 && (space = wnck_screen_get_workspace (pager->priv->screen, i)))
      { 
 		 if (space != wnck_screen_get_active_workspace (pager->priv->screen))
 			wnck_workspace_activate (space, event->time);
+		}
+		
+		lightdash_pager_clear_drag (pager);
+	
 	}
 		
 	return FALSE;
@@ -1155,6 +1296,18 @@ static gboolean lightdash_pager_expose_event (GtkWidget *widget, GdkEventExpose 
 	
 	return FALSE;	
 	
+}
+
+static void
+lightdash_pager_clear_drag (LightdashPager *pager)
+{
+  if (pager->priv->dragging)
+    lightdash_pager_queue_draw_window (pager, pager->priv->drag_window);
+
+  pager->priv->dragging = FALSE;
+  pager->priv->drag_window = NULL;
+  pager->priv->drag_start_x = -1;
+  pager->priv->drag_start_y = -1;
 }
 
 static GdkPixbuf*
