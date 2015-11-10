@@ -34,6 +34,8 @@
 #define DEFAULT_TABLE_COLUMNS 3
 #define DEFAULT_TABLE_ROWS 2
 
+static GtkWidgetClass *lightdash_windows_view_parent_class = NULL;
+
 /* 
  * This tasklist emits signals when various events happen. This allows
  * the parent application to perform actions based on these events.
@@ -61,6 +63,8 @@ static void
 lightdash_windows_view_drag_data_received_handl
 (GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *selection_data, 
 	guint target_type, guint time);
+gboolean lightdash_windows_view_drag_motion (GtkWidget *widget, GdkDragContext *drag_context,
+	gint x, gint y, guint time);
 void lightdash_windows_view_reattach_widgets (LightdashWindowsView *tasklist);
 
 #define LIGHT_TASK_TYPE (light_task_get_type())
@@ -170,8 +174,7 @@ void lightdash_windows_view_draw_symbolic_window_rectangle (LightTask *task, gin
 static gint
 lightdash_popup_handler (GtkWidget *widget, GdkEventButton *event, LightTask *task);
 
-gboolean lightdash_windows_view_drag_motion (GtkWidget *widget, GdkDragContext *drag_context,
-	gint x, gint y, guint time, LightTask *task);
+
 
 //****************
 
@@ -380,48 +383,15 @@ GType my_tasklist_get_type (void)
 	return my_tasklist_type;
 }
 
-static void my_tasklist_class_init (MyTasklistClass *klass)
-
-{	
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
-	
-	widget_class->drag_motion = lightdash_windows_view_drag_motion;
-	
-	task_button_clicked_signals [TASK_BUTTON_CLICKED_SIGNAL] = 
-		g_signal_new ("task-button-clicked",
-		G_TYPE_FROM_CLASS(klass),
-		G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
-		0,
-		NULL,
-		NULL,
-		g_cclosure_marshal_VOID__VOID,
-		G_TYPE_NONE, 0);
-		
-		task_button_drag_begin_signals [TASK_BUTTON_DRAG_BEGIN_SIGNAL] = 
-		g_signal_new ("task-button-drag-begin",
-		G_TYPE_FROM_CLASS(klass),
-		G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
-		0,
-		NULL,
-		NULL,
-		g_cclosure_marshal_VOID__VOID,
-		G_TYPE_NONE, 0);
-		
-		task_button_drag_end_signals [TASK_BUTTON_DRAG_END_SIGNAL] = 
-		g_signal_new ("task-button-drag-end",
-		G_TYPE_FROM_CLASS(klass),
-		G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
-		0,
-		NULL,
-		NULL,
-		g_cclosure_marshal_VOID__VOID,
-		G_TYPE_NONE, 0);
-	
-}
-static void lightdash_windows_view_realize (LightdashWindowsView *tasklist)
+static void lightdash_windows_view_realize (GtkWidget *widget)
 {
+	LightdashWindowsView *tasklist;
 	GtkWidget *parent_gtk_widget;
+	int dv, dr;
+	
+	tasklist = MY_TASKLIST (widget);
+	
+	(*GTK_WIDGET_CLASS (lightdash_windows_view_parent_class)->realize) (widget);
 	
 	parent_gtk_widget = gtk_widget_get_toplevel (GTK_WIDGET (tasklist));
 	
@@ -430,7 +400,19 @@ static void lightdash_windows_view_realize (LightdashWindowsView *tasklist)
 		tasklist->parent_gdk_window = gtk_widget_get_window (parent_gtk_widget);
 	}
 	
-
+	tasklist->screen = wnck_screen_get_default();
+	tasklist->gdk_screen = gdk_screen_get_default ();
+	tasklist->dpy = gdk_x11_get_default_xdisplay ();
+	
+	XSetErrorHandler (lightdash_windows_view_xhandler_xerror);
+	
+	tasklist->composited = gdk_screen_is_composited (tasklist->gdk_screen);
+	
+	XDamageQueryExtension (tasklist->dpy, &dv, &dr);
+	gdk_x11_register_standard_event_type (gdk_screen_get_display (tasklist->gdk_screen),
+		dv, dv + XDamageNotify);
+	
+	wnck_screen_force_update (tasklist->screen);
 	
 	my_tasklist_update_windows (tasklist);
 	
@@ -449,7 +431,6 @@ static void lightdash_windows_view_realize (LightdashWindowsView *tasklist)
 	
 static void my_tasklist_init (LightdashWindowsView *tasklist)
 {
-	int dv, dr;
 	
 	static const GtkTargetEntry targets [] = { {"application/x-wnck-window-id",0,0} };
 	
@@ -484,26 +465,49 @@ static void my_tasklist_init (LightdashWindowsView *tasklist)
 	g_signal_connect (GTK_WIDGET (tasklist), "drag-data-received",
 		G_CALLBACK (lightdash_windows_view_drag_data_received_handl), NULL);
 	
-	
 	gtk_widget_show (tasklist->table);
-	tasklist->screen = wnck_screen_get_default();
-	tasklist->gdk_screen = gdk_screen_get_default ();
-	tasklist->dpy = gdk_x11_get_default_xdisplay ();
-	
-	XSetErrorHandler (lightdash_windows_view_xhandler_xerror);
-	
-	tasklist->composited = gdk_screen_is_composited (tasklist->gdk_screen);
-	
-	XDamageQueryExtension (tasklist->dpy, &dv, &dr);
-	gdk_x11_register_standard_event_type (gdk_screen_get_display (tasklist->gdk_screen),
-		dv, dv + XDamageNotify);
-	
-	wnck_screen_force_update (tasklist->screen);
-	
-	g_signal_connect (G_OBJECT (tasklist), "realize",
-                G_CALLBACK (lightdash_windows_view_realize), tasklist);
-           
+}
 
+static void my_tasklist_class_init (MyTasklistClass *klass)
+{	
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+	
+	lightdash_windows_view_parent_class = gtk_type_class (gtk_event_box_get_type ());
+	
+	widget_class->realize = lightdash_windows_view_realize;
+	widget_class->drag_motion = lightdash_windows_view_drag_motion;
+	
+	task_button_clicked_signals [TASK_BUTTON_CLICKED_SIGNAL] = 
+		g_signal_new ("task-button-clicked",
+		G_TYPE_FROM_CLASS(klass),
+		G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
+		0,
+		NULL,
+		NULL,
+		g_cclosure_marshal_VOID__VOID,
+		G_TYPE_NONE, 0);
+		
+		task_button_drag_begin_signals [TASK_BUTTON_DRAG_BEGIN_SIGNAL] = 
+		g_signal_new ("task-button-drag-begin",
+		G_TYPE_FROM_CLASS(klass),
+		G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
+		0,
+		NULL,
+		NULL,
+		g_cclosure_marshal_VOID__VOID,
+		G_TYPE_NONE, 0);
+		
+		task_button_drag_end_signals [TASK_BUTTON_DRAG_END_SIGNAL] = 
+		g_signal_new ("task-button-drag-end",
+		G_TYPE_FROM_CLASS(klass),
+		G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
+		0,
+		NULL,
+		NULL,
+		g_cclosure_marshal_VOID__VOID,
+		G_TYPE_NONE, 0);
+	
 }
 
 GtkWidget* lightdash_window_switcher_new (void)
@@ -1148,7 +1152,7 @@ lightdash_windows_view_drag_data_received_handl
 }
 
 gboolean lightdash_windows_view_drag_motion (GtkWidget *widget, GdkDragContext *drag_context,
-	gint x, gint y, guint time, LightTask *task)
+	gint x, gint y, guint time)
 {
 	GdkAtom target;
 	LightdashWindowsView *windows_view;
