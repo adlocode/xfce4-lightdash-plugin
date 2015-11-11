@@ -305,12 +305,22 @@ xfce_lightdash_window_screen_changed (GtkWidget *widget, GdkScreen *wscreen, Xfc
 	gtk_widget_set_colormap (widget, colormap);
 }
 
+#if GTK_CHECK_VERSION (3, 0, 0)
+
+gboolean
+xfce_lightdash_window_draw (GtkWidget *widget, cairo_t *cr, XfceAppfinderWindow *window)
+#else
+
 gboolean
 xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderWindow *window)
+#endif
 {
 	GtkStyle *style;
 	GdkColor color;
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	#else
 	cairo_t *cr;
+	#endif
 	
 	if (!gtk_widget_get_realized (widget))
 	{
@@ -425,7 +435,12 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
 #endif
   gtk_container_add (GTK_CONTAINER (window), main_hbox);
   gtk_widget_show (main_hbox);
+  
+  #if GTK_CHECK_VERSION (3, 0, 0)
+  window->icon_bar = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+  #else
   window->icon_bar = gtk_vbox_new (FALSE, 0);
+  #endif
   
   gtk_box_pack_start (GTK_BOX (main_hbox), window->icon_bar, FALSE, FALSE, 5);
   gtk_box_pack_start (GTK_BOX (main_hbox), vbox, TRUE, TRUE, 0);
@@ -441,9 +456,14 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
           
   g_signal_connect (G_OBJECT (window), "show",
       G_CALLBACK (xfce_lightdash_window_show), window);
-      
+  
+  #if GTK_CHECK_VERSION (3, 0, 0) 
+  g_signal_connect (G_OBJECT (window), "draw",
+      G_CALLBACK (xfce_lightdash_window_draw), window);
+  #else   
   g_signal_connect (G_OBJECT (window), "expose-event",
       G_CALLBACK (xfce_lightdash_window_expose), window);
+  #endif
       
   g_signal_connect (G_OBJECT (window), "screen-changed",
       G_CALLBACK (xfce_lightdash_window_screen_changed), window);
@@ -532,8 +552,11 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
   window->paned = pane = gtk_hpaned_new ();
 #endif
 
-	
-	window->taskview_container = gtk_hbox_new (FALSE, 0);
+#if GTK_CHECK_VERSION (3, 0, 0)
+  window->taskview_container = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+#else
+  window->taskview_container = gtk_hbox_new (FALSE, 0);
+#endif
   gtk_box_pack_start (GTK_BOX (vbox), window->taskview_container, TRUE, TRUE, 0);
   
  gtk_widget_add_events (GTK_WIDGET (window), GDK_KEY_PRESS_MASK);

@@ -1396,7 +1396,7 @@ static void light_task_create_widgets (LightTask *task)
 
 	}
 	
-		task->button_resized_tag = g_signal_connect (task->button, "size-allocate",
+		task->button_resized_tag = g_signal_connect (task->image, "size-allocate",
 						G_CALLBACK (lightdash_windows_view_button_size_changed),
 						task);
 							
