@@ -2018,8 +2018,7 @@ xfce_appfinder_window_item_changed (XfceAppfinderWindow *window)
 static void
 xfce_appfinder_window_row_activated (XfceAppfinderWindow *window)
 {
-  if (gtk_widget_get_sensitive (window->button_launch))
-    gtk_button_clicked (GTK_BUTTON (window->button_launch));
+    xfce_appfinder_window_execute (window, TRUE);
 }
 
 
