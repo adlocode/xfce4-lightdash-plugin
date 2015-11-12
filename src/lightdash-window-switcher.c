@@ -99,7 +99,10 @@ struct _LightTask
 	gboolean preview_created;
 	gboolean scaled;
 	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	#else
 	GdkPixmap *gdk_pixmap;
+	#endif
 	
 	cairo_surface_t *surface;
 	
@@ -1307,7 +1310,11 @@ static void light_task_create_widgets (LightTask *task)
 	
 	task->label = gtk_label_new (wnck_window_get_name (task->window));
 	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	task->vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+	#else
 	task->vbox = gtk_vbox_new (FALSE, 0);
+	#endif
 		
 	task->pixbuf = wnck_window_get_icon (task->window);
 	
@@ -1324,8 +1331,10 @@ static void light_task_create_widgets (LightTask *task)
 				wnck_screen_get_active_workspace (task->tasklist->screen))) 
 	
 	{
-	
-	task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 1, 1, -1);	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	#else
+	task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 1, 1, -1);
+	#endif	
 			
 	if (task->tasklist->composited 
 		&& !wnck_window_is_minimized (task->window)
@@ -1335,8 +1344,8 @@ static void light_task_create_widgets (LightTask *task)
 			lightdash_windows_view_redirect_window (task);
 			
 			task->surface = lightdash_windows_view_get_window_picture (task);
-			
-			task->image = gtk_image_new_from_pixmap (task->gdk_pixmap, NULL);
+
+			task->image = gtk_image_new ();
 			
 			/* Ignore damage events on its own window */
 			if (task->tasklist->parent_gdk_window && task->gdk_window != task->tasklist->parent_gdk_window)
