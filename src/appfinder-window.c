@@ -185,6 +185,7 @@ struct _XfceAppfinderWindow
   GtkWidget					 *taskview_container;
   GtkWidget					 *window_switcher;
   GtkWidget					 *apps_button;
+  GList						 *bookmarks_buttons;
   GtkWidget					 *pager;	
   GtkWidget					 *icon_bar;
 
@@ -282,6 +283,44 @@ xfce_lightdash_window_key_press_event_after
 	
 	return FALSE;
 	
+}
+
+static void lightdash_window_bookmarks_changed (XfceAppfinderModel *model, XfceAppfinderWindow *window)
+{
+	GtkWidget *button;
+	GList *li;
+	GSList *sli;
+	ModelItem *item;
+	
+	g_print ("%s", "entering bookmarks-changed \n");
+	button = NULL;
+	for (li = window->bookmarks_buttons; li != NULL; li = li->next)
+	{
+		button = GTK_WIDGET (li->data);
+		if (button)
+		{
+			window->bookmarks_buttons = g_list_remove (window->bookmarks_buttons, (gconstpointer) button);
+			gtk_widget_destroy (button);
+		}
+		
+	}
+	g_print ("%s", "removed \n");
+	for (sli = lightdash_model_get_items (model); sli != NULL; sli = sli->next)
+	{
+		item = sli->data;
+		if (item->is_bookmark)
+		{
+			GtkWidget *image = gtk_image_new_from_pixbuf (item->icon_large);
+			button = gtk_button_new ();
+			gtk_container_add (GTK_CONTAINER (button), image);
+			gtk_widget_show (image);
+			gtk_box_pack_start (GTK_BOX (window->icon_bar), button, FALSE, TRUE, 0);
+			window->bookmarks_buttons = g_list_prepend (window->bookmarks_buttons, button);
+			gtk_widget_set_size_request (button, 70, 70);
+			gtk_widget_show (button);
+		}
+	}
+	g_slist_free (sli);
 }
 
 void
@@ -388,6 +427,7 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
    GtkWidget *icon_apps;
     
     window->supports_alpha = FALSE;
+    window->bookmarks_buttons = NULL;
     
     gtk_window_maximize (GTK_WINDOW (window));
 	gtk_window_set_decorated (GTK_WINDOW (window), FALSE);
@@ -413,6 +453,11 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
   window->model = xfce_appfinder_model_get ();
   xfconf_g_property_bind (window->channel, "/item-icon-size", G_TYPE_UINT,
                           G_OBJECT (window->model), "icon-size");
+                          
+  
+  
+  
+	
 
   gtk_window_set_title (GTK_WINDOW (window), _("Application Finder"));
   integer = xfconf_channel_get_int (window->channel, "/last/window-width", DEFAULT_WINDOW_WIDTH);
@@ -703,7 +748,10 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
     g_signal_connect (G_OBJECT (window->channel), "property-changed",
         G_CALLBACK (xfce_appfinder_window_property_changed), window);
         
+  lightdash_window_bookmarks_changed (window->model, window);
   
+  g_signal_connect (G_OBJECT (window->model), "bookmarks-changed",
+	G_CALLBACK (lightdash_window_bookmarks_changed), window);
         
   gtk_widget_grab_focus (entry);
 

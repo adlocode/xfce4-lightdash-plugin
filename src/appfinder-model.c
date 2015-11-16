@@ -148,22 +148,6 @@ struct _XfceAppfinderModel
 
 typedef struct
 {
-  GarconMenuItem *item;
-  gchar          *key;
-  gchar          *abstract;
-  GPtrArray      *categories;
-  gchar          *command;
-  gchar          *tooltip;
-  guint           not_visible : 1;
-  guint           is_bookmark : 1;
-
-  GdkPixbuf      *icon;
-  GdkPixbuf      *icon_large;
-}
-ModelItem;
-
-typedef struct
-{
   GSList              *items;
   GarconMenuDirectory *category;
   GHashTable          *desktop_ids;
@@ -173,6 +157,7 @@ CollectContext;
 enum
 {
   CATEGORIES_CHANGED,
+  BOOKMARKS_CHANGED,
   LAST_SIGNAL
 };
 
@@ -213,6 +198,14 @@ xfce_appfinder_model_class_init (XfceAppfinderModelClass *klass)
 
   model_signals[CATEGORIES_CHANGED] =
     g_signal_new (g_intern_static_string ("categories-changed"),
+                  G_TYPE_FROM_CLASS (gobject_class),
+                  G_SIGNAL_RUN_LAST,
+                  0, NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+                  
+  model_signals[BOOKMARKS_CHANGED] =
+    g_signal_new (g_intern_static_string ("bookmarks-changed"),
                   G_TYPE_FROM_CLASS (gobject_class),
                   G_SIGNAL_RUN_LAST,
                   0, NULL, NULL,
@@ -1329,6 +1322,8 @@ xfce_appfinder_model_bookmarks_changed (GFileMonitor       *monitor,
                       APPFINDER_DEBUG ("bookmark %s changed", desktop_id);
 
                       item->is_bookmark = is_bookmark;
+                      
+                      
 
                       /* let model know what happened */
                       path = gtk_tree_path_new_from_indices (idx, -1);
@@ -1337,6 +1332,7 @@ xfce_appfinder_model_bookmarks_changed (GFileMonitor       *monitor,
                       gtk_tree_path_free (path);
                     }
                 }
+               //g_signal_emit_by_name (model, "bookmarks-changed"); 
             }
         }
       break;
@@ -2450,15 +2446,19 @@ xfce_appfinder_model_bookmark_toggle (XfceAppfinderModel  *model,
             {
               /* toggle state */
               item->is_bookmark = !item->is_bookmark;
-
+              
               /* stop searching, continue collecting */
               desktop_id = NULL;
+              
+              
 
               /* update model */
               path = gtk_tree_path_new_from_indices (idx, -1);
               ITER_INIT (iter, model->stamp, li);
               gtk_tree_model_row_changed (GTK_TREE_MODEL (model), path, &iter);
               gtk_tree_path_free (path);
+              
+              g_signal_emit_by_name (model, "bookmarks-changed");
             }
         }
 
@@ -2471,6 +2471,7 @@ xfce_appfinder_model_bookmark_toggle (XfceAppfinderModel  *model,
               g_string_append (contents, desktop_id2);
               g_string_append_c (contents, '\n');
             }
+            
         }
     }
 
@@ -2544,4 +2545,9 @@ xfce_appfinder_model_get_bookmarks_category (void)
     }
 
   return category;
+}
+
+GSList * lightdash_model_get_items (XfceAppfinderModel *model)
+{
+	return g_slist_copy (model->items);
 }
