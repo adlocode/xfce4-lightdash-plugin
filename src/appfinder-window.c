@@ -289,23 +289,28 @@ static void lightdash_window_bookmarks_changed (XfceAppfinderModel *model, XfceA
 {
 	GtkWidget *button;
 	GList *li;
-	GSList *sli;
+	GSList *sli, *items;
 	ModelItem *item;
 	
 	g_print ("%s", "entering bookmarks-changed \n");
 	button = NULL;
-	for (li = window->bookmarks_buttons; li != NULL; li = li->next)
+	li = window->bookmarks_buttons;
+	while (li != NULL)
 	{
-		button = GTK_WIDGET (li->data);
-		if (button)
+		GList *next = li->next;
+		button = li->data;
+		
+		if (button != NULL)
 		{
-			window->bookmarks_buttons = g_list_remove (window->bookmarks_buttons, (gconstpointer) button);
+			window->bookmarks_buttons = g_list_delete_link (window->bookmarks_buttons, li);
 			gtk_widget_destroy (button);
 		}
-		
+		li = next;
 	}
 	g_print ("%s", "removed \n");
-	for (sli = lightdash_model_get_items (model); sli != NULL; sli = sli->next)
+	
+	items = lightdash_model_get_items (model);
+	for (sli = items; sli != NULL; sli = sli->next)
 	{
 		item = sli->data;
 		if (item->is_bookmark)
@@ -320,7 +325,7 @@ static void lightdash_window_bookmarks_changed (XfceAppfinderModel *model, XfceA
 			gtk_widget_show (button);
 		}
 	}
-	g_slist_free (sli);
+	g_slist_free (items);
 }
 
 void
