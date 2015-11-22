@@ -64,22 +64,6 @@ XfceAppfinderIconSize;
 #define XFCE_APPFINDER_ICON_SIZE_48               XFCE_APPFINDER_ICON_SIZE_NORMAL
 
 
-typedef struct
-{
-  GarconMenuItem *item;
-  gchar          *key;
-  gchar          *abstract;
-  GPtrArray      *categories;
-  gchar          *command;
-  gchar          *tooltip;
-  guint           not_visible : 1;
-  guint           is_bookmark : 1;
-
-  GdkPixbuf      *icon;
-  GdkPixbuf      *icon_large;
-}ModelItem;
-
-
 GType                xfce_appfinder_model_get_type               (void) G_GNUC_CONST;
 
 XfceAppfinderModel  *xfce_appfinder_model_get                    (void) G_GNUC_MALLOC;
@@ -122,8 +106,6 @@ gboolean             xfce_appfinder_model_bookmark_toggle        (XfceAppfinderM
 GarconMenuDirectory *xfce_appfinder_model_get_command_category   (void);
 
 GarconMenuDirectory *xfce_appfinder_model_get_bookmarks_category (void);
-
-GSList * lightdash_model_get_items (XfceAppfinderModel *model);
 
 G_END_DECLS
 

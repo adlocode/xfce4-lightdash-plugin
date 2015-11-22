@@ -287,21 +287,29 @@ xfce_lightdash_window_key_press_event_after
 
 static void lightdash_window_bookmarks_changed (XfceAppfinderModel *model, XfceAppfinderWindow *window)
 {
+	g_print ("%s", "entering bookmarks-changed \n");
 	GtkWidget *button;
-	GList *li;
-	GSList *sli, *items;
-	ModelItem *item;
+	gboolean valid;
+	GtkTreeIter iter;
+	GdkPixbuf *icon_large;
+	gboolean is_bookmark;
 	
 	g_list_free_full (window->bookmarks_buttons, (GDestroyNotify) gtk_widget_destroy);
 	window->bookmarks_buttons = NULL;
 	
-	items = lightdash_model_get_items (model);
-	for (sli = items; sli != NULL; sli = sli->next)
+	valid = gtk_tree_model_get_iter_first (GTK_TREE_MODEL (model), &iter);
+	
+	while (valid)
 	{
-		item = sli->data;
-		if (item->is_bookmark)
+		
+		gtk_tree_model_get (GTK_TREE_MODEL (model), &iter,
+					XFCE_APPFINDER_MODEL_COLUMN_ICON_LARGE, &icon_large,
+					XFCE_APPFINDER_MODEL_COLUMN_BOOKMARK, &is_bookmark,
+					-1);
+					
+		if (is_bookmark)
 		{
-			GtkWidget *image = gtk_image_new_from_pixbuf (item->icon_large);
+			GtkWidget *image = gtk_image_new_from_pixbuf (icon_large);
 			button = gtk_button_new ();
 			gtk_container_add (GTK_CONTAINER (button), image);
 			gtk_widget_show (image);
@@ -310,8 +318,9 @@ static void lightdash_window_bookmarks_changed (XfceAppfinderModel *model, XfceA
 			gtk_widget_set_size_request (button, 70, 70);
 			gtk_widget_show (button);
 		}
+		
+		valid = gtk_tree_model_iter_next (GTK_TREE_MODEL (model), &iter);
 	}
-		g_slist_free (items);
 }
 
 void

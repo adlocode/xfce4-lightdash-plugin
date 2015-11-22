@@ -148,6 +148,21 @@ struct _XfceAppfinderModel
 
 typedef struct
 {
+  GarconMenuItem *item;
+  gchar          *key;
+  gchar          *abstract;
+  GPtrArray      *categories;
+  gchar          *command;
+  gchar          *tooltip;
+  guint           not_visible : 1;
+  guint           is_bookmark : 1;
+
+  GdkPixbuf      *icon;
+  GdkPixbuf      *icon_large;
+}ModelItem;
+
+typedef struct
+{
   GSList              *items;
   GarconMenuDirectory *category;
   GHashTable          *desktop_ids;
@@ -1334,7 +1349,7 @@ xfce_appfinder_model_bookmarks_changed (GFileMonitor       *monitor,
                       gtk_tree_path_free (path);
                     }
                 }
-               g_signal_emit_by_name (model, "bookmarks-changed"); 
+               //g_signal_emit_by_name (model, "bookmarks-changed"); 
             }
         }
       break;
@@ -2547,9 +2562,4 @@ xfce_appfinder_model_get_bookmarks_category (void)
     }
 
   return category;
-}
-
-GSList * lightdash_model_get_items (XfceAppfinderModel *model)
-{
-	return g_slist_copy (model->items);
 }
