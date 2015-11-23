@@ -1349,7 +1349,7 @@ xfce_appfinder_model_bookmarks_changed (GFileMonitor       *monitor,
                       gtk_tree_path_free (path);
                     }
                 }
-               //g_signal_emit_by_name (model, "bookmarks-changed"); 
+               g_signal_emit_by_name (model, "bookmarks-changed"); 
             }
         }
       break;

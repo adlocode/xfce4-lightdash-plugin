@@ -293,6 +293,12 @@ xfce_lightdash_window_key_press_event_after
 	
 }
 
+static void lightdash_bookmark_free (LightdashBookmark *bookmark)
+{
+	gtk_widget_destroy (bookmark->button);
+	g_slice_free (LightdashBookmark, bookmark);
+}
+
 static void lightdash_window_bookmark_button_clicked (GtkButton *button, gpointer data)
 {
 	LightdashBookmark *bookmark;
@@ -363,7 +369,7 @@ static void lightdash_window_bookmarks_changed (XfceAppfinderModel *model, XfceA
 	gboolean is_bookmark;
 	LightdashBookmark *bookmark;
 	
-	g_list_free_full (window->bookmarks_buttons, (GDestroyNotify) gtk_widget_destroy);
+	g_list_free_full (window->bookmarks_buttons, (GDestroyNotify) lightdash_bookmark_free);
 	window->bookmarks_buttons = NULL;
 	
 	valid = gtk_tree_model_get_iter_first (GTK_TREE_MODEL (model), &iter);
@@ -384,7 +390,7 @@ static void lightdash_window_bookmarks_changed (XfceAppfinderModel *model, XfceA
 			gtk_container_add (GTK_CONTAINER (button), image);
 			gtk_widget_show (image);
 			gtk_box_pack_start (GTK_BOX (window->icon_bar), button, FALSE, TRUE, 0);
-			window->bookmarks_buttons = g_list_prepend (window->bookmarks_buttons, button);
+			window->bookmarks_buttons = g_list_prepend (window->bookmarks_buttons, bookmark);
 			gtk_widget_set_size_request (button, 70, 70);
 			gtk_widget_show (button);
 			g_object_unref (icon_large);
