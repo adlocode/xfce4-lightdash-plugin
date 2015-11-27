@@ -389,7 +389,7 @@ static void lightdash_window_bookmarks_changed (XfceAppfinderModel *model, XfceA
 			button = gtk_button_new ();
 			gtk_container_add (GTK_CONTAINER (button), image);
 			gtk_widget_show (image);
-			gtk_box_pack_start (GTK_BOX (window->icon_bar), button, FALSE, TRUE, 0);
+			gtk_box_pack_start (GTK_BOX (window->icon_bar), button, FALSE, TRUE, 1);
 			window->bookmarks_buttons = g_list_prepend (window->bookmarks_buttons, bookmark);
 			gtk_widget_set_size_request (button, 70, 70);
 			gtk_widget_show (button);
