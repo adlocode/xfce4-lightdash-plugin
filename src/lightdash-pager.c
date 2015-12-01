@@ -127,6 +127,10 @@ static void window_workspace_changed_callback (WnckWindow *window, gpointer data
 static void window_geometry_changed_callback (WnckWindow *window, gpointer data);
 
 static void
+window_icon_changed_callback      (WnckWindow      *window,
+                                   gpointer         data);
+
+static void
 window_state_changed_callback     (WnckWindow      *window,
                                    WnckWindowState  changed,
                                    WnckWindowState  new,
@@ -1298,6 +1302,22 @@ static gboolean lightdash_pager_expose_event (GtkWidget *widget, GdkEventExpose 
 	
 }
 
+static void lightdash_pager_disconnect_window (LightdashPager *pager, WnckWindow *window)
+{
+  g_signal_handlers_disconnect_by_func (G_OBJECT (window),
+                                        G_CALLBACK (window_state_changed_callback),
+                                        pager);
+  g_signal_handlers_disconnect_by_func (G_OBJECT (window),
+                                        G_CALLBACK (window_workspace_changed_callback),
+                                        pager);
+  g_signal_handlers_disconnect_by_func (G_OBJECT (window),
+                                        G_CALLBACK (window_icon_changed_callback),
+                                        pager);
+  g_signal_handlers_disconnect_by_func (G_OBJECT (window),
+                                        G_CALLBACK (window_geometry_changed_callback),
+                                        pager);
+}
+
 static void
 lightdash_pager_clear_drag (LightdashPager *pager)
 {
@@ -1380,7 +1400,11 @@ static void lightdash_pager_connect_window (LightdashPager *pager, WnckWindow *w
 					
 	g_signal_connect (G_OBJECT (window), "geometry-changed",
 					G_CALLBACK (window_geometry_changed_callback),
-					pager);				
+					pager);	
+					
+	g_signal_connect (G_OBJECT (window), "icon-changed",
+					G_CALLBACK (window_icon_changed_callback),
+					pager);						
 }
 
 static void lightdash_pager_active_workspace_changed
@@ -1420,6 +1444,14 @@ static void window_workspace_changed_callback (WnckWindow *window, gpointer data
 {
 	LightdashPager *pager = LIGHTDASH_PAGER (data);
 	gtk_widget_queue_draw (GTK_WIDGET (pager));
+}
+
+static void
+window_icon_changed_callback      (WnckWindow      *window,
+                                   gpointer         data)
+{
+  LightdashPager *pager = LIGHTDASH_PAGER (data);
+  lightdash_pager_queue_draw_window (pager, window);
 }
 
 static void window_geometry_changed_callback (WnckWindow *window, gpointer data)
