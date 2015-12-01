@@ -57,6 +57,7 @@ G_DEFINE_TYPE (LightdashPager, lightdash_pager, GTK_TYPE_WIDGET);
   (ycoord) <  ((rect).y + (rect).height))
 
 static void lightdash_pager_realize (GtkWidget *widget);
+static void lightdash_pager_unrealize (GtkWidget *widget);
 static GdkPixbuf*
 lightdash_pager_get_background (LightdashPager *pager,
                            int        width,
@@ -146,8 +147,10 @@ static void
 lightdash_pager_check_prelight (LightdashPager *pager,
                            gint       x,
                            gint       y,
-                           gboolean   prelight_dnd);                         
-                                                                                                             
+                           gboolean   prelight_dnd);  
+                                                  
+static void lightdash_pager_disconnect_window (LightdashPager *pager, WnckWindow *window); 
+                                                                                                            
 #if GTK_CHECK_VERSION (3, 0, 0)
 static gboolean lightdash_pager_draw (GtkWidget *widget, cairo_t *cr);
 #else
@@ -206,6 +209,7 @@ static void lightdash_pager_class_init (LightdashPagerClass *klass)
 	g_type_class_add_private (klass, sizeof (LightdashPagerPrivate));
 	
 	widget_class->realize = lightdash_pager_realize;
+	widget_class->unrealize = lightdash_pager_unrealize;
 	widget_class->button_press_event = lightdash_pager_button_press;
 	widget_class->motion_notify_event = lightdash_pager_motion;
 	widget_class->drag_motion = lightdash_pager_drag_motion;
@@ -291,6 +295,19 @@ static void lightdash_pager_realize (GtkWidget *widget)
             
     gtk_widget_queue_draw (widget);
 	
+}
+
+static void lightdash_pager_unrealize (GtkWidget *widget)
+{
+	GList *tmp;
+	LightdashPager *pager = LIGHTDASH_PAGER (widget);
+	
+	for (tmp = wnck_screen_get_windows (pager->priv->screen); tmp; tmp = tmp->next)
+	{
+		lightdash_pager_disconnect_window (pager, WNCK_WINDOW (tmp->data));
+	}
+	
+	(*GTK_WIDGET_CLASS (lightdash_pager_parent_class)->unrealize) (widget);
 }
 
 static void get_workspace_rect (LightdashPager *pager,
