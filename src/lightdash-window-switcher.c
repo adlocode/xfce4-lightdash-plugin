@@ -450,8 +450,6 @@ static void lightdash_windows_view_class_init (MyTasklistClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 	
-	lightdash_windows_view_parent_class = gtk_type_class (gtk_event_box_get_type ());
-	
 	widget_class->realize = lightdash_windows_view_realize;
 	widget_class->drag_motion = lightdash_windows_view_drag_motion;
 	
