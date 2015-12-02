@@ -23,33 +23,12 @@ static void lightdash_table_layout_class_init (LightdashTableLayoutClass *klass)
 
 static void lightdash_table_layout_init (LightdashTableLayout *grid);
 
+#if GTK_CHECK_VERSION (3, 0, 0)
+G_DEFINE_TYPE (LightdashTableLayout, lightdash_table_layout, GTK_TYPE_GRID);
+#else
+G_DEFINE_TYPE (LightdashTableLayout, lightdash_table_layout, GTK_TYPE_TABLE);
+#endif
 
-GType lightdash_table_layout_get_type (void)
-{
-	static GType lightdash_table_layout_type = 0;
-	
-	if (!lightdash_table_layout_type)
-	{
-		const GTypeInfo lightdash_table_layout_info =
-		{
-			sizeof(LightdashTableLayoutClass),
-			NULL, /*base_init*/
-			NULL, /*base_finalize*/
-			(GClassInitFunc) lightdash_table_layout_class_init,
-			NULL, /*class_finalize*/
-			NULL,
-			sizeof(LightdashTableLayout),
-			0,
-			(GInstanceInitFunc) lightdash_table_layout_init,
-		};
-		#if GTK_CHECK_VERSION (3, 0, 0)
-		lightdash_table_layout_type = g_type_register_static (GTK_TYPE_GRID, "LightdashTableLayout", &lightdash_table_layout_info, 0);
-		#else
-		lightdash_table_layout_type = g_type_register_static (GTK_TYPE_TABLE, "LightdashTableLayout", &lightdash_table_layout_info, 0);
-		#endif
-	}
-	return lightdash_table_layout_type;
-}
 
 static void lightdash_table_layout_class_init (LightdashTableLayoutClass *klass)
 
