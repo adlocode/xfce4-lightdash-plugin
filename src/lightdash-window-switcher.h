@@ -27,15 +27,16 @@
 
 G_BEGIN_DECLS
 
-#define MY_TASKLIST_TYPE (my_tasklist_get_type())
-#define MY_TASKLIST(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), MY_TASKLIST_TYPE, MyTasklist))
-#define MY_TASKLIST_CLASS (klass) (G_TYPE_CHECK_CLASS_CAST ((klass), MY_TASKLIST_TYPE, MyTasklistClass))
-#define IS_MY_TASKLIST (obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), MY_TASKLIST_TYPE))
-#define IS_MY_TASKLIST_CLASS(klass), (G_TYPE_CHECK_CLASS_TYPE ((klass), MY_TASKLIST_TYPE))
+#define LIGHTDASH_WINDOWS_VIEW_TYPE (lightdash_windows_view_get_type())
+#define LIGHTDASH_WINDOWS_VIEW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), LIGHTDASH_WINDOWS_VIEW_TYPE, MyTasklist))
+#define MY_TASKLIST_CLASS (klass) (G_TYPE_CHECK_CLASS_CAST ((klass), LIGHTDASH_WINDOWS_VIEW_TYPE, MyTasklistClass))
+#define IS_MY_TASKLIST (obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LIGHTDASH_WINDOWS_VIEW_TYPE))
+#define IS_MY_TASKLIST_CLASS(klass), (G_TYPE_CHECK_CLASS_TYPE ((klass), LIGHTDASH_WINDOWS_VIEW_TYPE))
 
 typedef struct _MyTasklist LightdashWindowsView;
-typedef struct _MyTasklistClass MyTasklistClass;
+typedef struct _MyTasklistClass LightdashWindowsViewClass;
 typedef LightdashWindowsView MyTasklist;
+typedef LightdashWindowsViewClass MyTasklistClass;
 
 struct _MyTasklist
 {
@@ -81,7 +82,6 @@ struct _MyTasklistClass
 	GtkEventBoxClass parent_class;
 };
 
-GType my_tasklist_get_type (void);
 GtkWidget* lightdash_window_switcher_new (void);
 
 

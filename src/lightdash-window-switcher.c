@@ -34,8 +34,6 @@
 #define DEFAULT_TABLE_COLUMNS 3
 #define DEFAULT_TABLE_ROWS 2
 
-static GtkWidgetClass *lightdash_windows_view_parent_class = NULL;
-
 /* 
  * This tasklist emits signals when various events happen. This allows
  * the parent application to perform actions based on these events.
@@ -354,37 +352,13 @@ enum {
 	LAST_SIGNAL
 };
 
-static void my_tasklist_class_init (MyTasklistClass *klass);
-static void my_tasklist_init (LightdashWindowsView *tasklist);
-
 static guint task_button_clicked_signals[LAST_SIGNAL]={0};
 
 static guint task_button_drag_begin_signals[LAST_SIGNAL]={0};
 
 static guint task_button_drag_end_signals[LAST_SIGNAL]={0};
 
-GType my_tasklist_get_type (void)
-{
-	static GType my_tasklist_type = 0;
-	
-	if (!my_tasklist_type)
-	{
-		const GTypeInfo my_tasklist_info =
-		{
-			sizeof(MyTasklistClass),
-			NULL, /*base_init*/
-			NULL, /*base_finalize*/
-			(GClassInitFunc) my_tasklist_class_init,
-			NULL, /*class_finalize*/
-			NULL,
-			sizeof(LightdashWindowsView),
-			0,
-			(GInstanceInitFunc) my_tasklist_init,
-		};
-		my_tasklist_type = g_type_register_static (GTK_TYPE_EVENT_BOX, "MyTasklist", &my_tasklist_info, 0);
-	}
-	return my_tasklist_type;
-}
+G_DEFINE_TYPE (LightdashWindowsView, lightdash_windows_view, GTK_TYPE_EVENT_BOX);
 
 static void lightdash_windows_view_realize (GtkWidget *widget)
 {
@@ -392,7 +366,7 @@ static void lightdash_windows_view_realize (GtkWidget *widget)
 	GtkWidget *parent_gtk_widget;
 	int dv, dr;
 	
-	tasklist = MY_TASKLIST (widget);
+	tasklist = LIGHTDASH_WINDOWS_VIEW (widget);
 	
 	(*GTK_WIDGET_CLASS (lightdash_windows_view_parent_class)->realize) (widget);
 	
@@ -432,7 +406,7 @@ static void lightdash_windows_view_realize (GtkWidget *widget)
                G_CALLBACK (my_tasklist_screen_composited_changed), tasklist);
 }
 	
-static void my_tasklist_init (LightdashWindowsView *tasklist)
+static void lightdash_windows_view_init (LightdashWindowsView *tasklist)
 {
 	
 	static const GtkTargetEntry targets [] = { {"application/x-wnck-window-id",0,0} };
@@ -471,7 +445,7 @@ static void my_tasklist_init (LightdashWindowsView *tasklist)
 	gtk_widget_show (tasklist->table);
 }
 
-static void my_tasklist_class_init (MyTasklistClass *klass)
+static void lightdash_windows_view_class_init (MyTasklistClass *klass)
 {	
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
@@ -515,7 +489,7 @@ static void my_tasklist_class_init (MyTasklistClass *klass)
 
 GtkWidget* lightdash_window_switcher_new (void)
 {
-	return GTK_WIDGET(g_object_new (my_tasklist_get_type (), NULL));
+	return GTK_WIDGET(g_object_new (lightdash_windows_view_get_type (), NULL));
 }
 
 static int lightdash_windows_view_xhandler_xerror (Display *dpy, XErrorEvent *e)
@@ -1130,7 +1104,7 @@ lightdash_windows_view_drag_data_received_handl
 	GList *tmp;
 	WnckWindow *win;
 	
-	window_switcher = MY_TASKLIST (widget);
+	window_switcher = LIGHTDASH_WINDOWS_VIEW (widget);
 	
 	if ((gtk_selection_data_get_length (selection_data) != sizeof (gulong)) ||
 		(gtk_selection_data_get_format (selection_data) != 8))
@@ -1161,7 +1135,7 @@ gboolean lightdash_windows_view_drag_motion (GtkWidget *widget, GdkDragContext *
 	LightdashWindowsView *windows_view;
 	GtkWidget *source_widget, *parent_widget;
 	
-	windows_view = MY_TASKLIST (widget);
+	windows_view = LIGHTDASH_WINDOWS_VIEW (widget);
 	
 	source_widget = gtk_drag_get_source_widget (drag_context);
 	parent_widget = gtk_widget_get_parent (source_widget);
