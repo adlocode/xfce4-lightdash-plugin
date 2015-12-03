@@ -764,56 +764,18 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
   gtk_paned_add2 (GTK_PANED (pane), scroll);
   gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (scroll), GTK_SHADOW_ETCHED_IN);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  //gtk_widget_show (scroll);
 
   /* set the icon or tree view */
   xfce_appfinder_window_view (window);
-#if GTK_CHECK_VERSION (3, 0, 0)
-  window->bin_expanded = gtk_paned_new (GTK_ORIENTATION_HORIZONTAL);
-#else
-  window->bin_expanded = gtk_alignment_new (0.0, 0.0, 1.0, 1.0);
-#endif
-  gtk_box_pack_start (GTK_BOX (vbox), window->bin_expanded, FALSE, TRUE, 0);
-  gtk_widget_show (window->bin_expanded);
 
 #if GTK_CHECK_VERSION (3, 0, 0)
-  window->bbox = hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
+  //window->bbox = hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
 #else
-  window->bbox = hbox = gtk_hbox_new (FALSE, 6);
+  //window->bbox = hbox = gtk_hbox_new (FALSE, 6);
 #endif
-  gtk_widget_show (hbox);
-
-  window->button_preferences = button = gtk_button_new_from_stock (GTK_STOCK_PREFERENCES);
-  //gtk_box_pack_start (GTK_BOX (hbox), button, FALSE, FALSE, 0);
-  g_signal_connect (G_OBJECT (button), "clicked",
-      G_CALLBACK (xfce_lightdash_window_preferences), window);
-
-#if GTK_CHECK_VERSION (3, 0, 0)
-  bbox = gtk_button_box_new (GTK_ORIENTATION_HORIZONTAL);
-  gtk_box_set_spacing (GTK_BOX (bbox), 6);
-#else
-  bbox = gtk_hbutton_box_new ();
-  gtk_button_box_set_spacing (GTK_BUTTON_BOX (bbox), 6);
-#endif
-  gtk_button_box_set_layout (GTK_BUTTON_BOX (bbox), GTK_BUTTONBOX_END);
-  gtk_box_pack_start (GTK_BOX (hbox), bbox, TRUE, TRUE, 0);
-  gtk_widget_show (bbox);
-
-  button = gtk_button_new_with_label (_("_Close"));
-  //gtk_container_add (GTK_CONTAINER (bbox), button);
-  g_signal_connect_swapped (G_OBJECT (button), "clicked",
-      G_CALLBACK (gtk_widget_destroy), window);
-  gtk_widget_show (button);
-
-  window->button_launch = button = gtk_button_new_with_mnemonic (_("La_unch"));
-  gtk_container_add (GTK_CONTAINER (bbox), button);
-  g_signal_connect_swapped (G_OBJECT (button), "clicked",
-      G_CALLBACK (xfce_appfinder_window_launch_clicked), window);
-  gtk_widget_set_sensitive (button, FALSE);
-  gtk_widget_show (button);
-
-  image = gtk_image_new_from_icon_name (XFCE_APPFINDER_STOCK_EXECUTE, GTK_ICON_SIZE_BUTTON);
-  gtk_button_set_image (GTK_BUTTON (button), image);
+  //gtk_widget_show (hbox);
+  
+  window->button_launch = gtk_button_new ();
 
   window->icon_theme = gtk_icon_theme_get_for_screen (gtk_window_get_screen (GTK_WINDOW (window)));
   g_signal_connect_swapped (G_OBJECT (window->icon_theme), "changed",
@@ -2330,12 +2292,12 @@ xfce_appfinder_window_set_expanded (XfceAppfinderWindow *window,
 
 
   /* repack the button box */
-  g_object_ref (G_OBJECT (window->bbox));
-  parent = gtk_widget_get_parent (window->bbox);
-  if (parent != NULL)
-    gtk_container_remove (GTK_CONTAINER (parent), window->bbox);
+  //g_object_ref (G_OBJECT (window->bbox));
+  //parent = gtk_widget_get_parent (window->bbox);
+  //if (parent != NULL)
+    //gtk_container_remove (GTK_CONTAINER (parent), window->bbox);
 
-    gtk_container_add (GTK_CONTAINER (window->bin_expanded), window->bbox);
+    //gtk_container_add (GTK_CONTAINER (window->bin_expanded), window->bbox);
 
 
   /* show/hide pane with treeviews */

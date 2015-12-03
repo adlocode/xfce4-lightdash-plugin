@@ -900,6 +900,13 @@ void lightdash_windows_view_update_preview (LightTask *task, gint width, gint he
 		if ((gint)dest_height == 0)
 			dest_height = 1;
 		
+		if (dest_width > task->attr.width && dest_height > task->attr.height)
+		{
+			factor = 1.0;
+			dest_width = task->attr.width;
+			dest_height = task->attr.height;
+		}
+		
 		task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 
 			dest_width, 
 			dest_height, 
@@ -1167,6 +1174,13 @@ void lightdash_windows_view_draw_symbolic_window_rectangle (LightTask *task, gin
 		
 		if ((gint)dest_height == 0)
 			dest_height = 1;
+			
+		if (dest_width > task->attr.width && dest_height > task->attr.height)
+		{
+			factor = 1.0;
+			dest_width = task->attr.width;
+			dest_height = task->attr.height;
+		}
 		
 		task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 
 			dest_width, 
