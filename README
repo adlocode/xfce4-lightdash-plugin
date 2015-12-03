@@ -2,3 +2,12 @@ ABOUT
 =====
 
 lightdash aims to be a lightweight GNOME Shell-like dashboard for Xfce.
+
+
+Keyboard Shortcut
+=================
+
+lightdash can be opened and closed using a keyboard shortcut.
+To enable support for this, open the keyboard preferences and
+bind the command 'xfce4-panel --plugin-event=lightdash:popup'
+to the keyboard shortcut of your choice.
