@@ -15,6 +15,10 @@
  * along with this library; if not, see <http://www.gnu.org/licenses/>
  */
  
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <libxfce4util/libxfce4util.h>
 #include <libxfce4panel/xfce-panel-plugin.h>
 #include <libxfce4ui/libxfce4ui.h>

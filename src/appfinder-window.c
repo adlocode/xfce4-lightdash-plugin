@@ -776,6 +776,7 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
   //gtk_widget_show (hbox);
   
   window->button_launch = gtk_button_new ();
+  gtk_widget_set_sensitive (window->button_launch, FALSE);
 
   window->icon_theme = gtk_icon_theme_get_for_screen (gtk_window_get_screen (GTK_WINDOW (window)));
   g_signal_connect_swapped (G_OBJECT (window->icon_theme), "changed",
