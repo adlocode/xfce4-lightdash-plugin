@@ -1272,6 +1272,25 @@ static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *even
 	
 	return GDK_FILTER_CONTINUE;
 }
+
+void lightdash_windows_view_create_composited_window (LightTask *task)
+{
+	XCompositeRedirectWindow (task->tasklist->dpy, task->xid,
+				CompositeRedirectAutomatic);
+			
+	task->surface = lightdash_windows_view_get_window_picture (task);
+	
+	/* Ignore damage events on its own window */
+	if (task->tasklist->parent_gdk_window && task->gdk_window != task->tasklist->parent_gdk_window)
+		{
+			task->damage = XDamageCreate (task->tasklist->dpy, 
+							task->xid, 
+							XDamageReportDeltaRectangles);
+			XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
+			gdk_window_add_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
+		}
+}
+	
 static void light_task_create_widgets (LightTask *task)
 {
 	static const GtkTargetEntry targets [] = { {"application/x-wnck-window-id",0,0} };
@@ -1318,27 +1337,9 @@ static void light_task_create_widgets (LightTask *task)
 		&& !wnck_window_is_minimized (task->window)
 		&& task->attr.height != 0)
 		{
-			
-			XCompositeRedirectWindow (task->tasklist->dpy, task->xid,
-				CompositeRedirectAutomatic);
-			
-			task->surface = lightdash_windows_view_get_window_picture (task);
-
 			task->image = gtk_image_new ();
 			
-			/* Ignore damage events on its own window */
-			if (task->tasklist->parent_gdk_window && task->gdk_window != task->tasklist->parent_gdk_window)
-			{
-				task->damage = XDamageCreate (task->tasklist->dpy, 
-									task->xid, 
-									XDamageReportDeltaRectangles);
-				XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
-				gdk_window_add_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
-			}
-			
-	
-
-			
+			lightdash_windows_view_create_composited_window (task);	
 		}
 		
 		else
