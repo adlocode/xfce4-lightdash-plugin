@@ -168,8 +168,6 @@ void lightdash_windows_view_update_preview (LightTask *task, gint width, gint he
 cairo_surface_t *
 lightdash_windows_view_get_window_picture (LightTask *task);
 
-void lightdash_windows_view_redirect_window (LightTask *task);
-
 void lightdash_windows_view_draw_symbolic_window_rectangle (LightTask *task, gint width, gint height);
 
 static gint
@@ -1213,12 +1211,6 @@ void lightdash_windows_view_draw_symbolic_window_rectangle (LightTask *task, gin
 	
 }
 
-void lightdash_windows_view_redirect_window (LightTask *task)
-{	
-	XCompositeRedirectWindow (task->tasklist->dpy, task->xid,
-		CompositeRedirectAutomatic);
-}
-
 cairo_surface_t *
 lightdash_windows_view_get_window_picture (LightTask *task)
 {
@@ -1327,7 +1319,8 @@ static void light_task_create_widgets (LightTask *task)
 		&& task->attr.height != 0)
 		{
 			
-			lightdash_windows_view_redirect_window (task);
+			XCompositeRedirectWindow (task->tasklist->dpy, task->xid,
+				CompositeRedirectAutomatic);
 			
 			task->surface = lightdash_windows_view_get_window_picture (task);
 
