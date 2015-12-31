@@ -1275,19 +1275,29 @@ static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *even
 
 void lightdash_windows_view_create_composited_window (LightTask *task)
 {
-	XCompositeRedirectWindow (task->tasklist->dpy, task->xid,
-				CompositeRedirectAutomatic);
-			
-	task->surface = lightdash_windows_view_get_window_picture (task);
+	XGetWindowAttributes (task->tasklist->dpy, task->xid, &task->attr);
 	
-	/* Ignore damage events on its own window */
-	if (task->tasklist->parent_gdk_window && task->gdk_window != task->tasklist->parent_gdk_window)
+	task->gdk_window = gdk_x11_window_foreign_new_for_display 
+		(gdk_screen_get_display (task->tasklist->gdk_screen), task->xid);
+	
+	if (task->tasklist->composited 
+		&& !wnck_window_is_minimized (task->window)
+		&& task->attr.height != 0)
 		{
-			task->damage = XDamageCreate (task->tasklist->dpy, 
-							task->xid, 
-							XDamageReportDeltaRectangles);
-			XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
-			gdk_window_add_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
+			XCompositeRedirectWindow (task->tasklist->dpy, task->xid,
+					CompositeRedirectAutomatic);
+			
+			task->surface = lightdash_windows_view_get_window_picture (task);
+	
+			/* Ignore damage events on its own window */
+			if (task->tasklist->parent_gdk_window && task->gdk_window != task->tasklist->parent_gdk_window)
+				{
+					task->damage = XDamageCreate (task->tasklist->dpy, 
+									task->xid, 
+									XDamageReportDeltaRectangles);
+					XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
+					gdk_window_add_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
+				}
 		}
 }
 	
@@ -1319,14 +1329,13 @@ static void light_task_create_widgets (LightTask *task)
 	task->previous_width = 0;
 	task->scaled = FALSE;
 	
-	XGetWindowAttributes (task->tasklist->dpy, task->xid, &task->attr);
 	
-	task->gdk_window = gdk_x11_window_foreign_new_for_display 
-		(gdk_screen_get_display (task->tasklist->gdk_screen), task->xid);
+	/* Create composited window */
+	lightdash_windows_view_create_composited_window (task);
+	
 		
 	if (wnck_window_is_on_workspace (task->window,
 				wnck_screen_get_active_workspace (task->tasklist->screen))) 
-	
 	{
 	#if GTK_CHECK_VERSION (3, 0, 0)
 	#else
@@ -1337,22 +1346,18 @@ static void light_task_create_widgets (LightTask *task)
 		&& !wnck_window_is_minimized (task->window)
 		&& task->attr.height != 0)
 		{
-			task->image = gtk_image_new ();
-			
-			lightdash_windows_view_create_composited_window (task);	
+			task->image = gtk_image_new ();	
 		}
 		
 		else
 		{
-			task->image = gtk_image_new_from_pixbuf (task->pixbuf);
-			
+			task->image = gtk_image_new_from_pixbuf (task->pixbuf);	
 		}
 	}
 		
 		else
 		{
 			task->image = gtk_image_new_from_pixbuf (task->pixbuf);
-			
 		}
 	
 	task->button = gtk_button_new();
