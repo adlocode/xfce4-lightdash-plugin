@@ -98,6 +98,7 @@ struct _LightTask
 	gboolean scaled;
 	
 	#if GTK_CHECK_VERSION (3, 0, 0)
+	cairo_surface_t *image_surface;
 	#else
 	GdkPixmap *gdk_pixmap;
 	#endif
@@ -189,7 +190,11 @@ static void light_task_class_init (LightTaskClass *klass)
 static void light_task_init (LightTask *task)
 
 {
-	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	task->image_surface = NULL;
+	#else
+	task->gdk_pixmap = NULL;
+	#endif
 	task->action_menu = NULL;
 	
 }
@@ -271,11 +276,19 @@ static void light_task_finalize (GObject *object)
 		task->surface = NULL;
 	}
 	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	if (task->image_surface)
+	{
+		cairo_surface_destroy (task->image_surface);
+		task->image_surface = NULL;
+	}
+	#else
 	if (task->gdk_pixmap)
 	{
 		g_object_unref (task->gdk_pixmap);
 		task->gdk_pixmap = NULL;
 	}
+	#endif
 	
 }
 
@@ -298,8 +311,6 @@ light_task_new_from_window (LightdashWindowsView *tasklist, WnckWindow *window)
 	task->xid = wnck_window_get_xid (window);
 	
 	task->surface = NULL;
-	
-	task->gdk_pixmap = NULL;
 	
 	task->preview_created = FALSE;
 	
@@ -888,7 +899,11 @@ void lightdash_windows_view_update_preview (LightTask *task, gint width, gint he
 		dest_width = task->attr.width*factor;
 		dest_height = task->attr.height*factor;
 		
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		cairo_surface_destroy (task->image_surface);
+		#else
 		g_object_unref (task->gdk_pixmap);
+		#endif
 		
 		if ((gint)dest_width == 0)
 			dest_width = 1;
@@ -903,13 +918,17 @@ void lightdash_windows_view_update_preview (LightTask *task, gint width, gint he
 			dest_height = task->attr.height;
 		}
 		
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		task->image_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+			dest_width, dest_height);
+		cr = cairo_create (task->image_surface);
+		#else
 		task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 
 			dest_width, 
 			dest_height, 
 			-1);
-			
 		cr = gdk_cairo_create (task->gdk_pixmap);
-		
+		#endif
 		cairo_scale (cr, factor, factor);
 
 		cairo_rectangle (cr, 0, 0, task->attr.width, task->attr.height);
@@ -920,7 +939,11 @@ void lightdash_windows_view_update_preview (LightTask *task, gint width, gint he
 			
 		cairo_fill (cr);
 		
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		gtk_image_set_from_surface (GTK_IMAGE (task->image), task->image_surface);
+		#else
 		gtk_image_set_from_pixmap (GTK_IMAGE (task->image), task->gdk_pixmap, NULL);
+		#endif
 		
 		cairo_destroy (cr);
 				
@@ -1331,9 +1354,17 @@ static void light_task_create_widgets (LightTask *task)
 	/* Create composited window */
 	lightdash_windows_view_create_composited_window (task);
 	
+	
 	task->image = gtk_image_new ();
 		
 	#if GTK_CHECK_VERSION (3, 0, 0)
+	if (wnck_window_is_on_workspace (task->window,
+			wnck_screen_get_active_workspace (task->tasklist->screen))) 
+	{
+
+		task->image_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
+		
+	}
 	#else
 	if (wnck_window_is_on_workspace (task->window,
 				wnck_screen_get_active_workspace (task->tasklist->screen))) 
