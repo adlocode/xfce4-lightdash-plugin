@@ -341,8 +341,6 @@ static void my_tasklist_window_icon_changed (WnckWindow *window, LightTask *task
 }
 
 
-
-
 enum {
 	TASK_BUTTON_CLICKED_SIGNAL,
 	TASK_BUTTON_DRAG_BEGIN_SIGNAL,
@@ -988,7 +986,7 @@ void lightdash_windows_view_button_size_changed (GtkWidget *widget,
 			&& task->image->allocation.width == task->previous_width)
 		return;
 		
-		if (wnck_window_is_minimized (task->window))
+		if (wnck_window_is_minimized (task->window) || task->tasklist->composited == FALSE)
 		{
 			lightdash_windows_view_draw_symbolic_window_rectangle (task, task->image->allocation.width,
 				task->image->allocation.height);
@@ -1337,28 +1335,18 @@ static void light_task_create_widgets (LightTask *task)
 	if (wnck_window_is_on_workspace (task->window,
 				wnck_screen_get_active_workspace (task->tasklist->screen))) 
 	{
-	#if GTK_CHECK_VERSION (3, 0, 0)
-	#else
-	task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 1, 1, -1);
-	#endif	
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		#else
+		task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 1, 1, -1);
+		#endif	
 			
-	if (task->tasklist->composited 
-		&& !wnck_window_is_minimized (task->window)
-		&& task->attr.height != 0)
-		{
-			task->image = gtk_image_new ();	
-		}
-		
-		else
-		{
-			task->image = gtk_image_new_from_pixbuf (task->pixbuf);	
-		}
+		task->image = gtk_image_new ();
 	}
 		
-		else
-		{
-			task->image = gtk_image_new_from_pixbuf (task->pixbuf);
-		}
+	else
+	{
+		task->image = gtk_image_new_from_pixbuf (task->pixbuf);
+	}
 	
 	task->button = gtk_button_new();
 	gtk_button_set_relief (GTK_BUTTON (task->button), GTK_RELIEF_NONE);
