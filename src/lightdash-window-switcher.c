@@ -1331,22 +1331,18 @@ static void light_task_create_widgets (LightTask *task)
 	/* Create composited window */
 	lightdash_windows_view_create_composited_window (task);
 	
+	task->image = gtk_image_new ();
 		
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	#else
 	if (wnck_window_is_on_workspace (task->window,
 				wnck_screen_get_active_workspace (task->tasklist->screen))) 
 	{
-		#if GTK_CHECK_VERSION (3, 0, 0)
-		#else
-		task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 1, 1, -1);
-		#endif	
-			
-		task->image = gtk_image_new ();
-	}
+
+		task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 1, 1, -1);	
 		
-	else
-	{
-		task->image = gtk_image_new_from_pixbuf (task->pixbuf);
 	}
+	#endif
 	
 	task->button = gtk_button_new();
 	gtk_button_set_relief (GTK_BUTTON (task->button), GTK_RELIEF_NONE);
