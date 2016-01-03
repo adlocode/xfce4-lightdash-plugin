@@ -1062,9 +1062,13 @@ static void my_tasklist_drag_begin_handl
 	
 	gtk_widget_hide (task->button);
 	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	gtk_drag_set_icon_surface (context, task->image_surface);
+	#else
 	gtk_drag_set_icon_pixmap (context,
 		gdk_drawable_get_colormap (GDK_DRAWABLE (task->gdk_pixmap)),
 		task->gdk_pixmap, NULL, -2, -2);
+	#endif
 }
 
 static void my_tasklist_drag_end_handl
@@ -1186,7 +1190,11 @@ void lightdash_windows_view_draw_symbolic_window_rectangle (LightTask *task, gin
 		dest_width = task->attr.width*factor;
 		dest_height = task->attr.height*factor;
 		
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		cairo_surface_destroy (task->image_surface);
+		#else
 		g_object_unref (task->gdk_pixmap);
+		#endif
 		
 		if ((gint)dest_width == 0)
 			dest_width = 1;
@@ -1201,12 +1209,17 @@ void lightdash_windows_view_draw_symbolic_window_rectangle (LightTask *task, gin
 			dest_height = task->attr.height;
 		}
 		
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		task->image_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+			dest_width, dest_height);
+		cr = cairo_create (task->image_surface);
+		#else
 		task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 
 			dest_width, 
 			dest_height, 
 			-1);
-			
 		cr = gdk_cairo_create (task->gdk_pixmap);
+		#endif
 
 		cairo_rectangle (cr, 0, 0, task->attr.width*factor, task->attr.height*factor);
 			
@@ -1226,7 +1239,11 @@ void lightdash_windows_view_draw_symbolic_window_rectangle (LightTask *task, gin
 		cairo_paint (cr);
 		cairo_restore (cr);
 		
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		gtk_image_set_from_surface (GTK_IMAGE (task->image), task->image_surface);
+		#else
 		gtk_image_set_from_pixmap (GTK_IMAGE (task->image), task->gdk_pixmap, NULL);
+		#endif
 		
 		cairo_destroy (cr);
 	
