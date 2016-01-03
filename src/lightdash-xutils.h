@@ -29,6 +29,10 @@
  #include <X11/Xlib.h>
  #include <gdk/gdkx.h>
 
+#if GTK_CHECK_VERSION (3, 0, 0)
+GdkPixbuf*
+_lightdash_gdk_pixbuf_get_from_pixmap (Pixmap       xpixmap);
+#else
 GdkPixbuf*
 _lightdash_gdk_pixbuf_get_from_pixmap (GdkPixbuf   *dest,
                                   Pixmap       xpixmap,
@@ -42,5 +46,6 @@ _lightdash_gdk_pixbuf_get_from_pixmap (GdkPixbuf   *dest,
 
 static GdkColormap*
 get_cmap (GdkPixmap *pixmap);
-
 #endif
+
+#endif /* LIGHTDASH_XUTILS_H */

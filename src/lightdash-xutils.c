@@ -23,6 +23,55 @@
  
  #include "lightdash-xutils.h"
 
+#if GTK_CHECK_VERSION (3, 0, 0)
+GdkPixbuf*
+_lightdash_gdk_pixbuf_get_from_pixmap (Pixmap       xpixmap)
+{
+  cairo_surface_t *surface;
+  Display *display;
+  Window root_return;
+  int x_ret, y_ret;
+  unsigned int w_ret, h_ret, bw_ret, depth_ret;
+  XWindowAttributes attrs;
+  GdkPixbuf *retval;
+
+  display = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
+
+  if (!XGetGeometry (display, xpixmap, &root_return,
+                     &x_ret, &y_ret, &w_ret, &h_ret, &bw_ret, &depth_ret))
+    return NULL;
+
+  if (depth_ret == 1)
+    {
+      surface = cairo_xlib_surface_create_for_bitmap (display,
+                                                      xpixmap,
+                                                      GDK_SCREEN_XSCREEN (gdk_screen_get_default ()),
+                                                      w_ret,
+                                                      h_ret);
+    }
+  else
+    {
+      if (!XGetWindowAttributes (display, root_return, &attrs))
+        return NULL;
+
+      surface = cairo_xlib_surface_create (display,
+                                           xpixmap,
+                                           attrs.visual,
+                                           w_ret, h_ret);
+    }
+
+  retval = gdk_pixbuf_get_from_surface (surface,
+                                        0,
+                                        0,
+                                        w_ret,
+                                        h_ret);
+  cairo_surface_destroy (surface);
+
+  return retval;
+}
+
+
+#else
 GdkPixbuf*
 _lightdash_gdk_pixbuf_get_from_pixmap (GdkPixbuf   *dest,
                                   Pixmap       xpixmap,
@@ -117,3 +166,5 @@ get_cmap (GdkPixmap *pixmap)
   
   return cmap;
 }
+
+#endif
