@@ -995,7 +995,6 @@ void lightdash_windows_view_button_size_changed (GtkWidget *widget,
 	
 	gfloat total_buttons_area, table_area;
 	gfloat aspect_ratio;
-	gint pixmap_width;
 	
 	if (task->scaled)
 	{
@@ -1028,13 +1027,9 @@ void lightdash_windows_view_button_size_changed (GtkWidget *widget,
 
 gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEvent *event, LightTask *task)
 {
-		gint pixmap_width;
 	
 		lightdash_windows_view_update_preview (task, task->image->allocation.width,
 							task->image->allocation.height);
-		
-
-		gdk_pixmap_get_size (task->gdk_pixmap, &pixmap_width, NULL);
 		
 		gtk_image_set_from_pixmap (GTK_IMAGE (task->image), task->gdk_pixmap, NULL);
 		
@@ -1282,14 +1277,11 @@ static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *even
 	
 	if (ev->type == dv + XDamageNotify && task->preview_created)
 	{
-		gint pixmap_width;
 	
 	XDamageSubtract (task->tasklist->dpy, e->damage, None, None);
 	
 	lightdash_windows_view_update_preview (task, task->image->allocation.width,
 										task->image->allocation.height);
-	
-	gdk_pixmap_get_size (task->gdk_pixmap, &pixmap_width, NULL);
 	
 	}
 	else if (ev->type == ConfigureNotify && task->preview_created)
@@ -1374,23 +1366,17 @@ static void light_task_create_widgets (LightTask *task)
 	
 	task->image = gtk_image_new ();
 		
-	#if GTK_CHECK_VERSION (3, 0, 0)
+	
 	if (wnck_window_is_on_workspace (task->window,
 			wnck_screen_get_active_workspace (task->tasklist->screen))) 
 	{
-
+		#if GTK_CHECK_VERSION (3, 0, 0)
 		task->image_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
-		
-	}
-	#else
-	if (wnck_window_is_on_workspace (task->window,
-				wnck_screen_get_active_workspace (task->tasklist->screen))) 
-	{
-
+		#else
 		task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 1, 1, -1);	
-		
+		#endif
 	}
-	#endif
+	
 	
 	task->button = gtk_button_new();
 	gtk_button_set_relief (GTK_BUTTON (task->button), GTK_RELIEF_NONE);
