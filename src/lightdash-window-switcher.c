@@ -1039,7 +1039,11 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEvent *event
 		lightdash_windows_view_update_preview (task, task->image->allocation.width,
 							task->image->allocation.height);
 		
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		gtk_image_set_from_surface (GTK_IMAGE (task->image), task->image_surface);
+		#else
 		gtk_image_set_from_pixmap (GTK_IMAGE (task->image), task->gdk_pixmap, NULL);
+		#endif
 		
 		if (task->expose_tag)
 		{
