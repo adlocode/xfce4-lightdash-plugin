@@ -158,7 +158,11 @@ LightTask *task);
 void lightdash_windows_view_button_size_changed (GtkWidget *widget,
 	GdkRectangle *allocation, LightTask *task);
 	
+#if GTK_CHECK_VERSION (3, 0, 0)
+gboolean lightdash_windows_view_image_draw (GtkWidget *widget, cairo_t *cr, LightTask *task);
+#else
 gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEvent *event, LightTask *task);
+#endif
 
 LightTask * get_task_from_window (LightdashWindowsView *tasklist, WnckWindow *window);
 
@@ -1025,7 +1029,11 @@ void lightdash_windows_view_button_size_changed (GtkWidget *widget,
 			
 }
 
+#if GTK_CHECK_VERSION (3, 0, 0)
+gboolean lightdash_windows_view_image_draw (GtkWidget *widget, cairo_t *cr, LightTask *task)
+#else
 gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEvent *event, LightTask *task)
+#endif
 {
 	
 		lightdash_windows_view_update_preview (task, task->image->allocation.width,
@@ -1400,12 +1408,15 @@ static void light_task_create_widgets (LightTask *task)
 					
 	if (!wnck_window_is_minimized (task->window))
 	{
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		task->expose_tag = g_signal_connect (task->image, "draw",
+							G_CALLBACK (lightdash_windows_view_image_draw),
+							task);
+		#else
 		task->expose_tag = g_signal_connect (task->image, "expose-event",
 							G_CALLBACK (lightdash_windows_view_image_expose),
 							task);
-
-							
-
+		#endif						
 	}
 	
 		task->button_resized_tag = g_signal_connect (task->image, "size-allocate",
