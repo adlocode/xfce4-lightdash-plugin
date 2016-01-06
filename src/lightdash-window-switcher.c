@@ -999,6 +999,15 @@ void lightdash_windows_view_button_size_changed (GtkWidget *widget,
 	
 	gfloat total_buttons_area, table_area;
 	gfloat aspect_ratio;
+	int width, height;
+	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	width = gtk_widget_get_allocated_width (task->image);
+	height = gtk_widget_get_allocated_height (task->image);
+	#else
+	width = task->image->allocation.width;
+	height = task->image->allocation.height;
+	#endif
 	
 	if (task->scaled)
 	{
@@ -1008,21 +1017,19 @@ void lightdash_windows_view_button_size_changed (GtkWidget *widget,
 	
 
 
-		if (task->image->allocation.height == task->previous_height
-			&& task->image->allocation.width == task->previous_width)
+		if (height == task->previous_height
+			&& width == task->previous_width)
 		return;
 		
 		if (wnck_window_is_minimized (task->window) || task->tasklist->composited == FALSE)
 		{
-			lightdash_windows_view_draw_symbolic_window_rectangle (task, task->image->allocation.width,
-				task->image->allocation.height);
+			lightdash_windows_view_draw_symbolic_window_rectangle (task, width, height);
 			task->scaled = TRUE;
 			return;
 		}
 		
 		
-		lightdash_windows_view_update_preview (task, task->image->allocation.width,
-							task->image->allocation.height);
+		lightdash_windows_view_update_preview (task, width, height);
 		
 		gtk_widget_queue_resize (GTK_WIDGET (task->tasklist));
 		task->scaled = TRUE;
@@ -1035,14 +1042,20 @@ gboolean lightdash_windows_view_image_draw (GtkWidget *widget, cairo_t *cr, Ligh
 gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEvent *event, LightTask *task)
 #endif
 {
-	
-		lightdash_windows_view_update_preview (task, task->image->allocation.width,
-							task->image->allocation.height);
-		
 		#if GTK_CHECK_VERSION (3, 0, 0)
+		
+		lightdash_windows_view_update_preview (task, gtk_widget_get_allocated_width (task->image),
+							gtk_widget_get_allocated_height (task->image));
+
 		gtk_image_set_from_surface (GTK_IMAGE (task->image), task->image_surface);
+		
 		#else
+		
+		lightdash_windows_view_update_preview (task, task->image->allocation.width,
+						task->image->allocation.height);
+									
 		gtk_image_set_from_pixmap (GTK_IMAGE (task->image), task->gdk_pixmap, NULL);
+		
 		#endif
 		
 		if (task->expose_tag)
@@ -1051,8 +1064,13 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEvent *event
 			task->expose_tag = 0;
 		}
 		
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		task->previous_height = gtk_widget_get_allocated_height (task->image);
+		task->previous_width = gtk_widget_get_allocated_width (task->image);
+		#else
 		task->previous_height = task->image->allocation.height;
 		task->previous_width = task->image->allocation.width;
+		#endif
 		
 		task->preview_created = TRUE;
 		
