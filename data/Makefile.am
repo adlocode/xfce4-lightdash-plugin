@@ -1,8 +1,7 @@
 
 appsdir = $(datadir)/applications
 apps_in_files = \
-	lightdash.desktop.in \
-	xfce4-lightdash.desktop.in
+	lightdash.desktop.in
 	
 apps_DATA = $(apps_in_files:.desktop.in=.desktop)
 @INTLTOOL_DESKTOP_RULE@
