@@ -194,13 +194,20 @@ static void light_task_class_init (LightTaskClass *klass)
 static void light_task_init (LightTask *task)
 
 {
+	task->surface = NULL;
+	task->damage = None;
+	
+	task->preview_created = FALSE;
+	
+	task->button_resized_tag = 0;
+	task->expose_tag = 0;
+	
 	#if GTK_CHECK_VERSION (3, 0, 0)
 	task->image_surface = NULL;
 	#else
 	task->gdk_pixmap = NULL;
 	#endif
 	task->action_menu = NULL;
-	
 }
 
 static void light_task_finalize (GObject *object)
@@ -304,19 +311,9 @@ light_task_new_from_window (LightdashWindowsView *tasklist, WnckWindow *window)
 	
 	task->tasklist = tasklist;
 	
-	task->damage = None;
-	
 	task->window = g_object_ref (window);
 	
-	task->button_resized_tag = 0;
-	
-	task->expose_tag = 0;
-	
 	task->xid = wnck_window_get_xid (window);
-	
-	task->surface = NULL;
-	
-	task->preview_created = FALSE;
 	
 	light_task_create_widgets (task);
 	
