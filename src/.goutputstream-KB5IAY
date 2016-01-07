@@ -1297,29 +1297,25 @@ lightdash_windows_view_get_window_picture (LightTask *task)
 static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTask *task)
 {
 	int dv, dr;
+	int width, height;
 	XEvent *ev;
 	XDamageNotifyEvent *e;
 	XConfigureEvent *ce;
 	XDamageQueryExtension (task->tasklist->dpy, &dv, &dr);
-	int width, height;
-	
-	ev = (XEvent*)xevent;
-	e = (XDamageNotifyEvent *)ev;
 	
 	#if GTK_CHECK_VERSION (3, 0, 0)
 	width = gtk_widget_get_allocated_width (task->image);
-	height = gtk_widget_get_allocated_height (task->image);
-	#else
-	width = task->image->allocation.width;
-	height = task->image->allocation.height;
-	#endif
+	
+	ev = (XEvent*)xevent;
+	e = (XDamageNotifyEvent *)ev;
 	
 	if (ev->type == dv + XDamageNotify && task->preview_created)
 	{
 	
 	XDamageSubtract (task->tasklist->dpy, e->damage, None, None);
 	
-	lightdash_windows_view_update_preview (task, width, height);
+	lightdash_windows_view_update_preview (task, task->image->allocation.width,
+										task->image->allocation.height);
 	
 	}
 	else if (ev->type == ConfigureNotify && task->preview_created)
@@ -1333,7 +1329,8 @@ static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *even
 		task->attr.height = ce->height;
 		cairo_surface_destroy (task->surface);
 		task->surface = lightdash_windows_view_get_window_picture (task);
-		lightdash_windows_view_update_preview (task, width, height);
+		lightdash_windows_view_update_preview (task, task->image->allocation.width,
+							task->image->allocation.height);
 
 	}
 	
