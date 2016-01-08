@@ -2,7 +2,7 @@
 Type=X-XFCE-PanelPlugin
 Encoding=UTF-8
 _Name=Lightdash
-_Comment=Sample plugin for the Xfce panel
+_Comment=GNOME Shell-like dashboard for Xfce
 Icon=xfce4-appfinder
 X-XFCE-Module=lightdash
 X-XFCE-Internal=false

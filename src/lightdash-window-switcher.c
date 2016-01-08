@@ -1371,7 +1371,11 @@ static void light_task_create_widgets (LightTask *task)
 	gfloat aspect_ratio;
 	task->tasklist->unique_id_counter++;
 	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	task->image_surface = NULL;
+	#else
 	task->gdk_pixmap = NULL;
+	#endif
 	
 	task->unique_id = task->tasklist->unique_id_counter;
 	
