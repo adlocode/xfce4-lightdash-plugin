@@ -544,15 +544,16 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
 	
 
   gtk_window_set_title (GTK_WINDOW (window), _("Application Finder"));
-  integer = xfconf_channel_get_int (window->channel, "/last/window-width", DEFAULT_WINDOW_WIDTH);
+  //integer = xfconf_channel_get_int (window->channel, "/last/window-width", DEFAULT_WINDOW_WIDTH);
+  integer = DEFAULT_WINDOW_WIDTH;
   gtk_window_set_default_size (GTK_WINDOW (window), integer, -1);
   gtk_window_set_icon_name (GTK_WINDOW (window), XFCE_APPFINDER_STOCK_EXECUTE);
 #if GTK_CHECK_VERSION (3, 0, 0)
   gtk_window_set_has_resize_grip (GTK_WINDOW (window), FALSE);
 #endif
 
-  if (xfconf_channel_get_bool (window->channel, "/always-center", FALSE))
-    gtk_window_set_position (GTK_WINDOW (window), GTK_WIN_POS_CENTER);
+  //if (xfconf_channel_get_bool (window->channel, "/always-center", FALSE))
+    //gtk_window_set_position (GTK_WINDOW (window), GTK_WIN_POS_CENTER);
 
 #if GTK_CHECK_VERSION (3, 0, 0)
 	main_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
@@ -710,7 +711,8 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
   
   
   gtk_box_pack_start (GTK_BOX (vbox), pane, TRUE, TRUE, 3);
-  integer = xfconf_channel_get_int (window->channel, "/last/pane-position", DEFAULT_PANED_POSITION);
+  //integer = xfconf_channel_get_int (window->channel, "/last/pane-position", DEFAULT_PANED_POSITION);
+  integer = DEFAULT_PANED_POSITION;
   gtk_paned_set_position (GTK_PANED (pane), integer);
   g_object_set (G_OBJECT (pane), "position-set", TRUE, NULL);
   
@@ -791,9 +793,9 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
                         window);
 
   /* monitor xfconf property changes */
-  window->property_watch_id =
-    g_signal_connect (G_OBJECT (window->channel), "property-changed",
-        G_CALLBACK (xfce_appfinder_window_property_changed), window);
+  //window->property_watch_id =
+    //g_signal_connect (G_OBJECT (window->channel), "property-changed",
+        //G_CALLBACK (xfce_appfinder_window_property_changed), window);
         
   lightdash_window_bookmarks_changed (window->model, window);
   
@@ -841,7 +843,7 @@ xfce_appfinder_window_finalize (GObject *object)
 static void
 appfinder_window_destroyed (GtkWidget *window)
 {
-  XfconfChannel *channel;
+  //XfconfChannel *channel;
 
   if (windows == NULL)
     return;
@@ -869,9 +871,9 @@ appfinder_window_destroyed (GtkWidget *window)
       else
         {
           /* leave if the user disable the service in the prefereces */
-          channel = xfconf_channel_get ("xfce4-lightdash");
-          if (!xfconf_channel_get_bool (channel, "/enable-service", FALSE))
-            gtk_main_quit ();
+          //channel = xfconf_channel_get ("xfce4-lightdash");
+          //if (!xfconf_channel_get_bool (channel, "/enable-service", FALSE))
+            //gtk_main_quit ();
         }
     }
 }
@@ -952,8 +954,8 @@ xfce_appfinder_window_key_press_event (GtkWidget   *widget,
         case GDK_KEY_1:
         case GDK_KEY_2:
           /* toggle between icon and tree view */
-          xfconf_channel_set_bool (window->channel, "/icon-view",
-                                   event->keyval == GDK_KEY_1);
+          //xfconf_channel_set_bool (window->channel, "/icon-view",
+                                   //event->keyval == GDK_KEY_1);
           return TRUE;
 
         case GDK_KEY_plus:
@@ -1142,7 +1144,8 @@ xfce_appfinder_window_view (XfceAppfinderWindow *window)
   GtkWidget         *view;
   gboolean           icon_view;
 
-  icon_view = xfconf_channel_get_bool (window->channel, "/icon-view", FALSE);
+  //icon_view = xfconf_channel_get_bool (window->channel, "/icon-view", FALSE);
+  icon_view = FALSE;
   if (window->view != NULL)
     {
       if (icon_view && GTK_IS_ICON_VIEW (window->view))
