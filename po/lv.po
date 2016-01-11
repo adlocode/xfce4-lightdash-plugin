@@ -24,6 +24,14 @@ msgstr ""
 "X-Poedit-Language: Latvian\n"
 "X-Poedit-Country: Latvia\n"
 
+#. Translators: If there is no suitable word for "Activities"
+#. in your language, you can use the word for "Overview".
+msgid "Activities"
+msgstr "Aktivitātes"
+
+msgid "_Title:"
+msgstr "Nosaukums:"
+
 #: ../src/appfinder-category-model.c:108
 #, fuzzy
 msgid "All Applications"
