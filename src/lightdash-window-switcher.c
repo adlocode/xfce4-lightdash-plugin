@@ -1150,6 +1150,12 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEvent *event
 		task->previous_width = task->image->allocation.width;
 		task->previous_height = task->image->allocation.height;
 		
+		if (!task->preview_created)
+		{
+			XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
+			gtk_widget_queue_resize (task->image);
+			task->preview_created = TRUE;
+		}	
 		
 		#endif
 
