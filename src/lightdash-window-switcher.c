@@ -1331,6 +1331,8 @@ static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *even
 	
 	lightdash_windows_view_update_preview (task, width, height);
 	
+	gtk_widget_queue_draw (task->image);
+	
 	}
 	else if (ev->type == ConfigureNotify && task->preview_created)
 	{
@@ -1344,6 +1346,7 @@ static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *even
 		cairo_surface_destroy (task->surface);
 		task->surface = lightdash_windows_view_get_window_picture (task);
 		lightdash_windows_view_update_preview (task, width, height);
+		gtk_widget_queue_draw (task->image);
 
 	}
 	
