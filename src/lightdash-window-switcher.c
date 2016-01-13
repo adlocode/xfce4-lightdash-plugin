@@ -168,12 +168,10 @@ LightTask * get_task_from_window (LightdashWindowsView *tasklist, WnckWindow *wi
 
 skipped_window * get_skipped_window (LightdashWindowsView *tasklist, WnckWindow *window);
 
-void lightdash_windows_view_update_preview (LightTask *task, gint width, gint height);
+void lightdash_windows_view_render_preview_at_size (LightTask *task, gint width, gint height);
 
 cairo_surface_t *
 lightdash_windows_view_get_window_picture (LightTask *task);
-
-void lightdash_windows_view_draw_symbolic_window_rectangle (LightTask *task, gint width, gint height);
 
 static gint
 lightdash_popup_handler (GtkWidget *widget, GdkEventButton *event, LightTask *task);
@@ -882,11 +880,13 @@ static void my_tasklist_button_emit_click_signal (GtkButton *button, LightdashWi
 	
 }
 
-void lightdash_windows_view_update_preview (LightTask *task, gint width, gint height)
+void lightdash_windows_view_render_preview_at_size (LightTask *task, gint width, gint height)
 {
 		gint dest_width, dest_height;
 		gfloat factor;
 		cairo_t *cr;
+		gint pixbuf_width, pixbuf_height;
+		
 		
 		factor = (gfloat) MIN ((gfloat)width / (gfloat)task->attr.width,
 						(gfloat)height / (gfloat)task->attr.height);
@@ -922,89 +922,46 @@ void lightdash_windows_view_update_preview (LightTask *task, gint width, gint he
 			dest_width, 
 			dest_height, 
 			-1);
+		
 		cr = gdk_cairo_create (task->gdk_pixmap);
 		#endif
-		cairo_scale (cr, factor, factor);
-
-		cairo_rectangle (cr, 0, 0, task->attr.width, task->attr.height);
-			
-		cairo_set_source_surface (cr, task->surface, 0, 0);
 		
-		cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
-			
-		cairo_fill (cr);
-				
-		cairo_destroy (cr);
-				
-}
-
-void lightdash_windows_view_draw_symbolic_window_rectangle (LightTask *task, gint width, gint height)
-{
-	
-	gint dest_width, dest_height;
-	gint pixbuf_width, pixbuf_height;
-		gfloat factor;
-		cairo_t *cr;
-		
-		factor = (gfloat) MIN ((gfloat)width / (gfloat)task->attr.width,
-						(gfloat)height / (gfloat)task->attr.height);
-				
-		dest_width = task->attr.width*factor;
-		dest_height = task->attr.height*factor;
-		
-		#if GTK_CHECK_VERSION (3, 0, 0)
-		cairo_surface_destroy (task->image_surface);
-		#else
-		g_object_unref (task->gdk_pixmap);
-		#endif
-		
-		if ((gint)dest_width == 0)
-			dest_width = 1;
-		
-		if ((gint)dest_height == 0)
-			dest_height = 1;
-			
-		if (dest_width > task->attr.width && dest_height > task->attr.height)
+		if (wnck_window_is_minimized (task->window) || task->tasklist->composited == FALSE)
 		{
-			factor = 1.0;
-			dest_width = task->attr.width;
-			dest_height = task->attr.height;
+			cairo_rectangle (cr, 0, 0, task->attr.width*factor, task->attr.height*factor);
+			
+			cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
+			
+			cairo_fill (cr);
+			cairo_save (cr);
+		
+			gdk_cairo_set_source_pixbuf (cr, task->pixbuf,
+				dest_width/2 - gdk_pixbuf_get_width (task->pixbuf)/2,
+				dest_height/2 - gdk_pixbuf_get_height (task->pixbuf)/2);
+		
+			pixbuf_width = gdk_pixbuf_get_width (task->pixbuf);
+			pixbuf_height = gdk_pixbuf_get_height (task->pixbuf);
+		
+			cairo_rectangle (cr, 0, 0, pixbuf_width, pixbuf_height);
+			cairo_paint (cr);
+			cairo_restore (cr);
 		}
 		
-		#if GTK_CHECK_VERSION (3, 0, 0)
-		task->image_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
-			dest_width, dest_height);
-		cr = cairo_create (task->image_surface);
-		#else
-		task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 
-			dest_width, 
-			dest_height, 
-			-1);
-		cr = gdk_cairo_create (task->gdk_pixmap);
-		#endif
+		else
+		{
+			cairo_scale (cr, factor, factor);
 
-		cairo_rectangle (cr, 0, 0, task->attr.width*factor, task->attr.height*factor);
+			cairo_rectangle (cr, 0, 0, task->attr.width, task->attr.height);
 			
-		cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
+			cairo_set_source_surface (cr, task->surface, 0, 0);
+		
+			cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
 			
-		cairo_fill (cr);
-		cairo_save (cr);
-		
-		gdk_cairo_set_source_pixbuf (cr, task->pixbuf,
-			dest_width/2 - gdk_pixbuf_get_width (task->pixbuf)/2,
-			dest_height/2 - gdk_pixbuf_get_height (task->pixbuf)/2);
-		
-		pixbuf_width = gdk_pixbuf_get_width (task->pixbuf);
-		pixbuf_height = gdk_pixbuf_get_height (task->pixbuf);
-		
-		cairo_rectangle (cr, 0, 0, pixbuf_width, pixbuf_height);
-		cairo_paint (cr);
-		cairo_restore (cr);
-		
-		gtk_widget_queue_draw (task->image);
-		
+			cairo_fill (cr);
+		}
+				
 		cairo_destroy (cr);
-	
+				
 }
 
 void lightdash_windows_view_reattach_widgets (LightdashWindowsView *tasklist)
@@ -1070,22 +1027,14 @@ void lightdash_windows_view_button_size_changed (GtkWidget *widget,
 	}
 	
 
-
+	
 		if (height == task->previous_height
 			&& width == task->previous_width)
 		return;
 		
-		if (wnck_window_is_minimized (task->window) || task->tasklist->composited == FALSE)
-		{
-			lightdash_windows_view_draw_symbolic_window_rectangle (task, width, height);
-			task->scaled = TRUE;
-			return;
-		}
+		lightdash_windows_view_render_preview_at_size (task, width, height);
 		
-		
-		lightdash_windows_view_update_preview (task, width, height);
-		
-		gtk_widget_queue_resize (GTK_WIDGET (task->tasklist));
+		gtk_widget_queue_draw (task->image);
 		
 		task->scaled = TRUE;
 			
@@ -1113,17 +1062,6 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEvent *event
 		width = task->image->allocation.width;
 		height = task->image->allocation.height;
 		#endif
-		
-		/*if (!wnck_window_is_minimized (task->window))
-		{
-			
-			lightdash_windows_view_update_preview (task, width, height);
-		
-		}
-		else
-		{
-			lightdash_windows_view_draw_symbolic_window_rectangle (task, width, height);
-		}*/
 			
 		#if GTK_CHECK_VERSION (3, 0, 0)
 		cairo_set_source_surface (cr, task->image_surface, 
@@ -1134,14 +1072,24 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEvent *event
 		
 		task->previous_width = gtk_widget_get_allocated_width (task->image);
 		task->previous_height = gtk_widget_get_allocated_height (task->image);
+		
+				if (!task->preview_created)
+		{
+			XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
+			gtk_widget_queue_resize (task->image);
+			task->preview_created = TRUE;
+		}	
 		#else
+		
 		gdk_pixmap_get_size (task->gdk_pixmap, &pixmap_width, &pixmap_height);
+
 		cr = gdk_cairo_create (widget->window);
+		
 		pixbuf = gdk_pixbuf_get_from_drawable (pixbuf, task->gdk_pixmap, NULL, 
 				0, 0, 0, 0, pixmap_width, pixmap_height);
 		gdk_cairo_set_source_pixbuf (cr, pixbuf, 
-				width/2 - (gdk_pixbuf_get_width (pixbuf)/2),
-				height/2 - gdk_pixbuf_get_height (pixbuf)/2);
+				width/2 - pixmap_width/2,
+				height/2 - pixmap_height/2);
 		
 		cairo_paint (cr);
 		
@@ -1150,7 +1098,7 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEvent *event
 		task->previous_width = task->image->allocation.width;
 		task->previous_height = task->image->allocation.height;
 		
-		if (!task->preview_created)
+		if (!task->preview_created &! wnck_window_is_minimized (task->window))
 		{
 			XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
 			gtk_widget_queue_resize (task->image);
@@ -1329,7 +1277,7 @@ static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *even
 	
 	XDamageSubtract (task->tasklist->dpy, e->damage, None, None);
 	
-	lightdash_windows_view_update_preview (task, width, height);
+	lightdash_windows_view_render_preview_at_size (task, width, height);
 	
 	gtk_widget_queue_draw (task->image);
 	
@@ -1345,7 +1293,7 @@ static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *even
 		task->attr.height = ce->height;
 		cairo_surface_destroy (task->surface);
 		task->surface = lightdash_windows_view_get_window_picture (task);
-		lightdash_windows_view_update_preview (task, width, height);
+		lightdash_windows_view_render_preview_at_size (task, width, height);
 		gtk_widget_queue_draw (task->image);
 
 	}
