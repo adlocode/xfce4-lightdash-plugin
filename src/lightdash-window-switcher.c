@@ -342,6 +342,9 @@ static void my_tasklist_window_icon_changed (WnckWindow *window, LightTask *task
 	
 	task->pixbuf = wnck_window_get_icon (task->window);
 	
+	if (wnck_window_is_minimized (task->window))
+		lightdash_windows_view_render_preview_at_size (task, task->previous_width, task->previous_height);
+	
 }
 
 
@@ -1035,6 +1038,14 @@ void lightdash_windows_view_button_size_changed (GtkWidget *widget,
 		lightdash_windows_view_render_preview_at_size (task, width, height);
 		
 		gtk_widget_queue_draw (task->image);
+		
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		task->previous_width = gtk_widget_get_allocated_width (task->image);
+		task->previous_height = gtk_widget_get_allocated_height (task->image);
+		#else
+		task->previous_width = task->image->allocation.width;
+		task->previous_height = task->image->allocation.height;
+		#endif
 		
 		task->scaled = TRUE;
 			
