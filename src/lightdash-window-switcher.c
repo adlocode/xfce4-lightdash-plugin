@@ -1099,8 +1099,8 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEvent *event
 		pixbuf = gdk_pixbuf_get_from_drawable (pixbuf, task->gdk_pixmap, NULL, 
 				0, 0, 0, 0, pixmap_width, pixmap_height);
 		gdk_cairo_set_source_pixbuf (cr, pixbuf, 
-				width/2 - pixmap_width/2,
-				height/2 - pixmap_height/2);
+				widget->allocation.x + width/2 - pixmap_width/2,
+				widget->allocation.y + height/2 - pixmap_height/2);
 		
 		cairo_paint (cr);
 		
@@ -1378,7 +1378,11 @@ static void light_task_create_widgets (LightTask *task)
 	
 	
 	task->image = gtk_drawing_area_new ();
-		
+	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	#else
+	gtk_widget_set_has_window (task->image, FALSE);
+	#endif
 	
 	if (wnck_window_is_on_workspace (task->window,
 			wnck_screen_get_active_workspace (task->tasklist->screen))) 
