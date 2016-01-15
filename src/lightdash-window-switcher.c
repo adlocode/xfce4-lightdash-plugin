@@ -151,12 +151,6 @@ static void my_tasklist_drag_data_get_handl
         guint target_type, guint time, LightTask *task);
 
 static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTask *task);
-
-void lightdash_windows_view_button_check_allocate_signal (GtkWidget *widget, GdkRectangle *allocation,
-LightTask *task);
-
-void lightdash_windows_view_button_size_changed (GtkWidget *widget,
-	GdkRectangle *allocation, LightTask *task);
 	
 #if GTK_CHECK_VERSION (3, 0, 0)
 gboolean lightdash_windows_view_image_draw (GtkWidget *widget, cairo_t *cr, LightTask *task);
@@ -213,14 +207,6 @@ static void light_task_finalize (GObject *object)
 	LightTask *task;
 	task = LIGHT_TASK (object);
 	gint error;
-	
-
-	if (task->button_resized_tag)
-	{
-		g_signal_handler_disconnect (task->button,
-						task->button_resized_tag);
-		task->button_resized_tag = 0;
-	}
 	
 	if (task->action_menu)
 	{
@@ -1004,50 +990,6 @@ void lightdash_windows_view_reattach_widgets (LightdashWindowsView *tasklist)
 	
 			
 }
-	
-void lightdash_windows_view_button_size_changed (GtkWidget *widget,
-	GdkRectangle *allocation, LightTask *task)
-{
-	
-	gfloat total_buttons_area, table_area;
-	gfloat aspect_ratio;
-	int width, height;
-	
-	#if GTK_CHECK_VERSION (3, 0, 0)
-	width = gtk_widget_get_allocated_width (task->image);
-	height = gtk_widget_get_allocated_height (task->image);
-	#else
-	width = task->image->allocation.width;
-	height = task->image->allocation.height;
-	#endif
-	
-	if (task->scaled)
-	{
-		task->scaled = FALSE;
-		return;
-	}
-	
-
-	
-		if (height == task->previous_height
-			&& width == task->previous_width)
-		return;
-		
-		lightdash_windows_view_render_preview_at_size (task, width, height);
-		
-		#if GTK_CHECK_VERSION (3, 0, 0)
-		task->previous_width = gtk_widget_get_allocated_width (task->image);
-		task->previous_height = gtk_widget_get_allocated_height (task->image);
-		#else
-		task->previous_width = task->image->allocation.width;
-		task->previous_height = task->image->allocation.height;
-		#endif
-		
-		gtk_widget_queue_draw (widget);
-		
-		task->scaled = TRUE;
-			
-}
 
 #if GTK_CHECK_VERSION (3, 0, 0)
 gboolean lightdash_windows_view_image_draw (GtkWidget *widget, cairo_t *cr, LightTask *task)
@@ -1064,6 +1006,9 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 		
 		int width, height;
 		
+		gfloat total_buttons_area, table_area;
+		gfloat aspect_ratio;
+	
 		#if GTK_CHECK_VERSION (3, 0, 0)
 		width = gtk_widget_get_allocated_width (task->image);
 		height = gtk_widget_get_allocated_height (task->image);
@@ -1071,6 +1016,18 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 		width = task->image->allocation.width;
 		height = task->image->allocation.height;
 		#endif
+		
+		lightdash_windows_view_render_preview_at_size (task, width, height);
+		
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		task->previous_width = gtk_widget_get_allocated_width (task->image);
+		task->previous_height = gtk_widget_get_allocated_height (task->image);
+		#else
+		task->previous_width = task->image->allocation.width;
+		task->previous_height = task->image->allocation.height;
+		#endif
+		
+		task->scaled = TRUE;
 			
 		#if GTK_CHECK_VERSION (3, 0, 0)
 		cairo_set_source_surface (cr, task->image_surface, 
@@ -1422,10 +1379,6 @@ static void light_task_create_widgets (LightTask *task)
 							task);
 		#endif
 	}					
-	
-		task->button_resized_tag = g_signal_connect (task->image, "size-allocate",
-						G_CALLBACK (lightdash_windows_view_button_size_changed),
-						task);
 							
 	gtk_drag_source_set (task->button,GDK_BUTTON1_MASK,targets,1,GDK_ACTION_MOVE);
 					
