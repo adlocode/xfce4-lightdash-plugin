@@ -161,7 +161,7 @@ void lightdash_windows_view_button_size_changed (GtkWidget *widget,
 #if GTK_CHECK_VERSION (3, 0, 0)
 gboolean lightdash_windows_view_image_draw (GtkWidget *widget, cairo_t *cr, LightTask *task);
 #else
-gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEvent *event, LightTask *task);
+gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose *event, LightTask *task);
 #endif
 
 LightTask * get_task_from_window (LightdashWindowsView *tasklist, WnckWindow *window);
@@ -407,7 +407,7 @@ static void lightdash_windows_view_realize (GtkWidget *widget)
                
    g_signal_connect (tasklist->gdk_screen, "composited-changed",
                G_CALLBACK (my_tasklist_screen_composited_changed), tasklist);
-}
+}	
 	
 static void lightdash_windows_view_init (LightdashWindowsView *tasklist)
 {
@@ -807,9 +807,7 @@ static void my_tasklist_on_window_closed
 				tasklist->table_columns);
 		gtk_widget_queue_resize (GTK_WIDGET(tasklist));
 	}
-	
 		
-	//my_tasklist_update_windows (tasklist);	
 }
 
 static void my_tasklist_active_workspace_changed
@@ -1037,8 +1035,6 @@ void lightdash_windows_view_button_size_changed (GtkWidget *widget,
 		
 		lightdash_windows_view_render_preview_at_size (task, width, height);
 		
-		gtk_widget_queue_draw (task->image);
-		
 		#if GTK_CHECK_VERSION (3, 0, 0)
 		task->previous_width = gtk_widget_get_allocated_width (task->image);
 		task->previous_height = gtk_widget_get_allocated_height (task->image);
@@ -1047,6 +1043,8 @@ void lightdash_windows_view_button_size_changed (GtkWidget *widget,
 		task->previous_height = task->image->allocation.height;
 		#endif
 		
+		gtk_widget_queue_draw (widget);
+		
 		task->scaled = TRUE;
 			
 }
@@ -1054,7 +1052,7 @@ void lightdash_windows_view_button_size_changed (GtkWidget *widget,
 #if GTK_CHECK_VERSION (3, 0, 0)
 gboolean lightdash_windows_view_image_draw (GtkWidget *widget, cairo_t *cr, LightTask *task)
 #else
-gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEvent *event, LightTask *task)
+gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose *event, LightTask *task)
 #endif
 {
 		#if GTK_CHECK_VERSION (3, 0, 0)
@@ -1379,10 +1377,7 @@ static void light_task_create_widgets (LightTask *task)
 	
 	task->image = gtk_drawing_area_new ();
 	
-	#if GTK_CHECK_VERSION (3, 0, 0)
-	#else
 	gtk_widget_set_has_window (task->image, FALSE);
-	#endif
 	
 	if (wnck_window_is_on_workspace (task->window,
 			wnck_screen_get_active_workspace (task->tasklist->screen))) 
@@ -1412,21 +1407,7 @@ static void light_task_create_widgets (LightTask *task)
 					G_CALLBACK (my_tasklist_window_workspace_changed), task->tasklist);
 					
 	task->state_changed_tag = g_signal_connect (task->window, "state-changed",
-					G_CALLBACK (my_tasklist_window_state_changed), task->tasklist);				
-					
-	/*				
-	if (!wnck_window_is_minimized (task->window))
-	{
-		#if GTK_CHECK_VERSION (3, 0, 0)
-		task->expose_tag = g_signal_connect (task->image, "draw",
-							G_CALLBACK (lightdash_windows_view_image_draw),
-							task);
-		#else
-		task->expose_tag = g_signal_connect (task->image, "expose-event",
-							G_CALLBACK (lightdash_windows_view_image_expose),
-							task);
-		#endif						
-	}*/
+					G_CALLBACK (my_tasklist_window_state_changed), task->tasklist);
 	
 	if (wnck_window_is_on_workspace (task->window,
 		wnck_screen_get_active_workspace (task->tasklist->screen))) 
