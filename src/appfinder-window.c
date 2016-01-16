@@ -992,23 +992,9 @@ xfce_appfinder_window_window_state_event (GtkWidget           *widget,
 {
   XfceAppfinderWindow *window = XFCE_APPFINDER_WINDOW (widget);
   gint                 width;
-  
-  
-  /*
-  if (!gtk_widget_get_visible (window->paned))
-    {
-      if ((event->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) != 0)
-        {
-          gtk_window_unmaximize (GTK_WINDOW (widget));
 
-          /* set sensible width instead of taking entire width *
-          width = xfconf_channel_get_int (window->channel, "/last/window-width", DEFAULT_WINDOW_WIDTH);
-          gtk_window_resize (GTK_WINDOW (widget), width, 100 /* should be corrected by wm *);
-        } */
-
-      if ((event->new_window_state & GDK_WINDOW_STATE_FULLSCREEN) != 0)
-        gtk_window_unfullscreen (GTK_WINDOW (widget));
-    //}
+  if ((event->new_window_state & GDK_WINDOW_STATE_FULLSCREEN) != 0)
+    gtk_window_unfullscreen (GTK_WINDOW (widget));
 
   if ((*GTK_WIDGET_CLASS (xfce_appfinder_window_parent_class)->window_state_event) != NULL)
     return (*GTK_WIDGET_CLASS (xfce_appfinder_window_parent_class)->window_state_event) (widget, event);
@@ -1651,8 +1637,6 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
 
   text = gtk_entry_get_text (GTK_ENTRY (window->entry));
 
-  //if (gtk_widget_get_visible (window->paned))
-    //{
       g_free (window->filter_text);
 
       if (IS_STRING (text))
@@ -1687,16 +1671,6 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
       else
         model = gtk_icon_view_get_model (GTK_ICON_VIEW (window->view));
       gtk_tree_model_filter_refilter (GTK_TREE_MODEL_FILTER (model));
-    //}
-  /*else
-    {
-      gtk_widget_set_sensitive (window->button_launch, IS_STRING (text));
-
-      pixbuf = xfce_appfinder_model_get_icon_for_command (window->model, text);
-      xfce_appfinder_window_update_image (window, pixbuf);
-      if (pixbuf != NULL)
-        g_object_unref (G_OBJECT (pixbuf));
-    }*/
 
   return FALSE;
 }
