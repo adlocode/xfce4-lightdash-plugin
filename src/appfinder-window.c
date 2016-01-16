@@ -247,15 +247,13 @@ xfce_lightdash_window_apps_button_toggled (GtkToggleButton *button, XfceAppfinde
 {
 	if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (button)))
         {
-			gtk_widget_show_all (window->scroll);
-			gtk_widget_show_all (window->viewscroll);
+			gtk_widget_show_all (window->paned);
 			gtk_widget_hide_all (window->taskview_container);
 		}
 		
 		else
 		{
-			gtk_widget_hide (window->scroll);
-			gtk_widget_hide (window->viewscroll);
+			gtk_widget_hide (window->paned);
 			gtk_widget_show_all (window->taskview_container);
 			
 		}
@@ -267,8 +265,7 @@ xfce_lightdash_window_show (GtkWidget *widget, XfceAppfinderWindow *window)
 	
 	gtk_window_set_keep_above (GTK_WINDOW (window), TRUE);
 	
-	gtk_widget_hide (window->scroll);
-	gtk_widget_hide (window->viewscroll);
+	gtk_widget_hide (window->paned);
 	gtk_widget_show_all (window->taskview_container);
 	gtk_entry_set_text (GTK_ENTRY(window->entry), "");
 	gtk_widget_grab_focus (window->entry);
@@ -995,21 +992,23 @@ xfce_appfinder_window_window_state_event (GtkWidget           *widget,
 {
   XfceAppfinderWindow *window = XFCE_APPFINDER_WINDOW (widget);
   gint                 width;
-
+  
+  
+  /*
   if (!gtk_widget_get_visible (window->paned))
     {
       if ((event->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) != 0)
         {
           gtk_window_unmaximize (GTK_WINDOW (widget));
 
-          /* set sensible width instead of taking entire width */
+          /* set sensible width instead of taking entire width *
           width = xfconf_channel_get_int (window->channel, "/last/window-width", DEFAULT_WINDOW_WIDTH);
-          gtk_window_resize (GTK_WINDOW (widget), width, 100 /* should be corrected by wm */);
-        }
+          gtk_window_resize (GTK_WINDOW (widget), width, 100 /* should be corrected by wm *);
+        } */
 
       if ((event->new_window_state & GDK_WINDOW_STATE_FULLSCREEN) != 0)
         gtk_window_unfullscreen (GTK_WINDOW (widget));
-    }
+    //}
 
   if ((*GTK_WIDGET_CLASS (xfce_appfinder_window_parent_class)->window_state_event) != NULL)
     return (*GTK_WIDGET_CLASS (xfce_appfinder_window_parent_class)->window_state_event) (widget, event);
@@ -1652,8 +1651,8 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
 
   text = gtk_entry_get_text (GTK_ENTRY (window->entry));
 
-  if (gtk_widget_get_visible (window->paned))
-    {
+  //if (gtk_widget_get_visible (window->paned))
+    //{
       g_free (window->filter_text);
 
       if (IS_STRING (text))
@@ -1669,16 +1668,14 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
         
         if (gtk_entry_get_text_length (GTK_ENTRY(window->entry)) != 0)
         {
-			gtk_widget_show_all (window->scroll);
-			gtk_widget_show_all (window->viewscroll);
+			gtk_widget_show_all (window->paned);
 			gtk_widget_hide_all (window->taskview_container);
 			gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (window->apps_button), TRUE);
 		}
 		
 		else
 		{
-			gtk_widget_hide (window->scroll);
-			gtk_widget_hide (window->viewscroll);
+			gtk_widget_hide (window->paned);
 			gtk_widget_show_all (window->taskview_container);
 			gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (window->apps_button), FALSE);
 			
@@ -1690,8 +1687,8 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
       else
         model = gtk_icon_view_get_model (GTK_ICON_VIEW (window->view));
       gtk_tree_model_filter_refilter (GTK_TREE_MODEL_FILTER (model));
-    }
-  else
+    //}
+  /*else
     {
       gtk_widget_set_sensitive (window->button_launch, IS_STRING (text));
 
@@ -1699,7 +1696,7 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
       xfce_appfinder_window_update_image (window, pixbuf);
       if (pixbuf != NULL)
         g_object_unref (G_OBJECT (pixbuf));
-    }
+    }*/
 
   return FALSE;
 }
@@ -2305,7 +2302,7 @@ xfce_appfinder_window_set_expanded (XfceAppfinderWindow *window,
 
 
   /* show/hide pane with treeviews */
-  gtk_widget_set_visible (window->paned, TRUE);
+  //gtk_widget_set_visible (window->paned, TRUE);
 
   /* toggle icon */
   gtk_entry_set_icon_from_icon_name (GTK_ENTRY (window->entry), GTK_ENTRY_ICON_SECONDARY,
