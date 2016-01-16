@@ -518,11 +518,7 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
     gtk_window_set_modal (GTK_WINDOW (window), TRUE);
     gtk_window_set_keep_above (GTK_WINDOW (window), TRUE);
     gtk_widget_set_name (GTK_WIDGET (window), "lightdash-window");
-    gtk_widget_set_app_paintable (GTK_WIDGET (window), TRUE);  
-    
-    //Setting the size request allows the previews to shrink when required
-    gtk_widget_set_size_request (GTK_WIDGET (window), 50, 50);
-
+    gtk_widget_set_app_paintable (GTK_WIDGET (window), TRUE);
 	
   window->channel = xfconf_channel_get ("xfce4-lightdash");
   window->last_window_height = xfconf_channel_get_int (window->channel, "/last/window-height", DEFAULT_WINDOW_HEIGHT);
