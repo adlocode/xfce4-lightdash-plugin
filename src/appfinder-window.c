@@ -551,12 +551,22 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
 #if GTK_CHECK_VERSION (3, 0, 0)
 	main_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
   vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
-#else
-	main_hbox = gtk_hbox_new (FALSE, 6);
-  vbox = gtk_vbox_new (FALSE, 6);
-  
-#endif
+  gtk_widget_set_margin_top (main_hbox, 6);
+  gtk_widget_set_margin_bottom (main_hbox, 30);
+  gtk_widget_set_margin_start (main_hbox, 1);
+  gtk_widget_set_margin_end (main_hbox, 3);
   gtk_container_add (GTK_CONTAINER (window), main_hbox);
+  
+#else
+  main_hbox = gtk_hbox_new (FALSE, 6);
+  vbox = gtk_vbox_new (FALSE, 6);
+  align = gtk_alignment_new (0.0, 0.0, 1.0, 1.0);
+  gtk_alignment_set_padding (GTK_ALIGNMENT (align), 6, 30, 1, 3);
+  gtk_container_add (GTK_CONTAINER (window), align);
+  gtk_container_add (GTK_CONTAINER (align), main_hbox);
+  gtk_widget_show (align);
+#endif
+  
   gtk_widget_show (main_hbox);
   
   #if GTK_CHECK_VERSION (3, 0, 0)
@@ -593,7 +603,6 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
       
   xfce_lightdash_window_screen_changed (GTK_WIDGET (window), NULL, window);
   
-  gtk_container_set_border_width (GTK_CONTAINER (vbox), 6);
   gtk_widget_show (vbox);
   gtk_widget_show (window->icon_bar);
 
@@ -622,9 +631,9 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
   
 
 #if GTK_CHECK_VERSION (3, 0, 0)
-  vbox2 = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
+  vbox2 = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
 #else
-  vbox2 = gtk_vbox_new (FALSE, 6);
+  vbox2 = gtk_vbox_new (FALSE, 0);
 #endif
   gtk_box_pack_start (GTK_BOX (hbox), vbox2, TRUE, TRUE, 0);
   gtk_widget_show (vbox2);
