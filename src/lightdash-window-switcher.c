@@ -97,8 +97,11 @@ struct _LightTask
 	gboolean preview_created;
 	gboolean scaled;
 	
-	#if GTK_CHECK_VERSION (3, 0, 0)
 	cairo_surface_t *image_surface;
+	int surface_width;
+	int surface_height;
+	
+	#if GTK_CHECK_VERSION (3, 0, 0)
 	#else
 	GdkPixmap *gdk_pixmap;
 	#endif
@@ -194,12 +197,15 @@ static void light_task_init (LightTask *task)
 	task->button_resized_tag = 0;
 	task->expose_tag = 0;
 	
-	#if GTK_CHECK_VERSION (3, 0, 0)
 	task->image_surface = NULL;
+	#if GTK_CHECK_VERSION (3, 0, 0)
 	#else
 	task->gdk_pixmap = NULL;
 	#endif
 	task->action_menu = NULL;
+	
+	task->surface_width = 1;
+	task->surface_height = 1;
 }
 
 static void light_task_finalize (GObject *object)
@@ -274,12 +280,13 @@ static void light_task_finalize (GObject *object)
 		task->surface = NULL;
 	}
 	
-	#if GTK_CHECK_VERSION (3, 0, 0)
+	
 	if (task->image_surface)
 	{
 		cairo_surface_destroy (task->image_surface);
 		task->image_surface = NULL;
 	}
+	#if GTK_CHECK_VERSION (3, 0, 0)
 	#else
 	if (task->gdk_pixmap)
 	{
@@ -881,11 +888,7 @@ void lightdash_windows_view_render_preview_at_size (LightTask *task, gint width,
 		dest_width = task->attr.width*factor;
 		dest_height = task->attr.height*factor;
 		
-		#if GTK_CHECK_VERSION (3, 0, 0)
 		cairo_surface_destroy (task->image_surface);
-		#else
-		g_object_unref (task->gdk_pixmap);
-		#endif
 		
 		if ((gint)dest_width == 0)
 			dest_width = 1;
@@ -900,18 +903,15 @@ void lightdash_windows_view_render_preview_at_size (LightTask *task, gint width,
 			dest_height = task->attr.height;
 		}
 		
-		#if GTK_CHECK_VERSION (3, 0, 0)
-		task->image_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
-			dest_width, dest_height);
+		task->surface_width = dest_width;
+		task->surface_height = dest_height;
+			
+		task->image_surface = gdk_window_create_similar_surface (task->tasklist->parent_gdk_window,
+								CAIRO_CONTENT_COLOR,
+								dest_width, dest_height);
+								
 		cr = cairo_create (task->image_surface);
-		#else
-		task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 
-			dest_width, 
-			dest_height, 
-			-1);
-		
-		cr = gdk_cairo_create (task->gdk_pixmap);
-		#endif
+
 		
 		if (wnck_window_is_minimized (task->window) || task->tasklist->composited == FALSE)
 		{
@@ -1000,7 +1000,6 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 		#if GTK_CHECK_VERSION (3, 0, 0)
 		#else
 		cairo_t *cr;
-		GdkPixbuf *pixbuf;
 		gint pixmap_width, pixmap_height;
 		#endif
 		
@@ -1031,8 +1030,8 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 			
 		#if GTK_CHECK_VERSION (3, 0, 0)
 		cairo_set_source_surface (cr, task->image_surface, 
-				width/2 - (cairo_image_surface_get_width (task->image_surface)/2), 
-				height/2 - cairo_image_surface_get_height (task->image_surface)/2);
+				width/2 - task->surface_width/2, 
+				height/2 - task->surface_height/2);
 				
 		cairo_paint (cr);
 		
@@ -1051,15 +1050,11 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 
 		cr = gdk_cairo_create (widget->window);
 		
-		pixbuf = gdk_pixbuf_get_from_drawable (pixbuf, task->gdk_pixmap, NULL, 
-				0, 0, 0, 0, pixmap_width, pixmap_height);
-		gdk_cairo_set_source_pixbuf (cr, pixbuf, 
-				widget->allocation.x + width/2 - pixmap_width/2,
-				widget->allocation.y + height/2 - pixmap_height/2);
+		cairo_set_source_surface (cr, task->image_surface, 
+				widget->allocation.x + width/2 - task->surface_width/2,
+				widget->allocation.y + height/2 - task->surface_height/2);
 		
 		cairo_paint (cr);
-		
-		g_object_unref (pixbuf);
 		
 		task->previous_width = task->image->allocation.width;
 		task->previous_height = task->image->allocation.height;
@@ -1339,8 +1334,10 @@ static void light_task_create_widgets (LightTask *task)
 	if (wnck_window_is_on_workspace (task->window,
 			wnck_screen_get_active_workspace (task->tasklist->screen))) 
 	{
+		task->image_surface = gdk_window_create_similar_surface (task->tasklist->parent_gdk_window,
+								CAIRO_CONTENT_COLOR,
+								1, 1);
 		#if GTK_CHECK_VERSION (3, 0, 0)
-		task->image_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
 		#else
 		task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 1, 1, -1);	
 		#endif
