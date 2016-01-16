@@ -1082,6 +1082,18 @@ static void my_tasklist_drag_begin_handl
 	#if GTK_CHECK_VERSION (3, 0, 0)
 	gtk_drag_set_icon_surface (context, task->image_surface);
 	#else
+	cairo_t *cr;
+	g_object_unref (task->gdk_pixmap);
+	task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window,
+						task->surface_width,
+						task->surface_height,
+						-1);
+	cr = gdk_cairo_create (task->gdk_pixmap);
+	cairo_rectangle (cr, 0, 0, task->attr.width, task->attr.height);	
+	cairo_set_source_surface (cr, task->image_surface, 0, 0);	
+	cairo_fill (cr);		
+	cairo_destroy (cr);
+	
 	gtk_drag_set_icon_pixmap (context,
 		gdk_drawable_get_colormap (GDK_DRAWABLE (task->gdk_pixmap)),
 		task->gdk_pixmap, NULL, -2, -2);
