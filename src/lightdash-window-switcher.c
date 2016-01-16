@@ -1000,7 +1000,6 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 		#if GTK_CHECK_VERSION (3, 0, 0)
 		#else
 		cairo_t *cr;
-		gint pixmap_width, pixmap_height;
 		#endif
 		
 		int width, height;
@@ -1045,8 +1044,6 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 			task->preview_created = TRUE;
 		}	
 		#else
-		
-		gdk_pixmap_get_size (task->gdk_pixmap, &pixmap_width, &pixmap_height);
 
 		cr = gdk_cairo_create (widget->window);
 		
