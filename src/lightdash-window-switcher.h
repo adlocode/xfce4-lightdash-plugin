@@ -27,11 +27,11 @@
 
 G_BEGIN_DECLS
 
-#define LIGHTDASH_WINDOWS_VIEW_TYPE (lightdash_windows_view_get_type())
-#define LIGHTDASH_WINDOWS_VIEW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), LIGHTDASH_WINDOWS_VIEW_TYPE, LightdashWindowsView))
-#define MY_TASKLIST_CLASS (klass) (G_TYPE_CHECK_CLASS_CAST ((klass), LIGHTDASH_WINDOWS_VIEW_TYPE, LightdashWindowsViewClass))
-#define IS_LIGHTDASH_WINDOWS_VIEW (obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LIGHTDASH_WINDOWS_VIEW_TYPE))
-#define IS_LIGHTDASH_WINDOWS_VIEW_CLASS(klass), (G_TYPE_CHECK_CLASS_TYPE ((klass), LIGHTDASH_WINDOWS_VIEW_TYPE))
+#define LIGHTDASH_TYPE_WINDOWS_VIEW (lightdash_windows_view_get_type())
+#define LIGHTDASH_WINDOWS_VIEW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), LIGHTDASH_TYPE_WINDOWS_VIEW, LightdashWindowsView))
+#define MY_TASKLIST_CLASS (klass) (G_TYPE_CHECK_CLASS_CAST ((klass), LIGHTDASH_TYPE_WINDOWS_VIEW, LightdashWindowsViewClass))
+#define IS_LIGHTDASH_WINDOWS_VIEW (obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LIGHTDASH_TYPE_WINDOWS_VIEW))
+#define IS_LIGHTDASH_WINDOWS_VIEW_CLASS(klass), (G_TYPE_CHECK_CLASS_TYPE ((klass), LIGHTDASH_TYPE_WINDOWS_VIEW))
 
 typedef struct _MyTasklist LightdashWindowsView;
 typedef struct _MyTasklistClass LightdashWindowsViewClass;
