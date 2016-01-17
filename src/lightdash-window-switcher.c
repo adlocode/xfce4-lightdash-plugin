@@ -30,6 +30,7 @@
 #include <math.h>
 #include "lightdash-window-switcher.h"
 #include "table-layout.h"
+#include "lightdash-image.h"
 
 #define DEFAULT_TABLE_COLUMNS 3
 #define DEFAULT_TABLE_ROWS 2
@@ -1336,9 +1337,7 @@ static void light_task_create_widgets (LightTask *task)
 	lightdash_windows_view_create_composited_window (task);
 	
 	
-	task->image = gtk_drawing_area_new ();
-	
-	gtk_widget_set_has_window (task->image, FALSE);
+	task->image = lightdash_image_new ();
 	
 	if (wnck_window_is_on_workspace (task->window,
 			wnck_screen_get_active_workspace (task->tasklist->screen))) 
