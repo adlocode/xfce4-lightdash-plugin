@@ -1065,6 +1065,8 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 		}	
 		
 		#endif
+		
+		cairo_destroy (cr);
 
 		return FALSE;
 }
