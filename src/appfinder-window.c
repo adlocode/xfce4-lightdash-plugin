@@ -320,7 +320,7 @@ static void lightdash_window_bookmark_button_clicked (GtkButton *button, gpointe
 {
 	LightdashBookmark *bookmark;
 	
-	GtkTreeModel *model;
+  GtkTreeModel *model;
   GtkTreeIter   orig;
   GError       *error = NULL;
   gboolean      result = FALSE;
@@ -337,34 +337,7 @@ static void lightdash_window_bookmark_button_clicked (GtkButton *button, gpointe
   
   screen = gtk_window_get_screen (GTK_WINDOW (bookmark->window));
 
-          //gtk_tree_model_filter_convert_iter_to_child_iter (GTK_TREE_MODEL_FILTER (model), &orig, &bookmark->iter);
-          result = xfce_appfinder_model_execute (bookmark->model, &bookmark->iter, screen, &regular_command, &error);
-
-          if (!result && regular_command)
-            {
-              //gtk_tree_model_get (model, &(bookmark->iter), XFCE_APPFINDER_MODEL_COLUMN_COMMAND, &cmd, -1);
-              //result = xfce_appfinder_window_execute_command (cmd, screen, bookmark->window, FALSE, NULL, &error);
-              //g_free (cmd);
-            }
-    
-  else
-    {
-      //if (!gtk_widget_get_sensitive (window->button_launch))
-        //return;
-
-      /*entry_execute:
-
-      text = gtk_entry_get_text (GTK_ENTRY (window->entry));
-      save_cmd = TRUE;
-
-      if (xfce_appfinder_window_execute_command (text, screen, window, only_custom_cmd, &save_cmd, &error))
-        {
-          if (save_cmd)
-            result = xfce_appfinder_model_save_command (window->model, text, &error);
-          else
-            result = TRUE;
-        }*/
-    }
+  result = xfce_appfinder_model_execute (bookmark->model, &bookmark->iter, screen, &regular_command, &error);
 
   if (error != NULL)
     {
