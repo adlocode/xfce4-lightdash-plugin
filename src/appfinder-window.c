@@ -475,8 +475,10 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 	}
 	
 	color = style->bg[GTK_STATE_NORMAL];
-	
+	#if GTK_CHECK_VERSION (3, 0, 0)
 	cr = gdk_cairo_create (gtk_widget_get_window (widget));
+	#else
+	#endif
 	if (window->supports_alpha)
 	{
 	cairo_set_source_rgba (cr, color.red/65535.0, 
