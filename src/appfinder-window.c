@@ -151,10 +151,7 @@ static void       xfce_appfinder_window_execute                       (XfceAppfi
 static void lightdash_window_set_property (GObject *object, guint property_id, const GValue *value, GParamSpec *pspec);
 static void lightdash_window_get_property (GObject *object, guint property_id, GValue *value, GParamSpec *pspec);
 static void lightdash_window_constructed (GObject *object);                                                                  
-                                                                      
-                                                          
-                                                                       
-void xfce_appfinder_window_create (XfceAppfinderWindow *window);
+                                                                                                                                                                                                    
 gboolean
 xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderWindow *window);
 
