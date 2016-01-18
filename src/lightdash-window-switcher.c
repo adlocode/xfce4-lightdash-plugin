@@ -830,7 +830,9 @@ static void my_tasklist_window_state_changed
 	
 	else if (changed_mask & WNCK_WINDOW_STATE_MINIMIZED)
 	{
-		my_tasklist_update_windows (tasklist);
+		LightTask *task;
+		task = get_task_from_window (tasklist, window);
+		gtk_widget_queue_draw (task->image);
 	}
 }
 
@@ -1041,7 +1043,6 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 				if (!task->preview_created)
 		{
 			XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
-			gtk_widget_queue_resize (task->image);
 			task->preview_created = TRUE;
 		}	
 		#else
@@ -1060,7 +1061,6 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 		if (!task->preview_created &! wnck_window_is_minimized (task->window))
 		{
 			XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
-			gtk_widget_queue_resize (task->image);
 			task->preview_created = TRUE;
 		}	
 		
@@ -1290,7 +1290,7 @@ void lightdash_windows_view_create_composited_window (LightTask *task)
 			
 			task->surface = lightdash_windows_view_get_window_picture (task);
 	
-			/* Ignore damage events on its own window */
+			/* Ignore damage events on its own window to prevent an infinite loop*/
 			if (task->tasklist->parent_gdk_window && task->gdk_window != task->tasklist->parent_gdk_window)
 				{
 					task->damage = XDamageCreate (task->tasklist->dpy, 
