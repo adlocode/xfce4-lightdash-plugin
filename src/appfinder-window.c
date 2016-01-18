@@ -81,6 +81,13 @@ static XfceAppfinderModel *model_cache = NULL;
 //static guint               objects_table_count = 0;
 #endif
 
+enum
+{
+	PROP_PLUGIN = 1,
+	N_PROPERTIES
+};
+
+static GParamSpec *obj_properties[N_PROPERTIES] = {NULL, };
 
 static void       xfce_appfinder_window_finalize                      (GObject                     *object);
 
@@ -140,7 +147,10 @@ static void       xfce_appfinder_window_icon_theme_changed            (XfceAppfi
 static void       xfce_appfinder_window_launch_clicked                (XfceAppfinderWindow         *window);
 static void       xfce_appfinder_window_execute                       (XfceAppfinderWindow         *window,
  
-                                                                      gboolean                     close_on_succeed);
+                                                                      gboolean                     close_on_succeed);                                                                     
+static void lightdash_window_set_property (GObject *object, guint property_id, const GValue *value, GParamSpec *pspec);
+static void lightdash_window_get_property (GObject *object, guint property_id, GValue *value, GParamSpec *pspec);
+static void lightdash_window_constructed (GObject *object);                                                                  
                                                                       
                                                           
                                                                        
@@ -236,11 +246,24 @@ xfce_appfinder_window_class_init (XfceAppfinderWindowClass *klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->finalize = xfce_appfinder_window_finalize;
+  gobject_class->set_property = lightdash_window_set_property;
+  gobject_class->get_property = lightdash_window_get_property;
+  gobject_class->constructed = lightdash_window_constructed;
 
   gtkwidget_class = GTK_WIDGET_CLASS (klass);
   //gtkwidget_class->unmap = xfce_appfinder_window_unmap;
   gtkwidget_class->key_press_event = xfce_appfinder_window_key_press_event;
   gtkwidget_class->window_state_event = xfce_appfinder_window_window_state_event;
+  
+  obj_properties[PROP_PLUGIN] =
+	g_param_spec_pointer ("plugin",
+						"Xfce panel plugin",
+						"Xfce panel plugin",
+						G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+						
+  g_object_class_install_properties (gobject_class,
+									N_PROPERTIES,
+									obj_properties);
 }
 static void
 xfce_lightdash_window_apps_button_toggled (GtkToggleButton *button, XfceAppfinderWindow *window)
@@ -483,12 +506,6 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 static void
 xfce_appfinder_window_init (XfceAppfinderWindow *window)
 {
-	
-}
-
-void
-xfce_appfinder_window_create (XfceAppfinderWindow *window)
-{
   GtkWidget          *vbox, *vbox2;
   GtkWidget          *entry;
   GtkWidget          *pane;
@@ -589,14 +606,6 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
           
   g_signal_connect (G_OBJECT (window), "show",
       G_CALLBACK (xfce_lightdash_window_show), window);
-  
-  #if GTK_CHECK_VERSION (3, 0, 0) 
-  g_signal_connect (G_OBJECT (window), "draw",
-      G_CALLBACK (xfce_lightdash_window_draw), window);
-  #else   
-  g_signal_connect (G_OBJECT (window), "expose-event",
-      G_CALLBACK (xfce_lightdash_window_expose), window);
-  #endif
       
   g_signal_connect (G_OBJECT (window), "screen-changed",
       G_CALLBACK (xfce_lightdash_window_screen_changed), window);
@@ -810,6 +819,55 @@ xfce_appfinder_window_create (XfceAppfinderWindow *window)
 }
 
 
+static void lightdash_window_set_property (GObject *object, guint property_id, const GValue *value, GParamSpec *pspec)
+{
+	XfceAppfinderWindow *window = XFCE_APPFINDER_WINDOW (object);
+	
+	switch (property_id)
+	{
+		case PROP_PLUGIN:
+		window->lightdash_plugin = (LightdashPlugin *) g_value_get_pointer (value);
+		break;
+		
+		default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+		break;
+	}
+}
+
+static void lightdash_window_get_property (GObject *object, guint property_id, GValue *value, GParamSpec *pspec)
+{
+	XfceAppfinderWindow *window = XFCE_APPFINDER_WINDOW (object);
+	
+	switch (property_id)
+	{
+		case PROP_PLUGIN:
+		g_value_set_pointer (value, window->lightdash_plugin);
+		break;
+		
+		default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+		break;
+	}
+}
+
+static void lightdash_window_constructed (GObject *object)
+{
+	XfceAppfinderWindow *window;
+	
+	window = XFCE_APPFINDER_WINDOW (object);
+	
+	#if GTK_CHECK_VERSION (3, 0, 0) 
+  g_signal_connect (G_OBJECT (window), "draw",
+      G_CALLBACK (xfce_lightdash_window_draw), window);
+  #else   
+  g_signal_connect (G_OBJECT (window), "expose-event",
+      G_CALLBACK (xfce_lightdash_window_expose), window);
+  #endif
+}
+	
+	
+
 
 static void
 xfce_appfinder_window_finalize (GObject *object)
@@ -888,11 +946,8 @@ lightdash_window_new (const gchar *startup_id,
 
   window = g_object_new (XFCE_TYPE_APPFINDER_WINDOW,
                          "startup-id", IS_STRING (startup_id) ? startup_id : NULL,
+                         "plugin", lightdash_plugin,
                          NULL);
-                         
-  XFCE_APPFINDER_WINDOW (window)->lightdash_plugin = lightdash_plugin;
-                         
-  xfce_appfinder_window_create (XFCE_APPFINDER_WINDOW (window));
   
   appfinder_refcount_debug_add (G_OBJECT (window), startup_id);
   xfce_appfinder_window_set_expanded (XFCE_APPFINDER_WINDOW (window), expanded);
