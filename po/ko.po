@@ -20,6 +20,17 @@ msgstr ""
 "Language: ko\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
+#. Translators: If there is no suitable word for "Activities"
+#. in your language, you can use the word for "Overview".
+msgid "Activities"
+msgstr "현재 활동"
+
+msgid "_Title:"
+msgstr "제목"
+
+msgid "Background opacit_y:"
+msgstr "배경 화면 불투명도:"
+
 #. close all windows and quit
 #: ../src/appfinder-gdbus.c:84
 msgid "Forced to quit"

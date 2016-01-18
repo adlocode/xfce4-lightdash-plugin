@@ -19,6 +19,17 @@ msgstr ""
 "Language: sl\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3);\n"
 
+#. Translators: If there is no suitable word for "Activities"
+#. in your language, you can use the word for "Overview". */
+msgid "Activities"
+msgstr "Dejavnosti"
+
+msgid "_Title:"
+msgstr "_Naziv:"
+
+msgid "Background opacit_y:"
+msgstr "Pro_zornost ozadja:"
+
 #. close all windows and quit
 #: ../src/appfinder-gdbus.c:84
 msgid "Forced to quit"
