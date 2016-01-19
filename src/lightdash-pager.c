@@ -84,6 +84,9 @@ lightdash_pager_drag_data_get (GtkWidget        *widget,
                           GtkSelectionData *selection_data,
                           guint             info,
                           guint             time);
+                          
+static void lightdash_pager_drag_end (GtkWidget *widget,
+							GdkDragContext *context);                          
 
 static gboolean 
 lightdash_pager_drag_motion (GtkWidget          *widget,
@@ -216,6 +219,7 @@ static void lightdash_pager_class_init (LightdashPagerClass *klass)
 	widget_class->button_press_event = lightdash_pager_button_press;
 	widget_class->motion_notify_event = lightdash_pager_motion;
 	widget_class->drag_motion = lightdash_pager_drag_motion;
+	widget_class->drag_end = lightdash_pager_drag_end;
 	widget_class->drag_data_get = lightdash_pager_drag_data_get;
 	
 }
@@ -914,7 +918,14 @@ lightdash_pager_drag_data_get (GtkWidget        *widget,
   gtk_selection_data_set (selection_data,
 			  gtk_selection_data_get_target (selection_data),
 			  8, (guchar *)&xid, sizeof (gulong));
-}			  
+}
+
+static void lightdash_pager_drag_end (GtkWidget *widget,
+							GdkDragContext *context)
+{
+	LightdashPager *pager = LIGHTDASH_PAGER (widget);
+	lightdash_pager_clear_drag (pager);
+}
 
 static gboolean
 lightdash_pager_motion (GtkWidget        *widget,
