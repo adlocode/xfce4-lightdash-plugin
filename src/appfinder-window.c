@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2011 Nick Schermer <nick@xfce.org>
  * 
- * Copyright (C) 2015 adlo
+ * Copyright (C) 2015-2016 adlo
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -108,9 +108,6 @@ static gboolean   xfce_appfinder_window_completion_match_func         (GtkEntryC
                                                                        gpointer                     data);
 static void       xfce_appfinder_window_entry_changed                 (XfceAppfinderWindow         *window);
 static void       xfce_appfinder_window_entry_activate                (GtkEditable                 *entry,
-                                                                       XfceAppfinderWindow         *window);
-static gboolean   xfce_appfinder_window_entry_key_press_event         (GtkWidget                   *entry,
-                                                                       GdkEventKey                 *event,
                                                                        XfceAppfinderWindow         *window);
 static void       xfce_appfinder_window_entry_icon_released           (GtkEntry                    *entry,
                                                                        GtkEntryIconPosition         icon_pos,
@@ -633,8 +630,6 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
       G_CALLBACK (xfce_appfinder_window_entry_changed), window);
   g_signal_connect (G_OBJECT (entry), "activate",
       G_CALLBACK (xfce_appfinder_window_entry_activate), window);
-  g_signal_connect (G_OBJECT (entry), "key-press-event",
-      G_CALLBACK (xfce_appfinder_window_entry_key_press_event), window);
   gtk_entry_set_icon_from_icon_name (GTK_ENTRY (entry),
                                      GTK_ENTRY_ICON_SECONDARY,
                                      XFCE_APPFINDER_STOCK_GO_DOWN);
@@ -1801,48 +1796,6 @@ xfce_appfinder_window_pointer_is_grabbed (GtkWidget *widget)
   return gdk_pointer_is_grabbed ();
 #endif
 }
-
-
-
-static gboolean
-xfce_appfinder_window_entry_key_press_event (GtkWidget           *entry,
-                                             GdkEventKey         *event,
-                                             XfceAppfinderWindow *window)
-{
-  gboolean          expand;
-  gboolean          is_expanded;
-
-  if (event->keyval == GDK_KEY_Up
-      || event->keyval == GDK_KEY_Down)
-    {
-      expand = (event->keyval == GDK_KEY_Down);
-      is_expanded = gtk_widget_get_visible (window->paned);
-      if (is_expanded != expand)
-        {
-          /* don't break entry completion navigation in collapsed mode */
-          if (!is_expanded
-              && xfce_appfinder_window_pointer_is_grabbed (entry))
-            {
-              /* window is still collapsed and the pointer is grabbed
-               * by the popup menu, do nothing with the event */
-              return FALSE;
-            }
-
-          return TRUE;
-        }
-    }
-  else if (event->keyval == GDK_KEY_Tab
-           && !gtk_widget_get_visible (window->paned)
-           && xfce_appfinder_window_pointer_is_grabbed (entry))
-    {
-      /* don't tab to the close button */
-      return TRUE;
-    }
-
-  return FALSE;
-}
-
-
 
 static void
 xfce_appfinder_window_drag_begin (GtkWidget           *widget,
