@@ -127,6 +127,9 @@ static void window_workspace_changed_callback (WnckWindow *window, gpointer data
 
 static void window_geometry_changed_callback (WnckWindow *window, gpointer data);
 
+static void lightdash_pager_active_window_changed (WnckScreen *screen,
+											WnckWindow *previously_active_window,
+											gpointer data);
 static void
 window_icon_changed_callback      (WnckWindow      *window,
                                    gpointer         data);
@@ -277,6 +280,10 @@ static void lightdash_pager_realize (GtkWidget *widget)
 	{
 		lightdash_pager_connect_window (pager, WNCK_WINDOW (tmp->data));
 	}
+	
+	g_signal_connect (pager->priv->screen, "active-window-changed",
+					G_CALLBACK (lightdash_pager_active_window_changed),
+					pager);
 		
 	g_signal_connect (pager->priv->screen, "active-workspace-changed",
             G_CALLBACK (lightdash_pager_active_workspace_changed), pager);
@@ -1424,20 +1431,30 @@ static void lightdash_pager_connect_window (LightdashPager *pager, WnckWindow *w
 					pager);						
 }
 
-static void lightdash_pager_active_workspace_changed
-	(WnckScreen *screen, WnckWorkspace *previously_active_workspace, LightdashPager *pager)
+static void lightdash_pager_active_window_changed (WnckScreen *screen,
+											WnckWindow *previously_active_window,
+											gpointer data)
+{
+	LightdashPager *pager = LIGHTDASH_PAGER (data);
+	gtk_widget_queue_draw (GTK_WIDGET (pager));
+}
+
+static void lightdash_pager_active_workspace_changed (WnckScreen *screen, 
+								WnckWorkspace *previously_active_workspace, 
+									LightdashPager *pager)
 {
 	gtk_widget_queue_draw (GTK_WIDGET (pager));
 }
 
-static void lightdash_pager_workspace_created_callback
-	(WnckScreen *screen, WnckWorkspace *space, LightdashPager *pager)
+static void lightdash_pager_workspace_created_callback (WnckScreen *screen, 
+											WnckWorkspace *space,
+											LightdashPager *pager)
 {
 	gtk_widget_queue_draw (GTK_WIDGET (pager));
 }
 
-static void lightdash_pager_workspace_destroyed_callback
-	(WnckScreen *screen, WnckWorkspace *space, LightdashPager *pager)
+static void lightdash_pager_workspace_destroyed_callback (WnckScreen *screen, 
+					WnckWorkspace *space, LightdashPager *pager)
 {
 	gtk_widget_queue_draw (GTK_WIDGET (pager));
 }
