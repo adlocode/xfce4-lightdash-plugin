@@ -135,7 +135,6 @@ AC_SUBST([PLATFORM_LDFLAGS])
 
 AC_OUTPUT([
 Makefile
-data/Makefile
 src/Makefile
 po/Makefile.in
 ])
