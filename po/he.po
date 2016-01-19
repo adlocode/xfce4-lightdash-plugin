@@ -21,6 +21,17 @@ msgstr ""
 "Language: he\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#. Translators: If there is no suitable word for "Activities"
+#. in your language, you can use the word for "Overview".
+msgid "Activities"
+msgstr "פעילויות"
+
+msgid "_Title:"
+msgstr "_כותרת:"
+
+msgid "Background opacit_y:"
+msgstr "א_טימות רקע:"
+
 #. close all windows and quit
 #: ../src/appfinder-gdbus.c:84
 msgid "Forced to quit"
