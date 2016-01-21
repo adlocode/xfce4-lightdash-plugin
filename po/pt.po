@@ -26,6 +26,9 @@ msgstr ""
 msgid "Activities"
 msgstr "Atividades"
 
+msgid "Show all applications"
+msgstr "Mostrar todas as aplicações"
+
 msgid "_Title:"
 msgstr "_Título:"
 
