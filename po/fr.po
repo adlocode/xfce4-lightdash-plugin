@@ -27,6 +27,9 @@ msgstr ""
 msgid "Activities"
 msgstr "Activités"
 
+msgid "Show all applications"
+msgstr "Afficher toutes les applications"
+
 #: ../panel-plugin/configuration-dialog.cpp:523
 msgid "_Title:"
 msgstr "_Titre :"
