@@ -1046,11 +1046,11 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 		{
 			XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
 			task->preview_created = TRUE;
-		}	
+		}
+		
+		cairo_destroy (cr);	
 		
 		#endif
-		
-		cairo_destroy (cr);
 
 		return FALSE;
 }
