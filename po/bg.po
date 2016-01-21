@@ -26,6 +26,9 @@ msgstr ""
 msgid "Activities"
 msgstr "Дейности"
 
+msgid "Show Applications"
+msgstr "Показване на програмите"
+
 msgid "_Title:"
 msgstr "Заглавие:"
 

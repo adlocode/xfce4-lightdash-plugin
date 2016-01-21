@@ -29,6 +29,9 @@ msgstr ""
 msgid "Activities"
 msgstr "Aktivitātes"
 
+msgid "Show Applications"
+msgstr "Rādīt lietotnes"
+
 msgid "_Title:"
 msgstr "Nosaukums:"
 

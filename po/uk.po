@@ -24,6 +24,9 @@ msgstr ""
 msgid "Activities"
 msgstr "Діяльність"
 
+msgid "Show Applications"
+msgstr "Показати програми"
+
 #: ../panel-plugin/configuration-dialog.cpp:523
 msgid "_Title:"
 msgstr "На_зва:"
