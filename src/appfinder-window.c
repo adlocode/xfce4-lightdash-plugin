@@ -482,7 +482,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   GtkWidget          *sidepane;
   GtkWidget          *image;
   GtkWidget          *hbox;
-  GtkWidget 		*main_hbox;
+  GtkWidget			 *main_hbox;
   GtkWidget          *align;
   GtkTreeViewColumn  *column;
   GtkCellRenderer    *renderer;
@@ -662,9 +662,9 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
 #endif
 
 #if GTK_CHECK_VERSION (3, 0, 0)
-  window->taskview_container = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+  window->taskview_container = gtk_grid_new ();
 #else
-  window->taskview_container = gtk_hbox_new (FALSE, 0);
+  window->taskview_container = gtk_table_new (1, 8, TRUE);
 #endif
   gtk_box_pack_start (GTK_BOX (vbox), window->taskview_container, TRUE, TRUE, 0);
   
@@ -672,7 +672,15 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   
   //Add window switcher  
   window->window_switcher = lightdash_window_switcher_new ();
-  gtk_box_pack_start (GTK_BOX (window->taskview_container), window->window_switcher, TRUE, TRUE, 3);
+  #if GTK_CHECK_VERSION (3, 0, 0)
+  gtk_grid_attach (GTK_GRID (window->taskview_container), 
+				window->window_switcher, 
+				0, 0, 7, 1);
+  #else
+  gtk_table_attach_defaults (GTK_TABLE (window->taskview_container), 
+						window->window_switcher, 
+						0, 8, 0, 1);
+  #endif							
   gtk_widget_add_events (window->window_switcher, GDK_KEY_PRESS_MASK);
   gtk_widget_show (window->window_switcher);
 
@@ -682,8 +690,15 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
 						
 	//Add pager
 	window->pager = lightdash_pager_new ();
-	gtk_box_pack_start (GTK_BOX (window->taskview_container), window->pager, FALSE, FALSE, 3);
-	gtk_widget_set_size_request (window->pager, 100, 5);
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	gtk_grid_attach (GTK_GRID (window->taskview_container), 
+						window->pager, 
+						8, 0, 1, 1);
+	#else
+	gtk_table_attach_defaults(GTK_TABLE (window->taskview_container), 
+						window->pager, 
+						8, 9, 0, 1);
+	#endif
 	gtk_widget_show (window->pager);
   
   gtk_widget_show_all (window->taskview_container);
