@@ -102,11 +102,6 @@ struct _LightTask
 	int surface_width;
 	int surface_height;
 	
-	#if GTK_CHECK_VERSION (3, 0, 0)
-	#else
-	GdkPixmap *gdk_pixmap;
-	#endif
-	
 	cairo_surface_t *surface;
 	
 	Damage damage;
@@ -199,10 +194,7 @@ static void light_task_init (LightTask *task)
 	task->expose_tag = 0;
 	
 	task->image_surface = NULL;
-	#if GTK_CHECK_VERSION (3, 0, 0)
-	#else
-	task->gdk_pixmap = NULL;
-	#endif
+	
 	task->action_menu = NULL;
 	
 	task->surface_width = 1;
@@ -287,14 +279,6 @@ static void light_task_finalize (GObject *object)
 		cairo_surface_destroy (task->image_surface);
 		task->image_surface = NULL;
 	}
-	#if GTK_CHECK_VERSION (3, 0, 0)
-	#else
-	if (task->gdk_pixmap)
-	{
-		g_object_unref (task->gdk_pixmap);
-		task->gdk_pixmap = NULL;
-	}
-	#endif
 	
 }
 
@@ -1076,16 +1060,17 @@ static void my_tasklist_drag_begin_handl
 (GtkWidget *widget, GdkDragContext *context, LightTask *task)
 {
 	gfloat size, factor, surface_width, surface_height;
+	cairo_t *cr;
+	
 	g_signal_emit_by_name (task->tasklist, "task-button-drag-begin");
 	
 	gtk_widget_hide (task->button);
 	
 	#if GTK_CHECK_VERSION (3, 0, 0)
-	gtk_drag_set_icon_surface (context, task->image_surface);
+	cairo_surface_t *dnd_pixmap;
 	#else
-	cairo_t *cr;
-	g_object_unref (task->gdk_pixmap);
-	
+	GdkPixmap *dnd_pixmap;
+	#endif
 	surface_width = (gfloat) task->surface_width;
 	surface_height = (gfloat) task->surface_height;
 	
@@ -1093,12 +1078,21 @@ static void my_tasklist_drag_begin_handl
 	factor = 256 / size;
 	if (surface_width * factor > surface_width || surface_height * factor > surface_height)
 		factor = 1.0;
-		
-	task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window,
+	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	dnd_pixmap = gdk_window_create_similar_surface (task->tasklist->parent_gdk_window,
+							CAIRO_CONTENT_COLOR,
+							task->surface_width * factor,
+							task->surface_height * factor);
+	cr = cairo_create (dnd_pixmap);
+	#else
+	dnd_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window,
 						task->surface_width * factor,
 						task->surface_height * factor,
 						-1);
-	cr = gdk_cairo_create (task->gdk_pixmap);
+	cr = gdk_cairo_create (dnd_pixmap);					
+	#endif
+	
 	cairo_scale (cr, factor, factor);
 	cairo_rectangle (cr, 0, 0, task->attr.width, task->attr.height);	
 	cairo_set_source_surface (cr, task->image_surface, 0, 0);
@@ -1106,9 +1100,15 @@ static void my_tasklist_drag_begin_handl
 	cairo_fill (cr);		
 	cairo_destroy (cr);
 	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	gtk_drag_set_icon_surface (context, dnd_pixmap);
+	cairo_surface_destroy (dnd_pixmap);
+	#else
 	gtk_drag_set_icon_pixmap (context,
-		gdk_drawable_get_colormap (GDK_DRAWABLE (task->gdk_pixmap)),
-		task->gdk_pixmap, NULL, -2, -2);
+		gdk_drawable_get_colormap (GDK_DRAWABLE (dnd_pixmap)),
+		dnd_pixmap, NULL, -2, -2);
+		
+	g_object_unref (dnd_pixmap);
 	#endif
 }
 
@@ -1320,12 +1320,8 @@ static void light_task_create_widgets (LightTask *task)
 	gfloat aspect_ratio;
 	task->tasklist->unique_id_counter++;
 	
-	#if GTK_CHECK_VERSION (3, 0, 0)
 	task->image_surface = NULL;
-	#else
-	task->gdk_pixmap = NULL;
-	#endif
-	
+
 	task->unique_id = task->tasklist->unique_id_counter;
 	
 	//g_print ("%s", "id:");
@@ -1359,10 +1355,6 @@ static void light_task_create_widgets (LightTask *task)
 		task->image_surface = gdk_window_create_similar_surface (task->tasklist->parent_gdk_window,
 								CAIRO_CONTENT_COLOR,
 								1, 1);
-		#if GTK_CHECK_VERSION (3, 0, 0)
-		#else
-		task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window, 1, 1, -1);	
-		#endif
 	}
 	
 	
