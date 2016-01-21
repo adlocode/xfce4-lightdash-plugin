@@ -34,8 +34,8 @@ msgstr ""
 msgid "Activities"
 msgstr "Обзор"
 
-msgid "Show all applications"
-msgstr "Показать все приложения"
+msgid "Show Applications"
+msgstr "Показать приложения"
 
 msgid "_Title:"
 msgstr "За_головок:"

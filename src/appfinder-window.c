@@ -565,7 +565,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   gtk_box_pack_start (GTK_BOX (main_hbox), vbox, TRUE, TRUE, 0);
   
   window->apps_button = gtk_toggle_button_new ();
-  gtk_widget_set_tooltip_text (window->apps_button, _("Show all applications"));
+  gtk_widget_set_tooltip_text (window->apps_button, _("Show Applications"));
   gtk_button_set_focus_on_click (GTK_BUTTON (window->apps_button), FALSE);
   gtk_box_pack_start (GTK_BOX (window->icon_bar), window->apps_button, FALSE, TRUE, 7);
   gtk_widget_set_size_request (window->apps_button, 70, 70);

@@ -28,8 +28,8 @@ msgstr ""
 msgid "Activities"
 msgstr "Aktiviteter"
 
-msgid "Show all applications"
-msgstr "Visa alla program"
+msgid "Show Applications"
+msgstr "Visa program"
 
 msgid "_Title:"
 msgstr "Tite_l:"
