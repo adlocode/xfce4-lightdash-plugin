@@ -1075,6 +1075,7 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 static void my_tasklist_drag_begin_handl
 (GtkWidget *widget, GdkDragContext *context, LightTask *task)
 {
+	gfloat size, factor, surface_width, surface_height;
 	g_signal_emit_by_name (task->tasklist, "task-button-drag-begin");
 	
 	gtk_widget_hide (task->button);
@@ -1084,13 +1085,24 @@ static void my_tasklist_drag_begin_handl
 	#else
 	cairo_t *cr;
 	g_object_unref (task->gdk_pixmap);
+	
+	surface_width = (gfloat) task->surface_width;
+	surface_height = (gfloat) task->surface_height;
+	
+	size = (gfloat) MAX (surface_width, surface_height);
+	factor = 256 / size;
+	if (surface_width * factor > surface_width || surface_height * factor > surface_height)
+		factor = 1.0;
+		
 	task->gdk_pixmap = gdk_pixmap_new (task->tasklist->parent_gdk_window,
-						task->surface_width,
-						task->surface_height,
+						task->surface_width * factor,
+						task->surface_height * factor,
 						-1);
 	cr = gdk_cairo_create (task->gdk_pixmap);
+	cairo_scale (cr, factor, factor);
 	cairo_rectangle (cr, 0, 0, task->attr.width, task->attr.height);	
-	cairo_set_source_surface (cr, task->image_surface, 0, 0);	
+	cairo_set_source_surface (cr, task->image_surface, 0, 0);
+	cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);	
 	cairo_fill (cr);		
 	cairo_destroy (cr);
 	
