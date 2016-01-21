@@ -113,7 +113,15 @@ static void lightdash_pager_workspace_destroyed_callback
 static GList*
 get_windows_for_workspace_in_bottom_to_top (WnckScreen    *screen,
                                             WnckWorkspace *workspace);
-                                            
+#if GTK_CHECK_VERSION (3, 0, 0)
+static void
+draw_window (cairo_t *cr,
+             GtkWidget          *widget,
+             WnckWindow         *win,
+             const GdkRectangle *winrect,
+             GtkStateType        state,
+             gboolean            translucent);
+#else                                            
 static void
 draw_window (GdkDrawable        *drawable,
              GtkWidget          *widget,
@@ -121,6 +129,7 @@ draw_window (GdkDrawable        *drawable,
              const GdkRectangle *winrect,
              GtkStateType        state,
              gboolean            translucent);
+#endif
              
 static void window_opened_callback (WnckScreen *screen, WnckWindow *window, gpointer data);
 
@@ -189,7 +198,7 @@ static void lightdash_pager_init (LightdashPager *pager)
 	
 	#if GTK_CHECK_VERSION (3, 0, 0)
 	g_signal_connect (G_OBJECT(pager), "draw", 
-		G_CALLBACK (lightdash_pager_expose_event), NULL);
+		G_CALLBACK (lightdash_pager_draw), NULL);
 	#else
 	g_signal_connect (G_OBJECT(pager), "expose-event", 
 		G_CALLBACK (lightdash_pager_expose_event), NULL);
@@ -463,6 +472,15 @@ get_window_rect (WnckWindow         *window,
   gdk_rectangle_intersect ((GdkRectangle *) workspace_rect, &unclipped_win_rect, rect);
 }
 
+#if GTK_CHECK_VERSION (3, 0, 0)
+static void
+draw_window (cairo_t *cr,
+             GtkWidget          *widget,
+             WnckWindow         *win,
+             const GdkRectangle *winrect,
+             GtkStateType        state,
+             gboolean            translucent)
+#else
 static void
 draw_window (GdkDrawable        *drawable,
              GtkWidget          *widget,
@@ -470,9 +488,13 @@ draw_window (GdkDrawable        *drawable,
              const GdkRectangle *winrect,
              GtkStateType        state,
              gboolean            translucent)
+#endif             
 {
   GtkStyle *style;
+  #if GTK_CHECK_VERSION (3, 0, 0)
+  #else
   cairo_t *cr;
+  #endif
   GdkPixbuf *icon;
   int icon_x, icon_y, icon_w, icon_h;
   gboolean is_active;
@@ -483,8 +505,12 @@ draw_window (GdkDrawable        *drawable,
 
   is_active = wnck_window_is_active (win);
   translucency = translucent ? 0.4 : 1.0;
-
+  
+  #if GTK_CHECK_VERSION (3, 0, 0)
+  cairo_save (cr);
+  #else
   cr = gdk_cairo_create (drawable);
+  #endif
   cairo_rectangle (cr, winrect->x, winrect->y, winrect->width, winrect->height);
   cairo_clip (cr);
 
@@ -559,8 +585,12 @@ draw_window (GdkDrawable        *drawable,
                    winrect->x + 0.5, winrect->y + 0.5,
                    MAX (0, winrect->width - 1), MAX (0, winrect->height - 1));
   cairo_stroke (cr);
-
+  
+  #if GTK_CHECK_VERSION (3, 0, 0)
+  cairo_restore (cr);
+  #else
   cairo_destroy (cr);
+  #endif
 }
 
 static WnckWindow *
@@ -1403,10 +1433,14 @@ lightdash_pager_get_background (LightdashPager *pager,
   
   if (p != None)
   {
+	  #if GTK_CHECK_VERSION (3, 0, 0)
+	  pix = _lightdash_gdk_pixbuf_get_from_pixmap (p);
+	  #else
       pix = _lightdash_gdk_pixbuf_get_from_pixmap (NULL,
                                               p,
                                               0, 0, 0, 0,
                                               -1, -1);
+      #endif
   }
 
 

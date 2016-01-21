@@ -28,6 +28,8 @@
  #include <libwnck/libwnck.h>
  #include <X11/Xlib.h>
  #include <gdk/gdkx.h>
+ #include <cairo/cairo.h>
+ #include <cairo/cairo-xlib.h>
 
 #if GTK_CHECK_VERSION (3, 0, 0)
 GdkPixbuf*
