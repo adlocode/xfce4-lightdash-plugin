@@ -25,6 +25,9 @@ msgstr ""
 msgid "Activities"
 msgstr "概覽 "
 
+msgid "Show Applications"
+msgstr "顯示應用程式"
+
 #: ../src/appfinder-category-model.c:146
 msgid "All Applications"
 msgstr "所有應用程式"

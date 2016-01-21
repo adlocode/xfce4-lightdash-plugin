@@ -24,6 +24,9 @@ msgstr ""
 msgid "Activities"
 msgstr "アクティビティ"
 
+msgid "Show Applications"
+msgstr "アプリケーションを表示する"
+
 msgid "_Title:"
 msgstr "タイトル(_T):"
 

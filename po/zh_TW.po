@@ -26,6 +26,9 @@ msgstr ""
 msgid "Activities"
 msgstr "概覽 "
 
+msgid "Show Applications"
+msgstr "顯示應用程式"
+
 msgid "_Title:"
 msgstr "標題(_T)："
 
