@@ -26,6 +26,9 @@ msgstr ""
 msgid "Activities"
 msgstr "الأنشطة"
 
+msgid "Show Applications"
+msgstr "أظهر التطبيقات"
+
 msgid "_Title:"
 msgstr "عن_وان:"
 
