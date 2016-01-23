@@ -98,7 +98,12 @@ lightdash_pager_drag_motion (GtkWidget          *widget,
 static gboolean
 lightdash_pager_motion (GtkWidget        *widget,
                    GdkEventMotion   *event);      
-		       
+static void
+lightdash_pager_drag_clean_up (WnckWindow     *window,
+		    GdkDragContext *context,
+		    gboolean	    clean_up_for_context_destroy,
+		    gboolean	    clean_up_for_window_destroy);
+		    		       
 static gboolean lightdash_pager_button_release (GtkWidget *widget, GdkEventButton *event);
 
 static void lightdash_pager_active_workspace_changed
@@ -957,6 +962,154 @@ static void lightdash_pager_drag_end (GtkWidget *widget,
 	lightdash_pager_clear_drag (pager);
 }
 
+static void
+lightdash_pager_drag_context_destroyed (gpointer  windowp,
+                             GObject  *context)
+{
+  lightdash_pager_drag_clean_up (windowp, (GdkDragContext *) context, TRUE, FALSE);
+}
+
+static void
+lightdash_pager_update_drag_icon (WnckWindow     *window,
+		       GdkDragContext *context)
+{
+  gint org_w, org_h, dnd_w, dnd_h;
+  WnckWorkspace *workspace;
+  GdkRectangle rect;
+  GtkWidget *widget;
+  #if GTK_CHECK_VERSION (3, 0, 0)
+  cairo_surface_t *surface;
+  cairo_t *cr;
+  #else
+  GdkPixmap *pixmap;
+  #endif
+
+  widget = g_object_get_data (G_OBJECT (context), "lightdash-drag-source-widget");
+  if (!widget)
+    return;
+
+  if (!gtk_icon_size_lookup_for_settings (gtk_widget_get_settings (widget),
+					  GTK_ICON_SIZE_DND, &dnd_w, &dnd_h))
+    dnd_w = dnd_h = 32;
+  /* windows are huge, so let's make this huge */
+  dnd_w *= 3;
+ 
+  workspace = wnck_window_get_workspace (window);
+  if (workspace == NULL)
+    workspace = wnck_screen_get_active_workspace (wnck_window_get_screen (window));
+  if (workspace == NULL)
+    return;
+
+  wnck_window_get_geometry (window, NULL, NULL, &org_w, &org_h);
+
+  rect.x = rect.y = 0;
+  rect.width = 0.5 + ((double) (dnd_w * org_w) / (double) wnck_workspace_get_width (workspace));
+  rect.width = MIN (org_w, rect.width);
+  rect.height = 0.5 + ((double) (rect.width * org_h) / (double) org_w);
+
+  /* we need at least three pixels to draw the smallest window */
+  rect.width = MAX (rect.width, 3);
+  rect.height = MAX (rect.height, 3);
+  
+  #if GTK_CHECK_VERSION (3, 0, 0)
+  surface = gdk_window_create_similar_surface (gtk_widget_get_window (widget),
+                                               CAIRO_CONTENT_COLOR,
+                                               rect.width, rect.height);
+  cr = cairo_create (surface);
+  draw_window (cr, widget, window,
+	       &rect, GTK_STATE_NORMAL, FALSE);  
+  cairo_destroy (cr);
+  cairo_surface_set_device_offset (surface, 2, 2);
+
+  gtk_drag_set_icon_surface (context, surface);
+
+  cairo_surface_destroy (surface);                                               
+  #else
+  pixmap = gdk_pixmap_new (gtk_widget_get_window (widget),
+					rect.width, rect.height, -1);
+  draw_window (GDK_DRAWABLE (pixmap), widget, window,
+			&rect, GTK_STATE_NORMAL, FALSE);
+  
+  gtk_drag_set_icon_pixmap (context,
+					gdk_drawable_get_colormap (GDK_DRAWABLE (pixmap)),
+					pixmap, NULL,
+					-2, -2);
+					
+  g_object_unref (pixmap);
+  #endif
+}
+
+static void
+lightdash_pager_drag_window_destroyed (gpointer  contextp,
+                            GObject  *window)
+{
+  lightdash_pager_drag_clean_up ((WnckWindow *) window, GDK_DRAG_CONTEXT (contextp),
+                      FALSE, TRUE);
+}
+
+static void
+lightdash_pager_drag_source_destroyed (gpointer  contextp,
+                            GObject  *drag_source)
+{
+  g_object_steal_data (G_OBJECT (contextp), "lightdash-drag-source-widget");
+}
+
+/* CAREFUL: This function is a bit brittle, because the pointers given may be
+ * finalized already */
+static void
+lightdash_pager_drag_clean_up (WnckWindow     *window,
+		    GdkDragContext *context,
+		    gboolean	    clean_up_for_context_destroy,
+		    gboolean	    clean_up_for_window_destroy)
+{
+  if (clean_up_for_context_destroy)
+    {
+      GtkWidget *drag_source;
+
+      drag_source = g_object_get_data (G_OBJECT (context),
+                                       "lightdash-drag-source-widget");
+      if (drag_source)
+        g_object_weak_unref (G_OBJECT (drag_source),
+                             lightdash_pager_drag_source_destroyed, context);
+
+      g_object_weak_unref (G_OBJECT (window),
+                           lightdash_pager_drag_window_destroyed, context);
+      if (g_signal_handlers_disconnect_by_func (window,
+                                                lightdash_pager_update_drag_icon, context) != 2)
+	g_assert_not_reached ();
+    }
+
+  if (clean_up_for_window_destroy)
+    {
+      g_object_steal_data (G_OBJECT (context), "lightdash-drag-source-widget");
+      g_object_weak_unref (G_OBJECT (context),
+                           lightdash_pager_drag_context_destroyed, window);
+    }
+}
+
+void 
+_lightdash_pager_window_set_as_drag_icon (WnckWindow     *window,
+                               GdkDragContext *context,
+                               GtkWidget      *drag_source)
+{
+  g_return_if_fail (WNCK_IS_WINDOW (window));
+  g_return_if_fail (GDK_IS_DRAG_CONTEXT (context));
+
+  g_object_weak_ref (G_OBJECT (window), lightdash_pager_drag_window_destroyed, context);
+  g_signal_connect (window, "geometry_changed",
+                    G_CALLBACK (lightdash_pager_update_drag_icon), context);
+  g_signal_connect (window, "icon_changed",
+                    G_CALLBACK (lightdash_pager_update_drag_icon), context);
+
+  g_object_set_data (G_OBJECT (context), "lightdash-drag-source-widget", drag_source);
+  g_object_weak_ref (G_OBJECT (drag_source), lightdash_pager_drag_source_destroyed, context);
+
+  g_object_weak_ref (G_OBJECT (context), lightdash_pager_drag_context_destroyed, window);
+
+  lightdash_pager_update_drag_icon (window, context);
+}
+
+
 static gboolean
 lightdash_pager_motion (GtkWidget        *widget,
                    GdkEventMotion   *event)
@@ -984,9 +1137,9 @@ lightdash_pager_motion (GtkWidget        *widget,
 				1, (GdkEvent *)event);
       pager->priv->dragging = TRUE;
       //pager->priv->prelight_dnd = TRUE;
-     // _wnck_window_set_as_drag_icon (pager->priv->drag_window, 
-				     //context,
-				     //GTK_WIDGET (pager));
+     _lightdash_pager_window_set_as_drag_icon (pager->priv->drag_window, 
+				     context,
+				     GTK_WIDGET (pager));
     }
 
   lightdash_pager_check_prelight (pager, x, y, pager->priv->prelight_dnd);
