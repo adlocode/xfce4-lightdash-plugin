@@ -59,7 +59,10 @@ struct _MyTasklist
 	GList *tasks;
 	GList *skipped_windows;
 	
+	/* Used for calculating number of columns */
 	guint window_counter;
+	
+	/* Used for generating window IDs */
 	guint unique_id_counter;
 	
 	guint total_buttons_area;
