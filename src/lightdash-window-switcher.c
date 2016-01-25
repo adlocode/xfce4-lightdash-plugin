@@ -1066,6 +1066,9 @@ static void my_tasklist_drag_begin_handl
 	
 	gtk_widget_hide (task->button);
 	
+	if (task->image_surface)
+	{
+	
 	#if GTK_CHECK_VERSION (3, 0, 0)
 	cairo_surface_t *dnd_pixmap;
 	#else
@@ -1110,6 +1113,7 @@ static void my_tasklist_drag_begin_handl
 		
 	g_object_unref (dnd_pixmap);
 	#endif
+	}
 }
 
 static void my_tasklist_drag_end_handl
@@ -1295,6 +1299,7 @@ void lightdash_windows_view_create_composited_window (LightTask *task)
 	
 	if (task->tasklist->composited 
 		&& !wnck_window_is_minimized (task->window)
+		&& wnck_window_is_on_workspace (task->window, wnck_screen_get_active_workspace (task->tasklist->screen))
 		&& task->attr.height != 0)
 		{
 			XCompositeRedirectWindow (task->tasklist->dpy, task->xid,
