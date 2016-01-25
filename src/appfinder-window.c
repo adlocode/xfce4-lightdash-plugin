@@ -516,10 +516,6 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   window->model = xfce_appfinder_model_get ();
   xfconf_g_property_bind (window->channel, "/item-icon-size", G_TYPE_UINT,
                           G_OBJECT (window->model), "icon-size");
-                          
-  
-  
-  
 	
 
   gtk_window_set_title (GTK_WINDOW (window), _("Application Finder"));
@@ -535,7 +531,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
     //gtk_window_set_position (GTK_WINDOW (window), GTK_WIN_POS_CENTER);
 
 #if GTK_CHECK_VERSION (3, 0, 0)
-	main_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
+  main_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
   vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
   gtk_widget_set_margin_top (main_hbox, 6);
   gtk_widget_set_margin_bottom (main_hbox, 30);

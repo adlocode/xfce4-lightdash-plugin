@@ -93,7 +93,7 @@ struct _LightTask
 	GdkWindow *gdk_window;
 	Window xid;
 	const GtkTargetEntry target;
-	GdkPixbuf *pixbuf;
+	GdkPixbuf *pixbuf; /* Icon pixbuf */
 	
 	gboolean preview_created;
 	gboolean scaled;
@@ -108,6 +108,7 @@ struct _LightTask
 	
 	gint previous_height;
 	gint previous_width;
+	WnckWorkspace *previous_workspace;
 	
 	guint unique_id;
 	
@@ -199,6 +200,8 @@ static void light_task_init (LightTask *task)
 	
 	task->surface_width = 1;
 	task->surface_height = 1;
+	
+	task->previous_workspace = NULL;
 }
 
 static void light_task_finalize (GObject *object)
@@ -293,6 +296,8 @@ light_task_new_from_window (LightdashWindowsView *tasklist, WnckWindow *window)
 	task->window = g_object_ref (window);
 	
 	task->xid = wnck_window_get_xid (window);
+	
+	task->previous_workspace = wnck_window_get_workspace (window);
 	
 	light_task_create_widgets (task);
 	
@@ -403,7 +408,6 @@ static void lightdash_windows_view_init (LightdashWindowsView *tasklist)
 	tasklist->table_columns = DEFAULT_TABLE_COLUMNS;
 	tasklist->table_rows = DEFAULT_TABLE_ROWS;
 	
-	tasklist->window_counter = 0;
 	tasklist->unique_id_counter = 0;
 	
 	
@@ -606,7 +610,6 @@ static void my_tasklist_update_windows (LightdashWindowsView *tasklist)
 			tasklist->table_rows, tasklist->table_columns);
 	
 	tasklist->update_complete = FALSE;
-	tasklist->window_counter = 0;
 	
 	for (window_l = wnck_screen_get_windows (tasklist->screen); window_l != NULL; window_l = window_l->next)
     {
@@ -624,8 +627,6 @@ static void my_tasklist_update_windows (LightdashWindowsView *tasklist)
 			{
 				
 				lightdash_table_layout_attach_next (task->button, LIGHTDASH_TABLE_LAYOUT (tasklist->table));
-				
-				tasklist->window_counter++;
 				
 			}
 			
@@ -648,7 +649,7 @@ static void my_tasklist_update_windows (LightdashWindowsView *tasklist)
 
 	}
 	my_tasklist_sort (tasklist);
-	lightdash_windows_view_update_rows_and_columns (tasklist);
+	lightdash_windows_view_update_rows_and_columns (tasklist, LIGHTDASH_TABLE_LAYOUT (tasklist->table));
 	lightdash_windows_view_reattach_widgets (tasklist);
 	lightdash_table_layout_resize (LIGHTDASH_TABLE_LAYOUT (tasklist->table), 
 			tasklist->table_rows, tasklist->table_columns);
@@ -692,12 +693,10 @@ static void my_tasklist_on_window_opened
 	{
 		lightdash_table_layout_attach_next (task->button, LIGHTDASH_TABLE_LAYOUT (tasklist->table));
 		
-		tasklist->window_counter++;
-		
 		rows = tasklist->table_rows;
 		columns = tasklist->table_columns;
 		
-		lightdash_windows_view_update_rows_and_columns (tasklist);
+		lightdash_windows_view_update_rows_and_columns (tasklist, LIGHTDASH_TABLE_LAYOUT (tasklist->table));
 		
 		if (tasklist->table_columns != columns)
 		{
@@ -708,7 +707,6 @@ static void my_tasklist_on_window_opened
 					tasklist->table_columns);
 		}
 		
-		//g_print ("%d", tasklist->window_counter);
 	}
 						
 
@@ -751,8 +749,6 @@ static void my_tasklist_on_window_closed
 	
 	if(task)
 	{
-			if(wnck_window_is_on_workspace(task->window, wnck_screen_get_active_workspace(tasklist->screen)))
-			tasklist->window_counter--;
 
 			if (task->button_resized_tag)
 			{
@@ -773,7 +769,7 @@ static void my_tasklist_on_window_closed
 		
 			my_tasklist_sort (tasklist);
 			
-			lightdash_windows_view_update_rows_and_columns (tasklist);
+			lightdash_windows_view_update_rows_and_columns (tasklist, LIGHTDASH_TABLE_LAYOUT (tasklist->table));
 			
 			lightdash_windows_view_reattach_widgets (tasklist);
 		
@@ -794,7 +790,49 @@ static void my_tasklist_active_workspace_changed
 
 static void my_tasklist_window_workspace_changed (WnckWindow *window, LightdashWindowsView *tasklist)
 {
-	my_tasklist_update_windows (tasklist);
+	LightTask *task;
+	task = get_task_from_window (tasklist, window);
+	
+	my_tasklist_sort (tasklist);
+	
+	if (wnck_window_is_on_workspace (window, 
+			wnck_screen_get_active_workspace (tasklist->screen)))
+	{
+		lightdash_windows_view_reattach_widgets (tasklist);
+		gtk_widget_show_all (task->button);
+		g_object_unref (task->button);
+		gtk_widget_queue_draw (task->button);
+		
+		if (!task->expose_tag)
+		{
+			#if GTK_CHECK_VERSION (3, 0, 0)
+			task->expose_tag = g_signal_connect (task->image, "draw",
+							G_CALLBACK (lightdash_windows_view_image_draw),
+							task);
+			#else
+			task->expose_tag = g_signal_connect (task->image, "expose-event",
+							G_CALLBACK (lightdash_windows_view_image_expose),
+							task);
+			#endif
+		}	
+	}
+	else if (task->previous_workspace = wnck_screen_get_active_workspace (tasklist->screen))
+	{
+		gtk_widget_hide (task->button);
+		g_object_ref (task->button);
+		gtk_container_remove (GTK_CONTAINER (tasklist->table), task->button);
+		g_signal_handler_disconnect (task->image, task->expose_tag);
+		task->expose_tag = 0;
+	}
+		
+		task->previous_workspace = wnck_window_get_workspace (window);
+		lightdash_windows_view_update_rows_and_columns (tasklist, LIGHTDASH_TABLE_LAYOUT (tasklist->table));
+		lightdash_windows_view_reattach_widgets (tasklist);
+		lightdash_table_layout_resize (LIGHTDASH_TABLE_LAYOUT(tasklist->table), 
+				tasklist->table_rows,
+				tasklist->table_columns);
+		gtk_widget_queue_resize (GTK_WIDGET(tasklist));
+		
 }
 
 static void my_tasklist_screen_composited_changed (GdkScreen *screen, LightdashWindowsView *tasklist)

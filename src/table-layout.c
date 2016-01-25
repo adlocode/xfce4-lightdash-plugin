@@ -20,8 +20,8 @@
 #include "lightdash-window-switcher.h"
 
 static void lightdash_table_layout_class_init (LightdashTableLayoutClass *klass);
-
 static void lightdash_table_layout_init (LightdashTableLayout *grid);
+static void lightdash_table_layout_remove (GtkContainer *container, GtkWidget *widget);
 
 #if GTK_CHECK_VERSION (3, 0, 0)
 G_DEFINE_TYPE (LightdashTableLayout, lightdash_table_layout, GTK_TYPE_GRID);
@@ -32,14 +32,18 @@ G_DEFINE_TYPE (LightdashTableLayout, lightdash_table_layout, GTK_TYPE_TABLE);
 
 static void lightdash_table_layout_class_init (LightdashTableLayoutClass *klass)
 
-{	
+{
 	
 }
 	
 static void lightdash_table_layout_init (LightdashTableLayout *table_layout)
 {
   
+  table_layout->number_children = 0;
   lightdash_table_layout_start_from_beginning (table_layout);
+  
+  g_signal_connect (G_OBJECT (table_layout), "remove",
+			G_CALLBACK (lightdash_table_layout_remove), NULL);
 
 }
 
@@ -105,6 +109,7 @@ void lightdash_table_layout_attach_next (GtkWidget *widget, LightdashTableLayout
 						table_layout->left_attach++;
 						table_layout->right_attach++;
 					}
+	table_layout->number_children++;
 }
 
 void lightdash_table_layout_resize (LightdashTableLayout *table_layout, guint rows, guint columns)
@@ -123,12 +128,19 @@ void lightdash_table_layout_resize (LightdashTableLayout *table_layout, guint ro
 	table_layout->ncols = columns;
 }
 
-void lightdash_windows_view_update_rows_and_columns (LightdashWindowsView *windows_view)
+static void lightdash_table_layout_remove (GtkContainer *container, GtkWidget *widget)
+{
+	LightdashTableLayout *table_layout = LIGHTDASH_TABLE_LAYOUT (container);
+	table_layout->number_children--;
+}
+	
+
+void lightdash_windows_view_update_rows_and_columns (LightdashWindowsView *windows_view, LightdashTableLayout *table_layout)
 {
 	gint rows, columns;
 	
-	columns = ceil (sqrt ((double)windows_view->window_counter));
-	rows = ceil ((double)windows_view->window_counter / (double)windows_view->table_columns);
+	columns = ceil (sqrt ((double)table_layout->number_children));
+	rows = ceil ((double)table_layout->number_children / (double)windows_view->table_columns);
 	
 	if (columns < 2)
 		columns = 2;
