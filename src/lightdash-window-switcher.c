@@ -1298,8 +1298,6 @@ void lightdash_windows_view_create_composited_window (LightTask *task)
 		(gdk_screen_get_display (task->tasklist->gdk_screen), task->xid);
 	
 	if (task->tasklist->composited 
-		&& !wnck_window_is_minimized (task->window)
-		&& wnck_window_is_on_workspace (task->window, wnck_screen_get_active_workspace (task->tasklist->screen))
 		&& task->attr.height != 0)
 		{
 			XCompositeRedirectWindow (task->tasklist->dpy, task->xid,
