@@ -65,9 +65,6 @@ struct _MyTasklist
 	/* Used for generating window IDs */
 	guint unique_id_counter;
 	
-	guint total_buttons_area;
-	guint table_area;
-	
 	guint table_columns;
 	guint table_rows;
 	

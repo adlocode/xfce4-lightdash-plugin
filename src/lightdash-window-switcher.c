@@ -405,8 +405,6 @@ static void lightdash_windows_view_init (LightdashWindowsView *tasklist)
 	
 	tasklist->window_counter = 0;
 	tasklist->unique_id_counter = 0;
-	tasklist->total_buttons_area = 0;
-	tasklist->table_area = 0;
 	
 	
 	gtk_event_box_set_visible_window (GTK_EVENT_BOX (tasklist), FALSE);
@@ -991,7 +989,6 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 		
 		int width, height;
 		
-		gfloat total_buttons_area, table_area;
 		gfloat aspect_ratio;
 	
 		#if GTK_CHECK_VERSION (3, 0, 0)
