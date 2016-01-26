@@ -97,6 +97,7 @@ struct _LightTask
 	
 	gboolean preview_created;
 	gboolean scaled;
+	gboolean unparented;
 	
 	cairo_surface_t *image_surface;
 	int surface_width;
@@ -190,6 +191,7 @@ static void light_task_init (LightTask *task)
 	task->damage = None;
 	
 	task->preview_created = FALSE;
+	task->unparented = FALSE;
 	
 	task->button_resized_tag = 0;
 	task->expose_tag = 0;
@@ -799,8 +801,18 @@ static void my_tasklist_window_workspace_changed (WnckWindow *window, LightdashW
 			wnck_screen_get_active_workspace (tasklist->screen)))
 	{
 		lightdash_windows_view_reattach_widgets (tasklist);
+		if (task->image_surface == NULL)
+			task->image_surface = gdk_window_create_similar_surface (task->tasklist->parent_gdk_window,
+								CAIRO_CONTENT_COLOR,
+								1, 1);
 		gtk_widget_show_all (task->button);
-		g_object_unref (task->button);
+		
+		if (task->unparented)
+		{
+			g_object_unref (task->button);
+			task->unparented = FALSE;
+		}
+		
 		gtk_widget_queue_draw (task->button);
 		
 		if (!task->expose_tag)
@@ -820,6 +832,7 @@ static void my_tasklist_window_workspace_changed (WnckWindow *window, LightdashW
 	{
 		gtk_widget_hide (task->button);
 		g_object_ref (task->button);
+		task->unparented = TRUE;
 		gtk_container_remove (GTK_CONTAINER (tasklist->table), task->button);
 		g_signal_handler_disconnect (task->image, task->expose_tag);
 		task->expose_tag = 0;
