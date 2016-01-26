@@ -50,8 +50,6 @@ static void my_tasklist_window_workspace_changed (WnckWindow *window, LightdashW
 static void my_tasklist_window_state_changed
 	(WnckWindow *window, WnckWindowState changed_mask, WnckWindowState new_state, LightdashWindowsView *tasklist);
 static void my_tasklist_screen_composited_changed (GdkScreen *screen, LightdashWindowsView *tasklist);
-static void my_tasklist_button_clicked (GtkButton *button, WnckWindow *window);
-static void my_tasklist_button_emit_click_signal (GtkButton *button, LightdashWindowsView *tasklist);
 static void my_tasklist_free_skipped_windows (LightdashWindowsView *tasklist);
 static int lightdash_windows_view_xhandler_xerror (Display *dpy, XErrorEvent *e);
 static gint my_tasklist_button_compare (gconstpointer a, gconstpointer b, gpointer data);
@@ -170,6 +168,8 @@ lightdash_windows_view_get_window_picture (LightTask *task);
 
 static gint
 lightdash_popup_handler (GtkWidget *widget, GdkEventButton *event, LightTask *task);
+
+static void my_tasklist_button_clicked (GtkButton *button, LightTask *task);
 
 
 
@@ -904,16 +904,11 @@ lightdash_popup_handler (GtkWidget *widget, GdkEventButton *event, LightTask *ta
 	}			
 }
 
-static void my_tasklist_button_clicked (GtkButton *button, WnckWindow *window)
+static void my_tasklist_button_clicked (GtkButton *button, LightTask *task)
 	
 {
-	wnck_window_activate (window, gtk_get_current_event_time());
-	
-}
-
-static void my_tasklist_button_emit_click_signal (GtkButton *button, LightdashWindowsView *tasklist)
-{
-	g_signal_emit_by_name (tasklist, "task-button-clicked");
+	wnck_window_activate (task->window, gtk_get_current_event_time());
+	g_signal_emit_by_name (task->tasklist, "task-button-clicked");
 	
 }
 
@@ -1467,11 +1462,7 @@ static void light_task_create_widgets (LightTask *task)
 					
 					
 	g_signal_connect_object (task->button, "clicked", 
-					G_CALLBACK (my_tasklist_button_clicked), task->window,
-					0);
-	
-	g_signal_connect_object (GTK_BUTTON(task->button), "clicked", 
-					G_CALLBACK (my_tasklist_button_emit_click_signal), task->tasklist,
+					G_CALLBACK (my_tasklist_button_clicked), task,
 					0);
 					
 	g_signal_connect_object (task->button, "button-press-event", 
