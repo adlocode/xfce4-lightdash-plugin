@@ -66,7 +66,7 @@ GtkWidget* lightdash_table_layout_new (guint rows, guint columns, gboolean homog
  
 void lightdash_table_layout_attach_next (GtkWidget *widget, LightdashTableLayout *table_layout);
 void lightdash_table_layout_resize (LightdashTableLayout *table_layout, guint rows, guint columns);
-void lightdash_windows_view_update_rows_and_columns (LightdashWindowsView *tasklist, LightdashTableLayout *table_layout);
+void lightdash_table_layout_update_rows_and_columns (LightdashTableLayout *table_layout, guint *table_rows, guint *table_columns);
 void lightdash_table_layout_start_from_beginning (LightdashTableLayout *table_layout);
  
 G_END_DECLS

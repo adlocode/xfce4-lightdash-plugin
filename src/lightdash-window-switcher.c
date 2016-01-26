@@ -651,7 +651,9 @@ static void my_tasklist_update_windows (LightdashWindowsView *tasklist)
 
 	}
 	my_tasklist_sort (tasklist);
-	lightdash_windows_view_update_rows_and_columns (tasklist, LIGHTDASH_TABLE_LAYOUT (tasklist->table));
+	lightdash_table_layout_update_rows_and_columns (LIGHTDASH_TABLE_LAYOUT (tasklist->table), 
+									&tasklist->table_rows, 
+									&tasklist->table_columns);
 	lightdash_windows_view_reattach_widgets (tasklist);
 	lightdash_table_layout_resize (LIGHTDASH_TABLE_LAYOUT (tasklist->table), 
 			tasklist->table_rows, tasklist->table_columns);
@@ -698,7 +700,9 @@ static void my_tasklist_on_window_opened
 		rows = tasklist->table_rows;
 		columns = tasklist->table_columns;
 		
-		lightdash_windows_view_update_rows_and_columns (tasklist, LIGHTDASH_TABLE_LAYOUT (tasklist->table));
+		lightdash_table_layout_update_rows_and_columns (LIGHTDASH_TABLE_LAYOUT (tasklist->table),
+											&tasklist->table_rows, 
+											&tasklist->table_columns);
 		
 		if (tasklist->table_columns != columns)
 		{
@@ -771,7 +775,9 @@ static void my_tasklist_on_window_closed
 		
 			my_tasklist_sort (tasklist);
 			
-			lightdash_windows_view_update_rows_and_columns (tasklist, LIGHTDASH_TABLE_LAYOUT (tasklist->table));
+			lightdash_table_layout_update_rows_and_columns (LIGHTDASH_TABLE_LAYOUT (tasklist->table),
+											&tasklist->table_rows, 
+											&tasklist->table_columns);
 			
 			lightdash_windows_view_reattach_widgets (tasklist);
 		
@@ -839,7 +845,9 @@ static void my_tasklist_window_workspace_changed (WnckWindow *window, LightdashW
 	}
 		
 		task->previous_workspace = wnck_window_get_workspace (window);
-		lightdash_windows_view_update_rows_and_columns (tasklist, LIGHTDASH_TABLE_LAYOUT (tasklist->table));
+		lightdash_table_layout_update_rows_and_columns (LIGHTDASH_TABLE_LAYOUT (tasklist->table),
+									&tasklist->table_rows, 
+									&tasklist->table_columns);
 		lightdash_windows_view_reattach_widgets (tasklist);
 		lightdash_table_layout_resize (LIGHTDASH_TABLE_LAYOUT(tasklist->table), 
 				tasklist->table_rows,

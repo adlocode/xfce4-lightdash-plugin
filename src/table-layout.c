@@ -17,7 +17,6 @@
 #include <gtk/gtk.h>
 #include <math.h>
 #include "table-layout.h"
-#include "lightdash-window-switcher.h"
 
 static void lightdash_table_layout_class_init (LightdashTableLayoutClass *klass);
 static void lightdash_table_layout_init (LightdashTableLayout *grid);
@@ -135,18 +134,18 @@ static void lightdash_table_layout_remove (GtkContainer *container, GtkWidget *w
 }
 	
 
-void lightdash_windows_view_update_rows_and_columns (LightdashWindowsView *windows_view, LightdashTableLayout *table_layout)
+void lightdash_table_layout_update_rows_and_columns (LightdashTableLayout *table_layout, guint *table_rows, guint *table_columns)
 {
 	gint rows, columns;
 	
 	columns = ceil (sqrt ((double)table_layout->number_children));
-	rows = ceil ((double)table_layout->number_children / (double)windows_view->table_columns);
+	rows = ceil ((double)table_layout->number_children / (double)*table_columns);
 	
 	if (columns < 2)
 		columns = 2;
 	if (rows < 2)
 		rows = 2;
 	
-	windows_view->table_columns = columns;
-	windows_view->table_rows = rows;
+	*table_columns = columns;
+	*table_rows = rows;
 }
