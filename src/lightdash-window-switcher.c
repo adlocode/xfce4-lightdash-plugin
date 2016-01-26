@@ -828,7 +828,7 @@ static void my_tasklist_window_workspace_changed (WnckWindow *window, LightdashW
 			#endif
 		}	
 	}
-	else if (task->previous_workspace = wnck_screen_get_active_workspace (tasklist->screen))
+	else if (task->previous_workspace == wnck_screen_get_active_workspace (tasklist->screen))
 	{
 		gtk_widget_hide (task->button);
 		g_object_ref (task->button);
@@ -845,7 +845,6 @@ static void my_tasklist_window_workspace_changed (WnckWindow *window, LightdashW
 				tasklist->table_rows,
 				tasklist->table_columns);
 		gtk_widget_queue_resize (GTK_WIDGET(tasklist));
-		
 }
 
 static void my_tasklist_screen_composited_changed (GdkScreen *screen, LightdashWindowsView *tasklist)
@@ -1021,10 +1020,7 @@ void lightdash_windows_view_reattach_widgets (LightdashWindowsView *tasklist)
 				lightdash_table_layout_attach_next (task->button, LIGHTDASH_TABLE_LAYOUT (tasklist->table));
 				g_object_unref (task->button);
 			}
-		}
-					
-	
-			
+		}		
 }
 
 #if GTK_CHECK_VERSION (3, 0, 0)
