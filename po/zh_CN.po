@@ -25,14 +25,6 @@ msgstr ""
 "Language: zh_CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#. Translators: If there is no suitable word for "Activities"
-#. in your language, you can use the word for "Overview".
-msgid "Activities"
-msgstr "活动"
-
-msgid "Show Applications"
-msgstr "显示应用程序"
-
 msgid "_Title:"
 msgstr "标题 (_T): "
 

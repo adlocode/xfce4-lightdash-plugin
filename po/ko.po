@@ -20,14 +20,6 @@ msgstr ""
 "Language: ko\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#. Translators: If there is no suitable word for "Activities"
-#. in your language, you can use the word for "Overview".
-msgid "Activities"
-msgstr "현재 활동"
-
-msgid "Show Applications"
-msgstr "프로그램 표시"
-
 msgid "_Title:"
 msgstr "제목"
 

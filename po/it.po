@@ -20,14 +20,6 @@ msgstr ""
 "Language: it\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#. Activities
-#: ../src/lightdash.c
-msgid "Activities"
-msgstr "Attività"
-
-msgid "Show Applications"
-msgstr "Mostra applicazioni"
-
 msgid "_Title:"
 msgstr "_Titolo:"
 

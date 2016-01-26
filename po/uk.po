@@ -19,14 +19,6 @@ msgstr ""
 "Language: uk\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#. Translators: If there is no suitable word for "Activities"
-#. in your language, you can use the word for "Overview".
-msgid "Activities"
-msgstr "Діяльність"
-
-msgid "Show Applications"
-msgstr "Показати програми"
-
 #: ../panel-plugin/configuration-dialog.cpp:523
 msgid "_Title:"
 msgstr "На_зва:"

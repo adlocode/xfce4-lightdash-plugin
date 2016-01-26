@@ -21,14 +21,6 @@ msgstr ""
 "Language: he\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#. Translators: If there is no suitable word for "Activities"
-#. in your language, you can use the word for "Overview".
-msgid "Activities"
-msgstr "פעילויות"
-
-msgid "Show Applications"
-msgstr "הצגת יישומים"
-
 msgid "_Title:"
 msgstr "_כותרת:"
 

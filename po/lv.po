@@ -24,14 +24,6 @@ msgstr ""
 "X-Poedit-Language: Latvian\n"
 "X-Poedit-Country: Latvia\n"
 
-#. Translators: If there is no suitable word for "Activities"
-#. in your language, you can use the word for "Overview".
-msgid "Activities"
-msgstr "Aktivitātes"
-
-msgid "Show Applications"
-msgstr "Rādīt lietotnes"
-
 msgid "_Title:"
 msgstr "Nosaukums:"
 
