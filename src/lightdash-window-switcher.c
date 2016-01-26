@@ -1373,6 +1373,11 @@ static void light_task_create_widgets (LightTask *task)
 {
 	static const GtkTargetEntry targets [] = { {"application/x-wnck-window-id",0,0} };
 	gfloat aspect_ratio;
+	
+	/* avoid integer overflows */
+	if (G_UNLIKELY (task->tasklist->unique_id_counter >= G_MAXUINT))
+		task->tasklist->unique_id_counter = 0;
+			
 	task->tasklist->unique_id_counter++;
 	
 	task->image_surface = NULL;
