@@ -785,8 +785,8 @@ static void my_tasklist_on_window_closed
 		
 }
 
-static void my_tasklist_active_workspace_changed
-	(WnckScreen *screen, WnckWorkspace *previously_active_workspace, LightdashWindowsView *tasklist)
+static void my_tasklist_active_workspace_changed (WnckScreen *screen, 
+				WnckWorkspace *previously_active_workspace, LightdashWindowsView *tasklist)
 {
 	GList *li;
 	LightTask *task;
@@ -838,7 +838,8 @@ static void my_tasklist_active_workspace_changed
 			
 			gtk_widget_queue_draw (task->image);
 		}
-	}
+	}			
+				my_tasklist_sort (tasklist);
 				lightdash_table_layout_update_rows_and_columns (LIGHTDASH_TABLE_LAYOUT (tasklist->table),
 										&tasklist->table_rows, &tasklist->table_columns);
 				lightdash_table_layout_resize (LIGHTDASH_TABLE_LAYOUT (tasklist->table),
