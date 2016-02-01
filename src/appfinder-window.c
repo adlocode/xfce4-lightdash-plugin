@@ -470,6 +470,15 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 	return FALSE;
 	
 }
+
+static void lightdash_window_workspace_changed (LightdashWindowsView *tasklist, XfceAppfinderWindow *window)
+{
+	if (gtk_widget_get_visible (GTK_WIDGET (window)))
+		gdk_window_focus (gtk_widget_get_window (GTK_WIDGET (window)), GDK_CURRENT_TIME);
+		
+		/* gtk_window_present () doesn't seem to work in this instance */
+
+}
 	
 	
 static void
@@ -683,6 +692,12 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   
   g_signal_connect_swapped (G_OBJECT (window->window_switcher), "task-button-clicked",
 							G_CALLBACK (gtk_widget_hide), GTK_WIDGET (window));
+  
+  /* Prevent window from losing focus when we switch workspace
+   * or when other windows change workspace */		
+  g_signal_connect (G_OBJECT (window->window_switcher), "workspace-changed",
+							G_CALLBACK (lightdash_window_workspace_changed), window);
+  
 						
 	//Add pager
 	window->pager = lightdash_pager_new ();

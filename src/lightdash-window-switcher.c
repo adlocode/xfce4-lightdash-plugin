@@ -332,6 +332,7 @@ enum {
 	TASK_BUTTON_CLICKED_SIGNAL,
 	TASK_BUTTON_DRAG_BEGIN_SIGNAL,
 	TASK_BUTTON_DRAG_END_SIGNAL,
+	WORKSPACE_CHANGED_SIGNAL,
 	LAST_SIGNAL
 };
 
@@ -340,6 +341,8 @@ static guint task_button_clicked_signals[LAST_SIGNAL]={0};
 static guint task_button_drag_begin_signals[LAST_SIGNAL]={0};
 
 static guint task_button_drag_end_signals[LAST_SIGNAL]={0};
+
+static guint workspace_changed_signals[LAST_SIGNAL]={0};
 
 G_DEFINE_TYPE (LightdashWindowsView, lightdash_windows_view, GTK_TYPE_EVENT_BOX);
 
@@ -455,6 +458,16 @@ static void lightdash_windows_view_class_init (MyTasklistClass *klass)
 		
 		task_button_drag_end_signals [TASK_BUTTON_DRAG_END_SIGNAL] = 
 		g_signal_new ("task-button-drag-end",
+		G_TYPE_FROM_CLASS(klass),
+		G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
+		0,
+		NULL,
+		NULL,
+		g_cclosure_marshal_VOID__VOID,
+		G_TYPE_NONE, 0);
+		
+		task_button_drag_end_signals [WORKSPACE_CHANGED_SIGNAL] = 
+		g_signal_new ("workspace-changed",
 		G_TYPE_FROM_CLASS(klass),
 		G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
 		0,
@@ -791,6 +804,8 @@ static void my_tasklist_active_workspace_changed (WnckScreen *screen,
 	GList *li;
 	LightTask *task;
 	
+	g_signal_emit_by_name (tasklist, "workspace-changed");
+	
 	lightdash_table_layout_start_from_beginning (LIGHTDASH_TABLE_LAYOUT (tasklist->table));
 	
 	for (li = tasklist->tasks; li != NULL; li = li->next)
@@ -850,9 +865,7 @@ static void my_tasklist_active_workspace_changed (WnckScreen *screen,
 
 static void my_tasklist_window_workspace_changed (WnckWindow *window, LightdashWindowsView *tasklist)
 {
-	
-	my_tasklist_active_workspace_changed (tasklist->screen, NULL, tasklist);
-
+	my_tasklist_active_workspace_changed (NULL, NULL, tasklist);
 }
 
 static void my_tasklist_screen_composited_changed (GdkScreen *screen, LightdashWindowsView *tasklist)
