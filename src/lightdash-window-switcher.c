@@ -466,7 +466,7 @@ static void lightdash_windows_view_class_init (MyTasklistClass *klass)
 		g_cclosure_marshal_VOID__VOID,
 		G_TYPE_NONE, 0);
 		
-		task_button_drag_end_signals [WORKSPACE_CHANGED_SIGNAL] = 
+		workspace_changed_signals [WORKSPACE_CHANGED_SIGNAL] = 
 		g_signal_new ("workspace-changed",
 		G_TYPE_FROM_CLASS(klass),
 		G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
