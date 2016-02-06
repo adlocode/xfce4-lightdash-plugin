@@ -732,14 +732,11 @@ static void my_tasklist_on_window_closed
 {
 	LightTask *task;
 	skipped_window *skipped;
-	GList *lp;
 
 	
 	if (wnck_window_is_skip_tasklist (window) 
-		&& (lp = g_list_find (tasklist->skipped_windows, window)) != NULL)
+		&& (skipped = get_skipped_window (tasklist, window)) != NULL)
 	{
-		
-		skipped = get_skipped_window (tasklist, window);
 
 		tasklist->skipped_windows = g_list_remove (tasklist->skipped_windows, 
 			(gconstpointer) skipped);		
