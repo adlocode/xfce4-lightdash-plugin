@@ -43,23 +43,23 @@
 static void my_tasklist_update_windows (LightdashWindowsView *tasklist);
 static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window, LightdashWindowsView *tasklist);
 static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window, LightdashWindowsView *tasklist);
-static void my_tasklist_active_workspace_changed
-	(WnckScreen *screen, WnckWorkspace *previously_active_workspace, LightdashWindowsView *tasklist);
+static void my_tasklist_active_workspace_changed (WnckScreen *screen, 
+			WnckWorkspace *previously_active_workspace, LightdashWindowsView *tasklist);
 static void my_tasklist_on_name_changed (WnckWindow *window, GtkWidget *label);
 static void my_tasklist_window_workspace_changed (WnckWindow *window, LightdashWindowsView *tasklist);
-static void my_tasklist_window_state_changed
-	(WnckWindow *window, WnckWindowState changed_mask, WnckWindowState new_state, LightdashWindowsView *tasklist);
+static void my_tasklist_window_state_changed (WnckWindow *window, 
+			WnckWindowState changed_mask, WnckWindowState new_state, LightdashWindowsView *tasklist);
+static void lightdash_windows_view_skipped_window_state_changed (WnckWindow *window, 
+			WnckWindowState changed_mask, WnckWindowState new_state, LightdashWindowsView *tasklist);
 static void my_tasklist_screen_composited_changed (GdkScreen *screen, LightdashWindowsView *tasklist);
 static void my_tasklist_free_skipped_windows (LightdashWindowsView *tasklist);
 static int lightdash_windows_view_xhandler_xerror (Display *dpy, XErrorEvent *e);
 static gint my_tasklist_button_compare (gconstpointer a, gconstpointer b, gpointer data);
-static gboolean
-lightdash_windows_view_drag_drop_handl
-(GtkWidget *widget, GdkDragContext *context, gint x, gint y, guint time);
-static void
-lightdash_windows_view_drag_data_received_handl
-(GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *selection_data, 
-	guint target_type, guint time);
+static gboolean lightdash_windows_view_drag_drop_handl (GtkWidget *widget, 
+			GdkDragContext *context, gint x, gint y, guint time);
+static void lightdash_windows_view_drag_data_received_handl (GtkWidget *widget, 
+			GdkDragContext *context, gint x, gint y, GtkSelectionData *selection_data, 
+			guint target_type, guint time);
 gboolean lightdash_windows_view_drag_motion (GtkWidget *widget, GdkDragContext *drag_context,
 	gint x, gint y, guint time);
 void lightdash_windows_view_reattach_widgets (LightdashWindowsView *tasklist);
@@ -647,7 +647,7 @@ static void my_tasklist_update_windows (LightdashWindowsView *tasklist)
 			skipped_window *skipped = g_new0 (skipped_window, 1);
 			skipped->window = g_object_ref (win);
 			skipped->tag = g_signal_connect (G_OBJECT (win), "state-changed",
-							G_CALLBACK (my_tasklist_window_state_changed),
+							G_CALLBACK (lightdash_windows_view_skipped_window_state_changed),
 							tasklist);
 							
 		tasklist->skipped_windows =
@@ -688,7 +688,7 @@ static void my_tasklist_on_window_opened
 		skipped_window *skipped = g_new0 (skipped_window, 1);
 			skipped->window = g_object_ref (window);
 			skipped->tag = g_signal_connect (G_OBJECT (window), "state-changed",
-							G_CALLBACK (my_tasklist_window_state_changed),
+							G_CALLBACK (lightdash_windows_view_skipped_window_state_changed),
 							tasklist);
 							
 		tasklist->skipped_windows =
@@ -732,29 +732,23 @@ static void my_tasklist_on_window_closed
 {
 	LightTask *task;
 	skipped_window *skipped;
+	GList *lp;
 
 	
-	if (wnck_window_is_skip_tasklist (window))
+	if (wnck_window_is_skip_tasklist (window) 
+		&& (lp = g_list_find (tasklist->skipped_windows, window)) != NULL)
 	{
 		
 		skipped = get_skipped_window (tasklist, window);
-		
-		if (skipped)
-		{
-			tasklist->skipped_windows = g_list_remove (tasklist->skipped_windows, 
-				(gconstpointer) skipped);		
-					
-			//g_print ("%s", wnck_window_get_name (skipped->window));
-			g_signal_handler_disconnect (skipped->window, skipped->tag);
-			g_object_unref (skipped->window);
-			g_free (skipped);
-			skipped = NULL;
-			
 
-		
-			//g_print ("%s", "free skipped window \n");
-			return;
-		}
+		tasklist->skipped_windows = g_list_remove (tasklist->skipped_windows, 
+			(gconstpointer) skipped);		
+					
+		g_signal_handler_disconnect (skipped->window, skipped->tag);
+		g_object_unref (skipped->window);
+		g_free (skipped);
+		skipped = NULL;
+
 		
 		return;
 	}
@@ -873,12 +867,13 @@ static void my_tasklist_screen_composited_changed (GdkScreen *screen, LightdashW
 	tasklist->composited = gdk_screen_is_composited (tasklist->gdk_screen);
 }
 
-static void my_tasklist_window_state_changed
-	(WnckWindow *window, WnckWindowState changed_mask, WnckWindowState new_state, LightdashWindowsView *tasklist)
+static void my_tasklist_window_state_changed (WnckWindow *window, 
+		WnckWindowState changed_mask, WnckWindowState new_state, LightdashWindowsView *tasklist)
 {
 	if (changed_mask & WNCK_WINDOW_STATE_SKIP_TASKLIST)
 	{
-		my_tasklist_update_windows (tasklist);
+		my_tasklist_on_window_closed (tasklist->screen, window, tasklist);
+		my_tasklist_on_window_opened (tasklist->screen, window, tasklist);
 	}
 	
 	else if (changed_mask & WNCK_WINDOW_STATE_MINIMIZED)
@@ -888,6 +883,24 @@ static void my_tasklist_window_state_changed
 		gtk_widget_queue_draw (task->image);
 	}
 }
+
+static void lightdash_windows_view_skipped_window_state_changed (WnckWindow *window, 
+		WnckWindowState changed_mask, WnckWindowState new_state, LightdashWindowsView *tasklist)
+{
+	skipped_window *skipped;
+	
+	if (changed_mask & WNCK_WINDOW_STATE_SKIP_TASKLIST)
+	{
+		skipped = get_skipped_window (tasklist, window);
+		tasklist->skipped_windows = g_list_remove (tasklist->skipped_windows, skipped);
+		g_signal_handler_disconnect (skipped->window, skipped->tag);
+		g_object_unref (skipped->window);
+		g_free (skipped);
+		
+		my_tasklist_on_window_opened (tasklist->screen, window, tasklist);
+	}
+}
+	
 
 static gboolean
 lightdash_popup_handler (GtkWidget *widget, GdkEventButton *event, LightTask *task)
