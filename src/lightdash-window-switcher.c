@@ -40,7 +40,6 @@
  * the parent application to perform actions based on these events.
  */
 
-static void my_tasklist_update_windows (LightdashWindowsView *tasklist);
 static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window, LightdashWindowsView *tasklist);
 static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window, LightdashWindowsView *tasklist);
 static void my_tasklist_active_workspace_changed (WnckScreen *screen, 
@@ -377,7 +376,31 @@ static void lightdash_windows_view_realize (GtkWidget *widget)
 	
 	wnck_screen_force_update (tasklist->screen);
 	
-	my_tasklist_update_windows (tasklist);
+	GList *window_l;
+	WnckWindow *win;
+	
+	tasklist->unique_id_counter = 0;
+	
+	lightdash_table_layout_start_from_beginning (LIGHTDASH_TABLE_LAYOUT (tasklist->table));
+	
+	lightdash_table_layout_resize (LIGHTDASH_TABLE_LAYOUT(tasklist->table), 
+			tasklist->table_rows, tasklist->table_columns);
+	
+	tasklist->update_complete = FALSE;
+	
+	for (window_l = wnck_screen_get_windows (tasklist->screen); window_l != NULL; window_l = window_l->next)
+    {
+		win = WNCK_WINDOW (window_l->data);
+		my_tasklist_on_window_opened (tasklist->screen, win, tasklist);
+	}
+	
+	my_tasklist_sort (tasklist);
+	lightdash_table_layout_update_rows_and_columns (LIGHTDASH_TABLE_LAYOUT (tasklist->table), 
+									&tasklist->table_rows, 
+									&tasklist->table_columns);
+	lightdash_windows_view_reattach_widgets (tasklist);
+	lightdash_table_layout_resize (LIGHTDASH_TABLE_LAYOUT (tasklist->table), 
+			tasklist->table_rows, tasklist->table_columns);
 	
 	g_signal_connect (tasklist->screen, "window-opened",
                 G_CALLBACK (my_tasklist_on_window_opened), tasklist); 
@@ -601,73 +624,6 @@ skipped_window * get_skipped_window (LightdashWindowsView *tasklist, WnckWindow 
 		
 	}
 	return NULL;
-}
-
-
-
-static void my_tasklist_update_windows (LightdashWindowsView *tasklist)
-{
-	GList *window_l;
-	WnckWindow *win;
-	
-	//Table attachment values
-	tasklist->unique_id_counter = 0;
-	
-	lightdash_table_layout_start_from_beginning (LIGHTDASH_TABLE_LAYOUT (tasklist->table));
-	
-	my_tasklist_free_tasks (tasklist);
-	lightdash_table_layout_resize (LIGHTDASH_TABLE_LAYOUT(tasklist->table), 
-			tasklist->table_rows, tasklist->table_columns);
-	
-	tasklist->update_complete = FALSE;
-	
-	for (window_l = wnck_screen_get_windows (tasklist->screen); window_l != NULL; window_l = window_l->next)
-    {
-		win = WNCK_WINDOW (window_l->data);
-		
-		if (!(wnck_window_is_skip_tasklist (win)))
-		{
-			LightTask *task;
-			
-			task = light_task_new_from_window (tasklist, win);
-	
-			tasklist->tasks = g_list_prepend (tasklist->tasks, task);
-			
-			if(wnck_window_is_on_workspace(task->window, wnck_screen_get_active_workspace(tasklist->screen)))
-			{
-				
-				lightdash_table_layout_attach_next (task->button, LIGHTDASH_TABLE_LAYOUT (tasklist->table));
-				
-			}
-			
-		}
-		
-		else
-		{
-			skipped_window *skipped = g_new0 (skipped_window, 1);
-			skipped->window = g_object_ref (win);
-			skipped->tag = g_signal_connect (G_OBJECT (win), "state-changed",
-							G_CALLBACK (lightdash_windows_view_skipped_window_state_changed),
-							tasklist);
-							
-		tasklist->skipped_windows =
-				g_list_prepend (tasklist->skipped_windows,
-					skipped);
-					
-		}
-		
-
-	}
-	my_tasklist_sort (tasklist);
-	lightdash_table_layout_update_rows_and_columns (LIGHTDASH_TABLE_LAYOUT (tasklist->table), 
-									&tasklist->table_rows, 
-									&tasklist->table_columns);
-	lightdash_windows_view_reattach_widgets (tasklist);
-	lightdash_table_layout_resize (LIGHTDASH_TABLE_LAYOUT (tasklist->table), 
-			tasklist->table_rows, tasklist->table_columns);
-	tasklist->update_complete = TRUE;
-	
-	
 }
 
 static void my_tasklist_on_name_changed (WnckWindow *window, GtkWidget *label) 
