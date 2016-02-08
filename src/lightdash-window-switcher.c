@@ -1050,11 +1050,10 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 		task->previous_width = gtk_widget_get_allocated_width (task->image);
 		task->previous_height = gtk_widget_get_allocated_height (task->image);
 		
-				if (!task->preview_created)
-		{
-			XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
-			task->preview_created = TRUE;
-		}	
+
+
+		task->preview_created = TRUE;
+	
 		#else
 
 		cr = gdk_cairo_create (widget->window);
@@ -1067,12 +1066,8 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 		
 		task->previous_width = task->image->allocation.width;
 		task->previous_height = task->image->allocation.height;
-		
-		if (!task->preview_created &! wnck_window_is_minimized (task->window))
-		{
-			XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
-			task->preview_created = TRUE;
-		}
+
+		task->preview_created = TRUE;
 		
 		cairo_destroy (cr);	
 		
@@ -1337,6 +1332,7 @@ void lightdash_windows_view_create_composited_window (LightTask *task)
 					task->damage = XDamageCreate (task->tasklist->dpy, 
 									task->xid, 
 									XDamageReportDeltaRectangles);
+					XSync (task->tasklist->dpy, False);
 					XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
 					gdk_window_add_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
 				}
