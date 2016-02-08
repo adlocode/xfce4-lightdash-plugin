@@ -92,7 +92,6 @@ struct _LightTask
 	const GtkTargetEntry target;
 	GdkPixbuf *pixbuf; /* Icon pixbuf */
 	
-	gboolean preview_created;
 	gboolean scaled;
 	gboolean unparented;
 	
@@ -188,7 +187,6 @@ static void light_task_init (LightTask *task)
 	task->surface = NULL;
 	task->damage = None;
 	
-	task->preview_created = FALSE;
 	task->unparented = FALSE;
 	
 	task->button_resized_tag = 0;
@@ -799,7 +797,6 @@ static void my_tasklist_active_workspace_changed (WnckScreen *screen,
 			}
 			
 			gtk_widget_queue_draw (task->image);
-			XDamageSubtract (tasklist->dpy, task->damage, None, None);
 		}
 	}			
 				my_tasklist_sort (tasklist);
@@ -1050,10 +1047,6 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 		
 		task->previous_width = gtk_widget_get_allocated_width (task->image);
 		task->previous_height = gtk_widget_get_allocated_height (task->image);
-		
-
-
-		task->preview_created = TRUE;
 	
 		#else
 
@@ -1067,8 +1060,6 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 		
 		task->previous_width = task->image->allocation.width;
 		task->previous_height = task->image->allocation.height;
-
-		task->preview_created = TRUE;
 		
 		cairo_destroy (cr);	
 		
@@ -1283,7 +1274,7 @@ static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *even
 	height = task->image->allocation.height;
 	#endif
 	
-	if (ev->type == dv + XDamageNotify && task->preview_created)
+	if (ev->type == dv + XDamageNotify)
 	{
 	
 	XDamageSubtract (task->tasklist->dpy, e->damage, None, None);
@@ -1293,7 +1284,7 @@ static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *even
 	gtk_widget_queue_draw (task->image);
 	
 	}
-	else if (ev->type == ConfigureNotify && task->preview_created)
+	else if (ev->type == ConfigureNotify)
 	{
 		ce = &ev->xconfigure;
 		
