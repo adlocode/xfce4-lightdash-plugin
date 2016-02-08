@@ -52,6 +52,7 @@ static void lightdash_windows_view_skipped_window_state_changed (WnckWindow *win
 			WnckWindowState changed_mask, WnckWindowState new_state, LightdashWindowsView *tasklist);
 static void my_tasklist_screen_composited_changed (GdkScreen *screen, LightdashWindowsView *tasklist);
 static void my_tasklist_free_skipped_windows (LightdashWindowsView *tasklist);
+static void lightdash_windows_view_unrealize (GtkWidget *widget);
 static int lightdash_windows_view_xhandler_xerror (Display *dpy, XErrorEvent *e);
 static gint my_tasklist_button_compare (gconstpointer a, gconstpointer b, gpointer data);
 static gboolean lightdash_windows_view_drag_drop_handl (GtkWidget *widget, 
@@ -456,6 +457,7 @@ static void lightdash_windows_view_class_init (MyTasklistClass *klass)
 	
 	widget_class->realize = lightdash_windows_view_realize;
 	widget_class->drag_motion = lightdash_windows_view_drag_motion;
+	widget_class->unrealize = lightdash_windows_view_unrealize;
 	
 	task_button_clicked_signals [TASK_BUTTON_CLICKED_SIGNAL] = 
 		g_signal_new ("task-button-clicked",
@@ -590,6 +592,15 @@ my_tasklist_free_skipped_windows (LightdashWindowsView *tasklist)
 		
 	}
 	
+}
+
+static void lightdash_windows_view_unrealize (GtkWidget *widget)
+{
+	LightdashWindowsView *tasklist = LIGHTDASH_WINDOWS_VIEW (widget);
+	
+	my_tasklist_free_tasks (tasklist);
+	
+	(*GTK_WIDGET_CLASS (lightdash_windows_view_parent_class)->unrealize) (widget);
 }
 
 LightTask * get_task_from_window (LightdashWindowsView *tasklist, WnckWindow *window)
