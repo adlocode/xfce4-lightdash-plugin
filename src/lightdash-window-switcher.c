@@ -799,6 +799,7 @@ static void my_tasklist_active_workspace_changed (WnckScreen *screen,
 			}
 			
 			gtk_widget_queue_draw (task->image);
+			XDamageSubtract (tasklist->dpy, task->damage, None, None);
 		}
 	}			
 				my_tasklist_sort (tasklist);
@@ -1332,8 +1333,8 @@ void lightdash_windows_view_create_composited_window (LightTask *task)
 					task->damage = XDamageCreate (task->tasklist->dpy, 
 									task->xid, 
 									XDamageReportDeltaRectangles);
+					XDamageSubtract (task->tasklist->dpy, task->damage, None, None);				
 					XSync (task->tasklist->dpy, False);
-					XDamageSubtract (task->tasklist->dpy, task->damage, None, None);
 					gdk_window_add_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
 				}
 		}
