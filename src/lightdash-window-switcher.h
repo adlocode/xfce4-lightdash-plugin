@@ -24,6 +24,7 @@
 #include <X11/extensions/Xcomposite.h>
 #include <X11/extensions/Xrender.h>
 #include <libwnck/libwnck.h>
+#include "lightdash-compositor.h"
 
 G_BEGIN_DECLS
 
@@ -44,6 +45,7 @@ struct _MyTasklist
 	
 	GtkWidget *table;
 	
+	LightdashCompositor *compositor;
 	WnckScreen *screen;
 	GdkScreen *gdk_screen;
 	Display *dpy;

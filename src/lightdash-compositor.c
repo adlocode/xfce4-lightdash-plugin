@@ -15,3 +15,63 @@
  */
  
  #include "lightdash-compositor.h"
+ 
+ G_DEFINE_TYPE (LightdashCompositor, lightdash_compositor, G_TYPE_OBJECT);
+ 
+ static int lightdash_compositor_xhandler_xerror (Display *dpy, XErrorEvent *e);
+ 
+ static LightdashCompositor *_lightdash_compositor_singleton = NULL;
+ 
+ static void lightdash_compositor_class_init (LightdashCompositorClass *klass)
+ {
+	 GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	 
+ }
+ 
+ static void lightdash_compositor_init (LightdashCompositor *compositor)
+ {
+	int dv, dr;
+	
+	compositor->screen = wnck_screen_get_default();
+	compositor->gdk_screen = gdk_screen_get_default ();
+	compositor->dpy = gdk_x11_get_default_xdisplay ();
+	
+	XSetErrorHandler (lightdash_compositor_xhandler_xerror);
+	
+	wnck_screen_force_update (compositor->screen);
+	
+	XDamageQueryExtension (compositor->dpy, &dv, &dr);
+	gdk_x11_register_standard_event_type (gdk_screen_get_display (compositor->gdk_screen),
+		dv, dv + XDamageNotify);
+ }
+ 
+ WnckScreen * lightdash_compositor_get_wnck_screen (LightdashCompositor *compositor)
+ {
+	 return compositor->screen;
+ }
+ 
+ static int lightdash_compositor_xhandler_xerror (Display *dpy, XErrorEvent *e)
+{
+	gchar text [64];
+	
+		g_print ("%s", "X11 error ");
+		g_print ("%d", e->error_code);
+		g_print ("%s", " - ");
+		XGetErrorText (dpy, e->error_code, text, 64);
+		g_print ("%s", text);
+		g_print ("%s", "\n");
+		
+		return 0;
+}
+ 
+ LightdashCompositor * lightdash_compositor_get_default ()
+ {
+	if (_lightdash_compositor_singleton == NULL)
+	{
+		_lightdash_compositor_singleton =
+			LIGHTDASH_COMPOSITOR (g_object_new (LIGHTDASH_TYPE_COMPOSITOR, NULL));
+	}
+	else g_object_ref (_lightdash_compositor_singleton);
+	
+	return _lightdash_compositor_singleton;
+}

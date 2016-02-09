@@ -30,6 +30,8 @@ liblightdash_la_SOURCES = \
 	appfinder-window.h \
 	lightdash-window-switcher.c \
 	lightdash-window-switcher.h \
+	lightdash-compositor.c \
+	lightdash-compositor.h \
 	table-layout.c \
 	table-layout.h \
 	lightdash-image.c \

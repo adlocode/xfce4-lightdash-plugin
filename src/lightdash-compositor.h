@@ -23,6 +23,8 @@
 #include <X11/Xlib.h>
 #include <X11/extensions/Xcomposite.h>
 #include <X11/extensions/Xrender.h>
+#include <X11/extensions/Xdamage.h>
+#include <gdk/gdkx.h>
 #include <libwnck/libwnck.h>
 
 G_BEGIN_DECLS
@@ -51,6 +53,7 @@ struct _LightdashCompositorClass
 };
 
 LightdashCompositor * lightdash_compositor_get_default ();
+WnckScreen * lightdash_compositor_get_wnck_screen (LightdashCompositor *compositor);
 
 G_END_DECLS
 

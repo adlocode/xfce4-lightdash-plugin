@@ -348,7 +348,7 @@ static void lightdash_windows_view_realize (GtkWidget *widget)
 {
 	LightdashWindowsView *tasklist;
 	GtkWidget *parent_gtk_widget;
-	int dv, dr;
+	
 	
 	tasklist = LIGHTDASH_WINDOWS_VIEW (widget);
 	
@@ -361,19 +361,16 @@ static void lightdash_windows_view_realize (GtkWidget *widget)
 		tasklist->parent_gdk_window = gtk_widget_get_window (parent_gtk_widget);
 	}
 	
-	tasklist->screen = wnck_screen_get_default();
-	tasklist->gdk_screen = gdk_screen_get_default ();
-	tasklist->dpy = gdk_x11_get_default_xdisplay ();
+	/* Get compositor instance*/
+	tasklist->compositor = lightdash_compositor_get_default ();
 	
-	XSetErrorHandler (lightdash_windows_view_xhandler_xerror);
+	tasklist->screen = lightdash_compositor_get_wnck_screen (tasklist->compositor);
+	tasklist->gdk_screen = tasklist->compositor->gdk_screen;
+	tasklist->dpy = tasklist->compositor->dpy;
 	
 	tasklist->composited = gdk_screen_is_composited (tasklist->gdk_screen);
 	
-	XDamageQueryExtension (tasklist->dpy, &dv, &dr);
-	gdk_x11_register_standard_event_type (gdk_screen_get_display (tasklist->gdk_screen),
-		dv, dv + XDamageNotify);
 	
-	wnck_screen_force_update (tasklist->screen);
 	
 	GList *window_l;
 	WnckWindow *win;
@@ -506,20 +503,6 @@ GtkWidget* lightdash_window_switcher_new (void)
 	return GTK_WIDGET(g_object_new (lightdash_windows_view_get_type (), NULL));
 }
 
-static int lightdash_windows_view_xhandler_xerror (Display *dpy, XErrorEvent *e)
-{
-	gchar text [64];
-	
-		g_print ("%s", "X11 error ");
-		g_print ("%d", e->error_code);
-		g_print ("%s", " - ");
-		XGetErrorText (dpy, e->error_code, text, 64);
-		g_print ("%s", text);
-		g_print ("%s", "\n");
-		
-		return 0;
-}
-
 static void
 my_tasklist_free_tasks (LightdashWindowsView *tasklist)
 {
@@ -599,6 +582,9 @@ static void lightdash_windows_view_unrealize (GtkWidget *widget)
 	LightdashWindowsView *tasklist = LIGHTDASH_WINDOWS_VIEW (widget);
 	
 	my_tasklist_free_tasks (tasklist);
+	
+	g_object_unref (tasklist->compositor);
+	tasklist->compositor = NULL;
 	
 	(*GTK_WIDGET_CLASS (lightdash_windows_view_parent_class)->unrealize) (widget);
 }
