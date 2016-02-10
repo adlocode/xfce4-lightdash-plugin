@@ -1304,8 +1304,9 @@ static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *even
 			
 		task->attr.width = ce->width;
 		task->attr.height = ce->height;
-		cairo_surface_destroy (task->surface);
-		task->surface = lightdash_windows_view_get_window_picture (task);
+		cairo_xlib_surface_set_size (task->surface,
+							task->attr.width,
+							task->attr.height);
 		lightdash_windows_view_render_preview_at_size (task, width, height);
 		gtk_widget_queue_draw (task->image);
 
