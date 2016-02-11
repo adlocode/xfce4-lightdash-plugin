@@ -164,8 +164,8 @@ lightdash_composited_window_get_window_picture (LightdashCompositedWindow *task)
 	composited_window = LIGHTDASH_COMPOSITED_WINDOW (g_object_new (LIGHTDASH_TYPE_COMPOSITED_WINDOW, NULL));
 	 
 	composited_window->window = window;
+	composited_window->xid = wnck_window_get_xid (composited_window->window);
 	XGetWindowAttributes (composited_window->compositor->dpy, composited_window->xid, &composited_window->attr);
-	
 	composited_window->gdk_window = gdk_x11_window_foreign_new_for_display 
 		(gdk_screen_get_display (composited_window->compositor->gdk_screen), composited_window->xid);
 	
@@ -177,7 +177,7 @@ lightdash_composited_window_get_window_picture (LightdashCompositedWindow *task)
 			
 			composited_window->surface = lightdash_composited_window_get_window_picture (composited_window);
 	
-			/* Ignore damage events on excluded windows*/
+			/* Ignore damage events on excluded windows */
 			if (composited_window->compositor->excluded_gdk_window && 
 					composited_window->gdk_window != composited_window->compositor->excluded_gdk_window)
 				{

@@ -31,6 +31,7 @@
 #include "lightdash-window-switcher.h"
 #include "table-layout.h"
 #include "lightdash-image.h"
+#include "lightdash-composited-window.h"
 
 #define DEFAULT_TABLE_COLUMNS 3
 #define DEFAULT_TABLE_ROWS 2
@@ -89,6 +90,7 @@ struct _LightTask
 	
 	WnckWindow *window;
 	GdkWindow *gdk_window;
+	LightdashCompositedWindow *composited_window;
 	Window xid;
 	const GtkTargetEntry target;
 	GdkPixbuf *pixbuf; /* Icon pixbuf */
@@ -146,8 +148,6 @@ static void light_task_create_widgets (LightTask *task);
 static void my_tasklist_drag_data_get_handl
 		(GtkWidget *widget, GdkDragContext *context, GtkSelectionData *selection_data,
         guint target_type, guint time, LightTask *task);
-
-static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTask *task);
 	
 #if GTK_CHECK_VERSION (3, 0, 0)
 gboolean lightdash_windows_view_image_draw (GtkWidget *widget, cairo_t *cr, LightTask *task);
@@ -264,14 +264,7 @@ static void light_task_finalize (GObject *object)
 		error = gdk_error_trap_pop ();
 	}
 	
-	
-	gdk_window_remove_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
-	
-	if (task->surface)
-	{	
-		cairo_surface_destroy (task->surface);
-		task->surface = NULL;
-	}
+	g_object_unref (task->composited_window);
 	
 	
 	if (task->image_surface)
@@ -895,11 +888,11 @@ void lightdash_windows_view_render_preview_at_size (LightTask *task, gint width,
 		gint pixbuf_width, pixbuf_height;
 		
 		
-		factor = (gfloat) MIN ((gfloat)width / (gfloat)task->attr.width,
-						(gfloat)height / (gfloat)task->attr.height);
+		factor = (gfloat) MIN ((gfloat)width / (gfloat)task->composited_window->attr.width,
+						(gfloat)height / (gfloat)task->composited_window->attr.height);
 				
-		dest_width = task->attr.width*factor;
-		dest_height = task->attr.height*factor;
+		dest_width = task->composited_window->attr.width*factor;
+		dest_height = task->composited_window->attr.height*factor;
 		
 		cairo_surface_destroy (task->image_surface);
 		
@@ -909,11 +902,11 @@ void lightdash_windows_view_render_preview_at_size (LightTask *task, gint width,
 		if ((gint)dest_height == 0)
 			dest_height = 1;
 		
-		if (dest_width > task->attr.width && dest_height > task->attr.height)
+		if (dest_width > task->composited_window->attr.width && dest_height > task->composited_window->attr.height)
 		{
 			factor = 1.0;
-			dest_width = task->attr.width;
-			dest_height = task->attr.height;
+			dest_width = task->composited_window->attr.width;
+			dest_height = task->composited_window->attr.height;
 		}
 		
 		task->surface_width = dest_width;
@@ -928,7 +921,7 @@ void lightdash_windows_view_render_preview_at_size (LightTask *task, gint width,
 		
 		if (wnck_window_is_minimized (task->window) || task->tasklist->composited == FALSE)
 		{
-			cairo_rectangle (cr, 0, 0, task->attr.width*factor, task->attr.height*factor);
+			cairo_rectangle (cr, 0, 0, task->composited_window->attr.width*factor, task->composited_window->attr.height*factor);
 			
 			cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
 			
@@ -951,9 +944,9 @@ void lightdash_windows_view_render_preview_at_size (LightTask *task, gint width,
 		{
 			cairo_scale (cr, factor, factor);
 
-			cairo_rectangle (cr, 0, 0, task->attr.width, task->attr.height);
+			cairo_rectangle (cr, 0, 0, task->composited_window->attr.width, task->composited_window->attr.height);
 			
-			cairo_set_source_surface (cr, task->surface, 0, 0);
+			cairo_set_source_surface (cr, task->composited_window->surface, 0, 0);
 		
 			cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
 			
@@ -1108,7 +1101,7 @@ static void my_tasklist_drag_begin_handl
 	#endif
 	
 	cairo_scale (cr, factor, factor);
-	cairo_rectangle (cr, 0, 0, task->attr.width, task->attr.height);	
+	cairo_rectangle (cr, 0, 0, task->composited_window->attr.width, task->composited_window->attr.height);	
 	cairo_set_source_surface (cr, task->image_surface, 0, 0);
 	cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);	
 	cairo_fill (cr);		
@@ -1252,36 +1245,18 @@ lightdash_windows_view_get_window_picture (LightTask *task)
 	return surface;
 }
 
-static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *event, LightTask *task)
+static GdkFilterReturn lightdash_windows_view_damage_event (LightdashCompositedWindow *composited_window, LightTask *task)
 {
-	int dv, dr;
-	XEvent *ev;
-	XDamageNotifyEvent *e;
-	XConfigureEvent *ce;
-	XDamageQueryExtension (task->tasklist->dpy, &dv, &dr);
-	int width, height;
+	GtkAllocation allocation;
 	
-	ev = (XEvent*)xevent;
-	e = (XDamageNotifyEvent *)ev;
+	gtk_widget_get_allocation (task->image, &allocation);
 	
-	#if GTK_CHECK_VERSION (3, 0, 0)
-	width = gtk_widget_get_allocated_width (task->image);
-	height = gtk_widget_get_allocated_height (task->image);
-	#else
-	width = task->image->allocation.width;
-	height = task->image->allocation.height;
-	#endif
-	
-	if (ev->type == dv + XDamageNotify)
-	{
-	
-	XDamageSubtract (task->tasklist->dpy, e->damage, None, None);
-	
-	lightdash_windows_view_render_preview_at_size (task, width, height);
+	lightdash_windows_view_render_preview_at_size (task, allocation.width, allocation.height);
 	
 	gtk_widget_queue_draw (task->image);
 	
-	}
+}
+/*
 	else if (ev->type == ConfigureNotify)
 	{
 		ce = &ev->xconfigure;
@@ -1294,13 +1269,13 @@ static GdkFilterReturn lightdash_window_event (GdkXEvent *xevent, GdkEvent *even
 		cairo_xlib_surface_set_size (task->surface,
 							task->attr.width,
 							task->attr.height);
-		lightdash_windows_view_render_preview_at_size (task, width, height);
+		lightdash_windows_view_render_preview_at_size (task, allocation.width, allocation.height);
 		gtk_widget_queue_draw (task->image);
 
 	}
 	
-	return GDK_FILTER_CONTINUE;
 }
+*/
 
 void lightdash_windows_view_create_composited_window (LightTask *task)
 {
@@ -1325,7 +1300,7 @@ void lightdash_windows_view_create_composited_window (LightTask *task)
 									XDamageReportDeltaRectangles);
 					XDamageSubtract (task->tasklist->dpy, task->damage, None, None);				
 					XSync (task->tasklist->dpy, False);
-					gdk_window_add_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
+					//gdk_window_add_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
 				}
 		}
 }
@@ -1365,7 +1340,7 @@ static void light_task_create_widgets (LightTask *task)
 	
 	
 	/* Create composited window */
-	lightdash_windows_view_create_composited_window (task);
+	task->composited_window = lightdash_composited_window_new_from_window (task->window);
 	
 	
 	task->image = lightdash_image_new ();
@@ -1410,7 +1385,10 @@ static void light_task_create_widgets (LightTask *task)
 							G_CALLBACK (lightdash_windows_view_image_expose),
 							task);
 		#endif
-	}					
+	}
+	
+	g_signal_connect (task->composited_window, "damage-event",
+					G_CALLBACK (lightdash_windows_view_damage_event), task);
 							
 	gtk_drag_source_set (task->button,GDK_BUTTON1_MASK,targets,1,GDK_ACTION_MOVE);
 					
