@@ -32,6 +32,7 @@
  {
 	int dv, dr;
 	
+	compositor->excluded_gdk_window = NULL;
 	compositor->screen = wnck_screen_get_default();
 	compositor->gdk_screen = gdk_screen_get_default ();
 	compositor->dpy = gdk_x11_get_default_xdisplay ();
@@ -62,6 +63,11 @@
 		g_print ("%s", "\n");
 		
 		return 0;
+}
+
+void lightdash_compositor_set_excluded_window (LightdashCompositor *compositor, GdkWindow *gdk_window)
+{
+	compositor->excluded_gdk_window = gdk_window;
 }
  
  LightdashCompositor * lightdash_compositor_get_default ()

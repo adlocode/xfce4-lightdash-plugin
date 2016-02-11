@@ -23,6 +23,7 @@
 #include <X11/extensions/Xcomposite.h>
 #include <X11/extensions/Xrender.h>
 #include <X11/extensions/Xdamage.h>
+#include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <libwnck/libwnck.h>
 
@@ -44,6 +45,8 @@ struct _LightdashCompositor
 	WnckScreen *screen;
 	GdkScreen *gdk_screen;
 	Display *dpy;
+	
+	GdkWindow *excluded_gdk_window;
 };
 
 struct _LightdashCompositorClass
@@ -53,6 +56,7 @@ struct _LightdashCompositorClass
 
 LightdashCompositor * lightdash_compositor_get_default ();
 WnckScreen * lightdash_compositor_get_wnck_screen (LightdashCompositor *compositor);
+void lightdash_compositor_set_excluded_window (LightdashCompositor *compositor, GdkWindow *gdk_window);
 
 G_END_DECLS
 
