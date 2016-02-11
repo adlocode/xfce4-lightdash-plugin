@@ -1245,7 +1245,7 @@ lightdash_windows_view_get_window_picture (LightTask *task)
 	return surface;
 }
 
-static GdkFilterReturn lightdash_windows_view_damage_event (LightdashCompositedWindow *composited_window, LightTask *task)
+static void lightdash_windows_view_window_event (LightdashCompositedWindow *composited_window, LightTask *task)
 {
 	GtkAllocation allocation;
 	
@@ -1256,26 +1256,6 @@ static GdkFilterReturn lightdash_windows_view_damage_event (LightdashCompositedW
 	gtk_widget_queue_draw (task->image);
 	
 }
-/*
-	else if (ev->type == ConfigureNotify)
-	{
-		ce = &ev->xconfigure;
-		
-		if (ce->height == task->attr.height && ce->width == task->attr.width)
-			return GDK_FILTER_CONTINUE;
-			
-		task->attr.width = ce->width;
-		task->attr.height = ce->height;
-		cairo_xlib_surface_set_size (task->surface,
-							task->attr.width,
-							task->attr.height);
-		lightdash_windows_view_render_preview_at_size (task, allocation.width, allocation.height);
-		gtk_widget_queue_draw (task->image);
-
-	}
-	
-}
-*/
 
 void lightdash_windows_view_create_composited_window (LightTask *task)
 {
@@ -1388,7 +1368,7 @@ static void light_task_create_widgets (LightTask *task)
 	}
 	
 	g_signal_connect (task->composited_window, "damage-event",
-					G_CALLBACK (lightdash_windows_view_damage_event), task);
+					G_CALLBACK (lightdash_windows_view_window_event), task);
 							
 	gtk_drag_source_set (task->button,GDK_BUTTON1_MASK,targets,1,GDK_ACTION_MOVE);
 					

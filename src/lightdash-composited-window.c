@@ -23,7 +23,6 @@
  enum 
  {
 	 DAMAGE_SIGNAL,
-	 CONFIGURE_SIGNAL,
 	 LAST_SIGNAL
  };
  
@@ -41,15 +40,6 @@
 	 object_class->finalize = lightdash_composited_window_finalize;
 	 
 	 lightdash_composited_window_signals [DAMAGE_SIGNAL] = g_signal_new ("damage-event",
-				G_TYPE_FROM_CLASS (klass),
-				G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
-				0,
-				NULL,
-				NULL,
-				g_cclosure_marshal_VOID__VOID,
-				G_TYPE_NONE, 0);
-	
-	lightdash_composited_window_signals [CONFIGURE_SIGNAL] = g_signal_new ("configure-event",
 				G_TYPE_FROM_CLASS (klass),
 				G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
 				0,
@@ -130,7 +120,7 @@
 							self->attr.width,
 							self->attr.height);
 							
-		g_signal_emit (self, lightdash_composited_window_signals[CONFIGURE_SIGNAL], 0);
+		g_signal_emit (self, lightdash_composited_window_signals[DAMAGE_SIGNAL], 0);
 
 	}
 	
