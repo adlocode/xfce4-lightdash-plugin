@@ -20,6 +20,14 @@
  
  #include "lightdash-composited-window.h"
  
+ enum 
+ {
+	 DAMAGE_SIGNAL,
+	 LAST_SIGNAL
+ };
+ 
+ static guint lightdash_composited_window_signals [LAST_SIGNAL]={0};
+ 
  G_DEFINE_TYPE (LightdashCompositedWindow, lightdash_composited_window, G_TYPE_OBJECT)
  
  static void lightdash_composited_window_finalize (GObject *object);
@@ -29,6 +37,15 @@
 	 GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	 
 	 object_class->finalize = lightdash_composited_window_finalize;
+	 
+	 lightdash_composited_window_signals [DAMAGE_SIGNAL] = g_signal_new ("damage-event",
+				G_TYPE_FROM_CLASS (klass),
+				G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
+				0,
+				NULL,
+				NULL,
+				g_cclosure_marshal_VOID__VOID,
+				G_TYPE_NONE, 0);
  }
  
  static void lightdash_composited_window_init (LightdashCompositedWindow *self)
@@ -68,44 +85,38 @@
 	g_object_unref (task->compositor);
 }
  
- static GdkFilterReturn lightdash_composited_window_event (GdkXEvent *xevent, GdkEvent *event, LightdashCompositedWindow *task)
-{
+ static GdkFilterReturn lightdash_composited_window_event (GdkXEvent *xevent, GdkEvent *event, LightdashCompositedWindow *self)
+ {
 	int dv, dr;
 	XEvent *ev;
 	XDamageNotifyEvent *e;
 	XConfigureEvent *ce;
-	XDamageQueryExtension (task->compositor->dpy, &dv, &dr);
+	XDamageQueryExtension (self->compositor->dpy, &dv, &dr);
 	int width, height;
 	
 	ev = (XEvent*)xevent;
 	e = (XDamageNotifyEvent *)ev;
 	
-	#if GTK_CHECK_VERSION (3, 0, 0)
-	width = gtk_widget_get_allocated_width (task->image);
-	height = gtk_widget_get_allocated_height (task->image);
-	#else
-	width = task->image->allocation.width;
-	height = task->image->allocation.height;
-	#endif
-	
 	if (ev->type == dv + XDamageNotify)
 	{
 	
-	XDamageSubtract (task->compositor->dpy, e->damage, None, None);
+	XDamageSubtract (self->compositor->dpy, e->damage, None, None);
+	
+	g_signal_emit (self, lightdash_composited_window_signals[DAMAGE_SIGNAL], 0);
 	
 	}
 	else if (ev->type == ConfigureNotify)
 	{
 		ce = &ev->xconfigure;
 		
-		if (ce->height == task->attr.height && ce->width == task->attr.width)
+		if (ce->height == self->attr.height && ce->width == self->attr.width)
 			return GDK_FILTER_CONTINUE;
 			
-		task->attr.width = ce->width;
-		task->attr.height = ce->height;
-		cairo_xlib_surface_set_size (task->surface,
-							task->attr.width,
-							task->attr.height);
+		self->attr.width = ce->width;
+		self->attr.height = ce->height;
+		cairo_xlib_surface_set_size (self->surface,
+							self->attr.width,
+							self->attr.height);
 
 	}
 	
