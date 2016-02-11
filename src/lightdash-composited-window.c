@@ -22,6 +22,8 @@
  
  G_DEFINE_TYPE (LightdashCompositedWindow, lightdash_composited_window, G_TYPE_OBJECT)
  
+ static void lightdash_composited_window_finalize (GObject *object);
+ 
  static void lightdash_composited_window_class_init (LightdashCompositedWindowClass *klass)
  {
 	 GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -40,6 +42,31 @@
 	 self->compositor = lightdash_compositor_get_default ();
 	 
  }
+ 
+ static void lightdash_composited_window_finalize (GObject *object)
+ {
+	 LightdashCompositedWindow *task;
+	 task = LIGHTDASH_COMPOSITED_WINDOW (object);
+	 
+	 if (task->damage != None)
+	{
+		gdk_error_trap_push ();
+		XDamageDestroy (task->compositor->dpy, task->damage);
+		task->damage = None;
+		error = gdk_error_trap_pop ();
+	}
+	
+	
+	gdk_window_remove_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
+	
+	if (task->surface)
+	{	
+		cairo_surface_destroy (task->surface);
+		task->surface = NULL;
+	}
+	
+	g_object_unref (task->compositor);
+}
  
  static GdkFilterReturn lightdash_composited_window_event (GdkXEvent *xevent, GdkEvent *event, LightdashCompositedWindow *task)
 {
