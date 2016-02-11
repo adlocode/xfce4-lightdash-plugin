@@ -41,6 +41,70 @@
 	 
  }
  
+ static GdkFilterReturn lightdash_composited_window_event (GdkXEvent *xevent, GdkEvent *event, LightdashCompositedWindow *task)
+{
+	int dv, dr;
+	XEvent *ev;
+	XDamageNotifyEvent *e;
+	XConfigureEvent *ce;
+	XDamageQueryExtension (task->compositor->dpy, &dv, &dr);
+	int width, height;
+	
+	ev = (XEvent*)xevent;
+	e = (XDamageNotifyEvent *)ev;
+	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	width = gtk_widget_get_allocated_width (task->image);
+	height = gtk_widget_get_allocated_height (task->image);
+	#else
+	width = task->image->allocation.width;
+	height = task->image->allocation.height;
+	#endif
+	
+	if (ev->type == dv + XDamageNotify)
+	{
+	
+	XDamageSubtract (task->compositor->dpy, e->damage, None, None);
+	
+	}
+	else if (ev->type == ConfigureNotify)
+	{
+		ce = &ev->xconfigure;
+		
+		if (ce->height == task->attr.height && ce->width == task->attr.width)
+			return GDK_FILTER_CONTINUE;
+			
+		task->attr.width = ce->width;
+		task->attr.height = ce->height;
+		cairo_xlib_surface_set_size (task->surface,
+							task->attr.width,
+							task->attr.height);
+
+	}
+	
+	return GDK_FILTER_CONTINUE;
+}
+ 
+ cairo_surface_t *
+lightdash_composited_window_get_window_picture (LightdashCompositedWindow *task)
+{
+	cairo_surface_t *surface;
+	XRenderPictFormat *format;
+		
+	format = None;
+			
+	format = XRenderFindVisualFormat (task->compositor->dpy, task->attr.visual);	
+
+	surface = cairo_xlib_surface_create_with_xrender_format (task->compositor->dpy,
+			task->xid,
+			task->attr.screen,
+			format,
+			task->attr.width,
+			task->attr.height);
+			
+	return surface;
+}
+ 
  LightdashCompositedWindow * lightdash_composited_window_new_from_window (WnckWindow *window)
  {
 	LightdashCompositedWindow *composited_window;
@@ -75,4 +139,6 @@
 								composited_window);
 				}
 		//}
+		
+	return composited_window;
 }
