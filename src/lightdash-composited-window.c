@@ -23,6 +23,7 @@
  enum 
  {
 	 DAMAGE_SIGNAL,
+	 CONFIGURE_SIGNAL,
 	 LAST_SIGNAL
  };
  
@@ -31,6 +32,7 @@
  G_DEFINE_TYPE (LightdashCompositedWindow, lightdash_composited_window, G_TYPE_OBJECT)
  
  static void lightdash_composited_window_finalize (GObject *object);
+ static GdkFilterReturn lightdash_composited_window_event (GdkXEvent *xevent, GdkEvent *event, LightdashCompositedWindow *self);
  
  static void lightdash_composited_window_class_init (LightdashCompositedWindowClass *klass)
  {
@@ -39,6 +41,15 @@
 	 object_class->finalize = lightdash_composited_window_finalize;
 	 
 	 lightdash_composited_window_signals [DAMAGE_SIGNAL] = g_signal_new ("damage-event",
+				G_TYPE_FROM_CLASS (klass),
+				G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
+				0,
+				NULL,
+				NULL,
+				g_cclosure_marshal_VOID__VOID,
+				G_TYPE_NONE, 0);
+	
+	lightdash_composited_window_signals [CONFIGURE_SIGNAL] = g_signal_new ("configure-event",
 				G_TYPE_FROM_CLASS (klass),
 				G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
 				0,
@@ -63,6 +74,7 @@
  static void lightdash_composited_window_finalize (GObject *object)
  {
 	 LightdashCompositedWindow *task;
+	 gint error;
 	 task = LIGHTDASH_COMPOSITED_WINDOW (object);
 	 
 	 if (task->damage != None)
@@ -74,7 +86,7 @@
 	}
 	
 	
-	gdk_window_remove_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
+	gdk_window_remove_filter (task->gdk_window, (GdkFilterFunc) lightdash_composited_window_event, task);
 	
 	if (task->surface)
 	{	
@@ -117,6 +129,8 @@
 		cairo_xlib_surface_set_size (self->surface,
 							self->attr.width,
 							self->attr.height);
+							
+		g_signal_emit (self, lightdash_composited_window_signals[CONFIGURE_SIGNAL], 0);
 
 	}
 	
