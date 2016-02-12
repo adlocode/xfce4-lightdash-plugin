@@ -54,7 +54,6 @@ static void lightdash_windows_view_skipped_window_state_changed (WnckWindow *win
 static void my_tasklist_screen_composited_changed (GdkScreen *screen, LightdashWindowsView *tasklist);
 static void my_tasklist_free_skipped_windows (LightdashWindowsView *tasklist);
 static void lightdash_windows_view_unrealize (GtkWidget *widget);
-static int lightdash_windows_view_xhandler_xerror (Display *dpy, XErrorEvent *e);
 static gint my_tasklist_button_compare (gconstpointer a, gconstpointer b, gpointer data);
 static gboolean lightdash_windows_view_drag_drop_handl (GtkWidget *widget, 
 			GdkDragContext *context, gint x, gint y, guint time);
@@ -1230,26 +1229,6 @@ gboolean lightdash_windows_view_drag_motion (GtkWidget *widget, GdkDragContext *
 	return TRUE;
 }
 
-cairo_surface_t *
-lightdash_windows_view_get_window_picture (LightTask *task)
-{
-	cairo_surface_t *surface;
-	XRenderPictFormat *format;
-		
-	format = None;
-			
-	format = XRenderFindVisualFormat (task->tasklist->dpy, task->attr.visual);	
-
-	surface = cairo_xlib_surface_create_with_xrender_format (task->tasklist->dpy,
-			task->xid,
-			task->attr.screen,
-			format,
-			task->attr.width,
-			task->attr.height);
-			
-	return surface;
-}
-
 static void lightdash_windows_view_window_event (LightdashCompositedWindow *composited_window, LightTask *task)
 {
 	GtkAllocation allocation;
@@ -1260,34 +1239,6 @@ static void lightdash_windows_view_window_event (LightdashCompositedWindow *comp
 	
 	gtk_widget_queue_draw (task->image);
 	
-}
-
-void lightdash_windows_view_create_composited_window (LightTask *task)
-{
-	XGetWindowAttributes (task->tasklist->dpy, task->xid, &task->attr);
-	
-	task->gdk_window = gdk_x11_window_foreign_new_for_display 
-		(gdk_screen_get_display (task->tasklist->gdk_screen), task->xid);
-	
-	if (task->tasklist->composited 
-		&& task->attr.height != 0)
-		{
-			XCompositeRedirectWindow (task->tasklist->dpy, task->xid,
-					CompositeRedirectAutomatic);
-			
-			task->surface = lightdash_windows_view_get_window_picture (task);
-	
-			/* Ignore damage events on its own window to prevent an infinite loop*/
-			if (task->tasklist->parent_gdk_window && task->gdk_window != task->tasklist->parent_gdk_window)
-				{
-					task->damage = XDamageCreate (task->tasklist->dpy, 
-									task->xid, 
-									XDamageReportDeltaRectangles);
-					XDamageSubtract (task->tasklist->dpy, task->damage, None, None);				
-					XSync (task->tasklist->dpy, False);
-					//gdk_window_add_filter (task->gdk_window, (GdkFilterFunc) lightdash_window_event, task);
-				}
-		}
 }
 	
 static void light_task_create_widgets (LightTask *task)
