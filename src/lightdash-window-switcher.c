@@ -355,6 +355,8 @@ static void lightdash_windows_view_realize (GtkWidget *widget)
 	
 	/* Get compositor instance*/
 	tasklist->compositor = lightdash_compositor_get_default ();
+	
+	/* Ignore damage events on its own window to prevent an infinite loop */
 	lightdash_compositor_set_excluded_window (tasklist->compositor, tasklist->parent_gdk_window);
 	
 	tasklist->screen = lightdash_compositor_get_wnck_screen (tasklist->compositor);
