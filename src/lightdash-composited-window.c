@@ -85,6 +85,8 @@
 	}
 	
 	g_object_unref (task->compositor);
+	
+	G_OBJECT_CLASS (lightdash_composited_window_parent_class)->finalize (object);
 }
 
 void lightdash_composited_window_get_size (LightdashCompositedWindow *self, gint *width, gint *height)
