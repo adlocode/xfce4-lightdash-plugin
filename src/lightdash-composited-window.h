@@ -51,6 +51,7 @@ struct _LightdashCompositedWindowClass
 };
 
 LightdashCompositedWindow * lightdash_composited_window_new_from_window (WnckWindow *window);
+void lightdash_composited_window_get_size (LightdashCompositedWindow *self, gint *width, gint *height);
 
 G_END_DECLS
 

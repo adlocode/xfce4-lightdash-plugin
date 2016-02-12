@@ -882,17 +882,19 @@ static void my_tasklist_button_clicked (GtkButton *button, LightTask *task)
 
 void lightdash_windows_view_render_preview_at_size (LightTask *task, gint width, gint height)
 {
+		gint src_width, src_height;
 		gint dest_width, dest_height;
 		gfloat factor;
 		cairo_t *cr;
 		gint pixbuf_width, pixbuf_height;
 		
+		lightdash_composited_window_get_size (task->composited_window, &src_width, &src_height);
 		
-		factor = (gfloat) MIN ((gfloat)width / (gfloat)task->composited_window->attr.width,
-						(gfloat)height / (gfloat)task->composited_window->attr.height);
+		factor = (gfloat) MIN ((gfloat)width / (gfloat)src_width,
+						(gfloat)height / (gfloat)src_height);
 				
-		dest_width = task->composited_window->attr.width*factor;
-		dest_height = task->composited_window->attr.height*factor;
+		dest_width = src_width*factor;
+		dest_height = src_height*factor;
 		
 		cairo_surface_destroy (task->image_surface);
 		
@@ -902,11 +904,11 @@ void lightdash_windows_view_render_preview_at_size (LightTask *task, gint width,
 		if ((gint)dest_height == 0)
 			dest_height = 1;
 		
-		if (dest_width > task->composited_window->attr.width && dest_height > task->composited_window->attr.height)
+		if (dest_width > src_width && dest_height > src_height)
 		{
 			factor = 1.0;
-			dest_width = task->composited_window->attr.width;
-			dest_height = task->composited_window->attr.height;
+			dest_width = src_width;
+			dest_height = src_height;
 		}
 		
 		task->surface_width = dest_width;
@@ -921,7 +923,7 @@ void lightdash_windows_view_render_preview_at_size (LightTask *task, gint width,
 		
 		if (wnck_window_is_minimized (task->window) || task->tasklist->composited == FALSE)
 		{
-			cairo_rectangle (cr, 0, 0, task->composited_window->attr.width*factor, task->composited_window->attr.height*factor);
+			cairo_rectangle (cr, 0, 0, src_width*factor, src_height*factor);
 			
 			cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
 			
@@ -944,7 +946,7 @@ void lightdash_windows_view_render_preview_at_size (LightTask *task, gint width,
 		{
 			cairo_scale (cr, factor, factor);
 
-			cairo_rectangle (cr, 0, 0, task->composited_window->attr.width, task->composited_window->attr.height);
+			cairo_rectangle (cr, 0, 0, src_width, src_height);
 			
 			cairo_set_source_surface (cr, task->composited_window->surface, 0, 0);
 		
@@ -1063,12 +1065,15 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 static void my_tasklist_drag_begin_handl
 (GtkWidget *widget, GdkDragContext *context, LightTask *task)
 {
+	gint src_width, src_height;
 	gfloat size, factor, surface_width, surface_height;
 	cairo_t *cr;
 	
 	g_signal_emit_by_name (task->tasklist, "task-button-drag-begin");
 	
 	gtk_widget_hide (task->button);
+	
+	lightdash_composited_window_get_size (task->composited_window, &src_width, &src_height);
 	
 	if (task->image_surface)
 	{
@@ -1101,7 +1106,7 @@ static void my_tasklist_drag_begin_handl
 	#endif
 	
 	cairo_scale (cr, factor, factor);
-	cairo_rectangle (cr, 0, 0, task->composited_window->attr.width, task->composited_window->attr.height);	
+	cairo_rectangle (cr, 0, 0, src_width, src_height);	
 	cairo_set_source_surface (cr, task->image_surface, 0, 0);
 	cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);	
 	cairo_fill (cr);		

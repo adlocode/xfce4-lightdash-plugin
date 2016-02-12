@@ -86,6 +86,15 @@
 	
 	g_object_unref (task->compositor);
 }
+
+void lightdash_composited_window_get_size (LightdashCompositedWindow *self, gint *width, gint *height)
+{
+	if (width)
+		*width = self->attr.width;
+		
+	if (height)
+		*height = self->attr.height;
+}
  
  static GdkFilterReturn lightdash_composited_window_event (GdkXEvent *xevent, GdkEvent *event, LightdashCompositedWindow *self)
  {
