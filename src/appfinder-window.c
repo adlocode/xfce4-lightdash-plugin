@@ -47,6 +47,7 @@
 #include "lightdash.h"
 #include "lightdash-window-switcher.h"
 #include "lightdash-pager.h"
+#include "lightdash-composited-window.h"
 
 #if GTK_CHECK_VERSION (3, 0, 0)
 #else
@@ -211,6 +212,9 @@ struct _XfceAppfinderWindow
   gulong                      property_watch_id;
   gulong                      categories_changed_id;
   gboolean					  supports_alpha;
+  
+  WnckWindow				  *root;
+  LightdashCompositedWindow *cw;
 };
 
 typedef struct
@@ -427,14 +431,25 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 {
 	GtkStyle *style;
 	GdkColor color;
+	LightdashCompositedWindow *cw;
 	#if GTK_CHECK_VERSION (3, 0, 0)
 	#else
 	cairo_t *cr;
 	#endif
 	
+	cw = NULL;
+	
 	if (!gtk_widget_get_realized (widget))
 	{
 		gtk_widget_realize (widget);
+	}
+	
+	if (!window->root)
+	{
+		window->root = lightdash_compositor_get_root_window (lightdash_compositor_get_default ());
+		window->cw = lightdash_composited_window_new_from_window (window->root);
+		g_signal_connect_swapped (window->cw, "damage-event",
+					G_CALLBACK (gtk_widget_queue_draw), GTK_WIDGET (window));
 	}
 	
 	style = gtk_widget_get_style (widget);
@@ -449,6 +464,16 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 	#else
 	cr = gdk_cairo_create (gtk_widget_get_window (widget));
 	#endif
+	
+	if (window->cw)
+	{
+		cairo_set_source_surface (cr,
+						window->cw->surface,
+						0, 0);
+		cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+		cairo_paint (cr);
+	}
+	
 	if (window->supports_alpha)
 	{
 	cairo_set_source_rgba (cr, color.red/65535.0, 
@@ -463,7 +488,7 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 							color.blue/65535.0);
 	}
 							
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 	cairo_paint (cr);
 	cairo_destroy (cr);
 	
@@ -502,6 +527,8 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   gint                integer;
    GtkWidget *icon_apps;
     
+    window->cw = NULL;
+    window->root = NULL;
     window->supports_alpha = FALSE;
     window->bookmarks_buttons = NULL;
     

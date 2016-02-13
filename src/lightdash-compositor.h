@@ -57,6 +57,7 @@ struct _LightdashCompositorClass
 LightdashCompositor * lightdash_compositor_get_default ();
 WnckScreen * lightdash_compositor_get_wnck_screen (LightdashCompositor *compositor);
 void lightdash_compositor_set_excluded_window (LightdashCompositor *compositor, GdkWindow *gdk_window);
+WnckWindow * lightdash_compositor_get_root_window (LightdashCompositor *compositor);
 
 G_END_DECLS
 

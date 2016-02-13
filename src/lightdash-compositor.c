@@ -69,6 +69,23 @@ void lightdash_compositor_set_excluded_window (LightdashCompositor *compositor, 
 {
 	compositor->excluded_gdk_window = gdk_window;
 }
+
+ WnckWindow * lightdash_compositor_get_root_window (LightdashCompositor *compositor)
+ {
+	 GList *li;
+	 
+	 for (li = wnck_screen_get_windows (compositor->screen); li != NULL; li = li->next)
+	 {
+		 WnckWindow *win = WNCK_WINDOW (li->data);
+		 
+		 if (wnck_window_get_window_type (win) == WNCK_WINDOW_DESKTOP)
+		 {
+			 return win;
+		 }
+	 }
+	 
+	 return NULL;
+ }
  
  LightdashCompositor * lightdash_compositor_get_default ()
  {
