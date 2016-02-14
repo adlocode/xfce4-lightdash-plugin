@@ -215,6 +215,7 @@ struct _XfceAppfinderWindow
   
   WnckWindow				  *root;
   LightdashCompositedWindow *cw;
+  LightdashCompositor *compositor;
 };
 
 typedef struct
@@ -432,6 +433,8 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 	GtkStyle *style;
 	GdkColor color;
 	LightdashCompositedWindow *cw;
+	GdkWindow *gdk_win;
+	int x, y;
 	#if GTK_CHECK_VERSION (3, 0, 0)
 	#else
 	cairo_t *cr;
@@ -446,10 +449,12 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 	
 	if (!window->root)
 	{
-		window->root = lightdash_compositor_get_root_window (lightdash_compositor_get_default ());
+		window->compositor = lightdash_compositor_get_default ();
+		window->root = lightdash_compositor_get_root_window (window->compositor);
 		window->cw = lightdash_composited_window_new_from_window (window->root);
 		g_signal_connect_swapped (window->cw, "damage-event",
 					G_CALLBACK (gtk_widget_queue_draw), GTK_WIDGET (window));
+		
 	}
 	
 	style = gtk_widget_get_style (widget);
@@ -467,9 +472,11 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 	
 	if (window->cw)
 	{
+		gdk_win = gtk_widget_get_window (widget);
+		gdk_window_get_origin (gdk_win, &x, &y);
 		cairo_set_source_surface (cr,
 						window->cw->surface,
-						0, 0);
+						-x, -y);
 		cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 		cairo_paint (cr);
 	}
