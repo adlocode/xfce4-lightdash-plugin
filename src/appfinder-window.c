@@ -214,6 +214,7 @@ struct _XfceAppfinderWindow
   gboolean					  supports_alpha;
   
   WnckWindow				  *root;
+  WnckWindow				  *wnck_window;
   LightdashCompositedWindow *cw;
   LightdashCompositor *compositor;
 };
@@ -420,6 +421,15 @@ xfce_lightdash_window_screen_changed (GtkWidget *widget, GdkScreen *wscreen, Xfc
 	gtk_widget_set_colormap (widget, colormap);
 }
 
+static void lightdash_window_workspace_changed (WnckScreen *screen, WnckWindow *previous, XfceAppfinderWindow *window)
+{
+	if (gtk_widget_get_visible (GTK_WIDGET (window)))
+		gdk_window_focus (gtk_widget_get_window (GTK_WIDGET (window)), GDK_CURRENT_TIME);
+		
+		/* gtk_window_present () doesn't seem to work in this instance */
+
+}
+
 #if GTK_CHECK_VERSION (3, 0, 0)
 
 gboolean
@@ -450,6 +460,8 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 	if (!window->root)
 	{
 		window->compositor = lightdash_compositor_get_default ();
+		g_signal_connect (lightdash_compositor_get_wnck_screen (window->compositor), "active-window-changed",
+							G_CALLBACK (lightdash_window_workspace_changed), window);
 		window->root = lightdash_compositor_get_root_window (window->compositor);
 		window->cw = lightdash_composited_window_new_from_window (window->root);
 		g_signal_connect_swapped (window->cw, "damage-event",
@@ -501,15 +513,6 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 	
 	return FALSE;
 	
-}
-
-static void lightdash_window_workspace_changed (LightdashWindowsView *tasklist, XfceAppfinderWindow *window)
-{
-	if (gtk_widget_get_visible (GTK_WIDGET (window)))
-		gdk_window_focus (gtk_widget_get_window (GTK_WIDGET (window)), GDK_CURRENT_TIME);
-		
-		/* gtk_window_present () doesn't seem to work in this instance */
-
 }
 	
 	
@@ -726,11 +729,6 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   
   g_signal_connect_swapped (G_OBJECT (window->window_switcher), "task-button-clicked",
 							G_CALLBACK (gtk_widget_hide), GTK_WIDGET (window));
-  
-  /* Prevent window from losing focus when we switch workspace
-   * or when other windows change workspace */		
-  g_signal_connect (G_OBJECT (window->window_switcher), "workspace-changed",
-							G_CALLBACK (lightdash_window_workspace_changed), window);
   
 						
 	//Add pager
