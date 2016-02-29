@@ -148,7 +148,8 @@ static void       xfce_appfinder_window_execute                       (XfceAppfi
                                                                       gboolean                     close_on_succeed);                                                                     
 static void lightdash_window_set_property (GObject *object, guint property_id, const GValue *value, GParamSpec *pspec);
 static void lightdash_window_get_property (GObject *object, guint property_id, GValue *value, GParamSpec *pspec);
-static void lightdash_window_constructed (GObject *object);                                                                  
+static void lightdash_window_constructed (GObject *object);
+static void lightdash_window_realize (GtkWidget *widget);                                                                  
                                                                                                                                                                                                     
 gboolean
 xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderWindow *window);
@@ -254,6 +255,7 @@ xfce_appfinder_window_class_init (XfceAppfinderWindowClass *klass)
   //gtkwidget_class->unmap = xfce_appfinder_window_unmap;
   gtkwidget_class->key_press_event = xfce_appfinder_window_key_press_event;
   gtkwidget_class->window_state_event = xfce_appfinder_window_window_state_event;
+  gtkwidget_class->realize = lightdash_window_realize;
   
   obj_properties[PROP_PLUGIN] =
 	g_param_spec_pointer ("plugin",
@@ -459,9 +461,6 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 	
 	if (!window->root)
 	{
-		window->compositor = lightdash_compositor_get_default ();
-		g_signal_connect (lightdash_compositor_get_wnck_screen (window->compositor), "active-window-changed",
-							G_CALLBACK (lightdash_window_workspace_changed), window);
 		window->root = lightdash_compositor_get_root_window (window->compositor);
 		window->cw = lightdash_composited_window_new_from_window (window->root);
 		g_signal_connect_swapped (window->cw, "damage-event",
@@ -1007,6 +1006,16 @@ xfce_appfinder_window_unmap (GtkWidget *widget)
   return (*GTK_WIDGET_CLASS (xfce_appfinder_window_parent_class)->unmap) (widget);
 } */
 
+
+static void lightdash_window_realize (GtkWidget *widget)
+{
+	XfceAppfinderWindow *window = XFCE_APPFINDER_WINDOW (widget);
+	(*GTK_WIDGET_CLASS (xfce_appfinder_window_parent_class)->realize) (widget);
+	
+	window->compositor = lightdash_compositor_get_default ();
+	g_signal_connect (lightdash_compositor_get_wnck_screen (window->compositor), "active-window-changed",
+					G_CALLBACK (lightdash_window_workspace_changed), window);
+}
 
 
 static gboolean
