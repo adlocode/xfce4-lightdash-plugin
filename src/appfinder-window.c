@@ -444,7 +444,6 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 {
 	GtkStyle *style;
 	GdkColor color;
-	LightdashCompositedWindow *cw;
 	GdkWindow *gdk_win;
 	int x, y;
 	#if GTK_CHECK_VERSION (3, 0, 0)
@@ -452,7 +451,6 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 	cairo_t *cr;
 	#endif
 	
-	cw = NULL;
 	
 	if (!gtk_widget_get_realized (widget))
 	{
@@ -499,7 +497,11 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 							
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 	cairo_paint (cr);
+	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	#else
 	cairo_destroy (cr);
+	#endif
 	
 	return FALSE;
 	
