@@ -459,15 +459,6 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 		gtk_widget_realize (widget);
 	}
 	
-	if (!window->root)
-	{
-		window->root = lightdash_compositor_get_root_window (window->compositor);
-		window->cw = lightdash_composited_window_new_from_window (window->root);
-		g_signal_connect_swapped (window->cw, "damage-event",
-					G_CALLBACK (gtk_widget_queue_draw), GTK_WIDGET (window));
-		
-	}
-	
 	style = gtk_widget_get_style (widget);
 	
 	if (style == NULL)
@@ -1015,6 +1006,15 @@ static void lightdash_window_realize (GtkWidget *widget)
 	window->compositor = lightdash_compositor_get_default ();
 	g_signal_connect (lightdash_compositor_get_wnck_screen (window->compositor), "active-window-changed",
 					G_CALLBACK (lightdash_window_workspace_changed), window);
+					
+	if (!window->root)
+	{
+		window->root = lightdash_compositor_get_root_window (window->compositor);
+		window->cw = lightdash_composited_window_new_from_window (window->root);
+		g_signal_connect_swapped (window->cw, "damage-event",
+					G_CALLBACK (gtk_widget_queue_draw), GTK_WIDGET (window));
+		
+	}
 }
 
 
