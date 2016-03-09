@@ -75,13 +75,18 @@ void lightdash_configure (XfcePanelPlugin *plugin,
 	
 	dialog = xfce_titled_dialog_new_with_buttons (_("lightdash"),
 						window,
-						GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_NO_SEPARATOR,
+						GTK_DIALOG_DESTROY_WITH_PARENT 
+							#if GTK_CHECK_VERSION (3, 0, 0)
+							#else
+							| GTK_DIALOG_NO_SEPARATOR
+							#endif
+						,
 						GTK_STOCK_HELP, GTK_RESPONSE_HELP,
 						GTK_STOCK_CLOSE, GTK_RESPONSE_OK,
 						NULL);
 	
 	#if GTK_CHECK_VERSION (3, 0, 0)
-	hbox = gtk_box_new (GTK_ORIENTATION_VERTICAL);
+	hbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
 	#else
 	hbox = gtk_hbox_new (FALSE, 0);
 	#endif
@@ -105,7 +110,7 @@ void lightdash_configure (XfcePanelPlugin *plugin,
 	
 	
 	#if GTK_CHECK_VERSION (3, 0, 0)
-	hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL);
+	hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
 	#else
 	hbox = gtk_hbox_new (FALSE, 0);
 	#endif

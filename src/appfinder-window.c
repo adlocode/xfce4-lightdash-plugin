@@ -406,8 +406,27 @@ void
 xfce_lightdash_window_screen_changed (GtkWidget *widget, GdkScreen *wscreen, XfceAppfinderWindow *window)
 {
 	GdkScreen *screen;
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	GdkVisual *visual;
+	#else
 	GdkColormap *colormap;
+	#endif
 	
+	#if GTK_CHECK_VERSION (3, 0, 0)
+	visual = gdk_screen_get_rgba_visual (screen);
+	
+	if (!visual)
+	{
+		visual = gdk_screen_get_system_visual (screen);
+		window->supports_alpha = FALSE;
+	}
+	else
+	{
+		window->supports_alpha = TRUE;
+	}
+	
+	gtk_widget_set_visual (widget, visual);
+	#else
 	screen = gtk_widget_get_screen (widget);
 	colormap = gdk_screen_get_rgba_colormap (screen);
 	if (!colormap)
@@ -421,6 +440,7 @@ xfce_lightdash_window_screen_changed (GtkWidget *widget, GdkScreen *wscreen, Xfc
 	}
 	
 	gtk_widget_set_colormap (widget, colormap);
+	#endif
 }
 
 static void lightdash_window_workspace_changed (WnckScreen *screen, WnckWindow *previous, XfceAppfinderWindow *window)
@@ -689,7 +709,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   gtk_entry_completion_set_inline_completion (completion, TRUE);
   
 #if GTK_CHECK_VERSION (3, 0, 0)
-  window->bin_collapsed = gtk_paned_new (GTK_ORIENTATION_HORIZONTAL)
+  window->bin_collapsed = gtk_paned_new (GTK_ORIENTATION_HORIZONTAL);
 #else
   window->bin_collapsed = gtk_alignment_new (0.0, 0.0, 1.0, 1.0);
 #endif
