@@ -183,7 +183,7 @@ struct _XfceAppfinderWindow
 
   GtkWidget                  *paned;
   GtkWidget                  *entry;
-  GtkWidget                  *image;
+  //GtkWidget                  *image;
   GtkWidget                  *view;
   GtkWidget                  *viewscroll;
   GtkWidget					 *scroll;
@@ -638,15 +638,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, TRUE, 0);
   gtk_widget_show (hbox);
 
-  align = gtk_alignment_new (0.5, 0.0, 0.0, 0.0);
-  gtk_box_pack_start (GTK_BOX (hbox), align, FALSE, FALSE, 0);
-  gtk_widget_show (align);
-
   window->icon_find = xfce_appfinder_model_load_pixbuf (XFCE_APPFINDER_STOCK_FIND, XFCE_APPFINDER_ICON_SIZE_48);
-  window->image = image = gtk_image_new_from_pixbuf (window->icon_find);
-  gtk_widget_set_size_request (image, 48, 48);
-  gtk_container_add (GTK_CONTAINER (align), image);
-  //gtk_widget_show (image);
   
    icon_apps = gtk_image_new_from_icon_name ("applications-other", 
 	GTK_ICON_SIZE_DIALOG);
@@ -1688,8 +1680,8 @@ xfce_appfinder_window_update_image (XfceAppfinderWindow *window,
     pixbuf = window->icon_find;
 
   /* gtk doesn't check this */
-  if (gtk_image_get_pixbuf (GTK_IMAGE (window->image)) != pixbuf)
-    gtk_image_set_from_pixbuf (GTK_IMAGE (window->image), pixbuf);
+  //if (gtk_image_get_pixbuf (GTK_IMAGE (window->image)) != pixbuf)
+    //gtk_image_set_from_pixbuf (GTK_IMAGE (window->image), pixbuf);
 }
 
 
