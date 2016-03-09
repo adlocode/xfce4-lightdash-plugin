@@ -186,7 +186,6 @@ lightdash_composited_window_get_window_picture (LightdashCompositedWindow *task)
 									composited_window->xid, 
 									XDamageReportDeltaRectangles);
 					XDamageSubtract (composited_window->compositor->dpy, composited_window->damage, None, None);				
-					XSync (composited_window->compositor->dpy, False);
 					gdk_window_add_filter (composited_window->gdk_window, 
 								(GdkFilterFunc) lightdash_composited_window_event, 
 								composited_window);

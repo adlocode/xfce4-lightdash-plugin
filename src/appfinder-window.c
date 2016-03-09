@@ -502,8 +502,11 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 							color.green/65535.0, 
 							color.blue/65535.0);
 	}
-							
-	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	
+	if (window->cw)						
+		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	else
+		cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 	cairo_paint (cr);
 	
 	#if GTK_CHECK_VERSION (3, 0, 0)
