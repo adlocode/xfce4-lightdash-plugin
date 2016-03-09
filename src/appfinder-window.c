@@ -618,20 +618,24 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   vbox2 = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
 #else
   vbox2 = gtk_vbox_new (FALSE, 0);
-#endif
-  gtk_box_pack_start (GTK_BOX (hbox), vbox2, TRUE, TRUE, 0);
-  gtk_widget_show (vbox2);
-
   align = gtk_alignment_new (0.0, 0.0, 1.0, 0.0);
   gtk_box_pack_start (GTK_BOX (vbox2), align, TRUE, TRUE, 0);
   gtk_widget_show (align);
+#endif
+  gtk_box_pack_start (GTK_BOX (hbox), vbox2, TRUE, TRUE, 0);
+  gtk_widget_show (vbox2);
 
   window->entry = entry = gtk_entry_new ();
   gtk_container_add (GTK_CONTAINER (align), entry);
   g_signal_connect (G_OBJECT (entry), "icon-release",
       G_CALLBACK (xfce_appfinder_window_entry_icon_released), window);
+  #if GTK_CHECK_VERSION (3, 0, 0)
+  g_signal_connect (G_OBJECT (entry), "realize",
+      G_CALLBACK (xfce_appfinder_window_set_padding), entry);
+  #else
   g_signal_connect (G_OBJECT (entry), "realize",
       G_CALLBACK (xfce_appfinder_window_set_padding), align);
+  #endif
   g_signal_connect_swapped (G_OBJECT (entry), "changed",
       G_CALLBACK (xfce_appfinder_window_entry_changed), window);
   g_signal_connect (G_OBJECT (entry), "activate",
@@ -1652,7 +1656,11 @@ xfce_appfinder_window_set_padding (GtkWidget *entry,
   /* 48 is the icon size of XFCE_APPFINDER_ICON_SIZE_48 */
   gtk_widget_get_allocation (entry, &alloc);
   padding = (48 - alloc.height) / 2;
+  #if GTK_CHECK_VERSION (3, 0, 0)
+  gtk_widget_set_margin_top (align, MAX (0, padding));
+  #else
   gtk_alignment_set_padding (GTK_ALIGNMENT (align), MAX (0, padding), 0, 0, 0);
+  #endif
 }
 
 
