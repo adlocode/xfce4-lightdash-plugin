@@ -412,6 +412,8 @@ xfce_lightdash_window_screen_changed (GtkWidget *widget, GdkScreen *wscreen, Xfc
 	GdkColormap *colormap;
 	#endif
 	
+	screen = gtk_widget_get_screen (widget);
+	
 	#if GTK_CHECK_VERSION (3, 0, 0)
 	visual = gdk_screen_get_rgba_visual (screen);
 	
@@ -427,7 +429,6 @@ xfce_lightdash_window_screen_changed (GtkWidget *widget, GdkScreen *wscreen, Xfc
 	
 	gtk_widget_set_visual (widget, visual);
 	#else
-	screen = gtk_widget_get_screen (widget);
 	colormap = gdk_screen_get_rgba_colormap (screen);
 	if (!colormap)
 	{
