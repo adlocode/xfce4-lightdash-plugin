@@ -99,7 +99,7 @@ AC_ARG_ENABLE([gtk3],
               [enable_gtk3=$enableval], [enable_gtk3=no])
 if test "x$enable_gtk3" = "xyes"; then
   XDT_CHECK_PACKAGE([LIBXFCE4UI], [libxfce4ui-2], [4.10.0])
-  XDT_CHECK_PACKAGE([GTK], [gtk+-3.0], [3.14.0])
+  XDT_CHECK_PACKAGE([GTK], [gtk+-3.0], [3.2.0])
   XDT_CHECK_PACKAGE([LIBWNCK], [libwnck-3.0], [3.0.0])
 else
   XDT_CHECK_PACKAGE([LIBXFCE4UI], [libxfce4ui-1], [4.10.0])
