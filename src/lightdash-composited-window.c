@@ -181,8 +181,7 @@ lightdash_composited_window_get_window_picture (LightdashCompositedWindow *task)
 			composited_window->surface = lightdash_composited_window_get_window_picture (composited_window);
 	
 			/* Ignore damage events on excluded windows */
-			if (composited_window->compositor->excluded_gdk_window && 
-					composited_window->gdk_window != composited_window->compositor->excluded_gdk_window)
+			if (composited_window->gdk_window != composited_window->compositor->excluded_gdk_window)
 				{
 					composited_window->damage = XDamageCreate (composited_window->compositor->dpy, 
 									composited_window->xid, 
