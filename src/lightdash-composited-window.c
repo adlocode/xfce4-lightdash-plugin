@@ -161,6 +161,7 @@ lightdash_composited_window_get_window_picture (LightdashCompositedWindow *task)
  LightdashCompositedWindow * lightdash_composited_window_new_from_window (WnckWindow *window)
  {
 	LightdashCompositedWindow *composited_window;
+	gint error;
 	 
 	composited_window = LIGHTDASH_COMPOSITED_WINDOW (g_object_new (LIGHTDASH_TYPE_COMPOSITED_WINDOW, NULL));
 	 
@@ -173,6 +174,7 @@ lightdash_composited_window_get_window_picture (LightdashCompositedWindow *task)
 	//if (task->tasklist->composited 
 		//&& task->attr.height != 0)
 		//{
+			gdk_error_trap_push ();
 			XCompositeRedirectWindow (composited_window->compositor->dpy, composited_window->xid,
 					CompositeRedirectAutomatic);
 			
@@ -190,6 +192,7 @@ lightdash_composited_window_get_window_picture (LightdashCompositedWindow *task)
 								(GdkFilterFunc) lightdash_composited_window_event, 
 								composited_window);
 				}
+			error = gdk_error_trap_pop ();
 		//}
 		
 	return composited_window;
