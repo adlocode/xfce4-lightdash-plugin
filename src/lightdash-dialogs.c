@@ -50,6 +50,11 @@ static void lightdash_preferences_entry_changed (GtkEditable *editable, Lightdas
 	gtk_label_set_text (GTK_LABEL (lightdash->button_label), text);
 	lightdash->button_title = g_strdup (text);
 }
+
+static void lightdash_show_desktop_button_toggled (GtkToggleButton *button, LightdashPlugin *lightdash)
+{
+	lightdash->show_desktop = gtk_toggle_button_get_active (button);
+}
 				
 void lightdash_configure (XfcePanelPlugin *plugin,
 							LightdashPlugin *lightdash)
@@ -59,6 +64,7 @@ void lightdash_configure (XfcePanelPlugin *plugin,
 	GtkWidget *label;
 	GtkWidget *entry;
 	GtkWidget *opacity_slider;
+	GtkWidget *show_desktop_button;
 	GtkWidget *toplevel;
 	GtkWindow *window;
 	
@@ -133,6 +139,14 @@ void lightdash_configure (XfcePanelPlugin *plugin,
 			G_CALLBACK (lightdash_opacity_slider_changed), lightdash);
 	
 	gtk_widget_show_all (hbox);
+	
+	show_desktop_button = gtk_check_button_new_with_label (_("Show desktop behind dashboard"));
+	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (show_desktop_button), lightdash->show_desktop);
+	gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), 
+		show_desktop_button, TRUE, TRUE, 6);
+	g_signal_connect (G_OBJECT (show_desktop_button), "toggled",
+		G_CALLBACK (lightdash_show_desktop_button_toggled), lightdash);
+	
 	 				
 	g_object_set_data (G_OBJECT (plugin), "dialog", dialog);
 	

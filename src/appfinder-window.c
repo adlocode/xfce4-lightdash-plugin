@@ -491,7 +491,7 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 	cr = gdk_cairo_create (gtk_widget_get_window (widget));
 	#endif
 	
-	if (window->cw)
+	if (window->cw && window->lightdash_plugin->show_desktop)
 	{
 		gdk_win = gtk_widget_get_window (widget);
 		gdk_window_get_origin (gdk_win, &x, &y);
@@ -516,7 +516,7 @@ xfce_lightdash_window_expose (GtkWidget *widget, GdkEvent *event, XfceAppfinderW
 							color.blue/65535.0);
 	}
 	
-	if (window->cw)						
+	if (window->cw && window->lightdash_plugin->show_desktop)						
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 	else
 		cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
