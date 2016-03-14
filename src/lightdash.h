@@ -34,6 +34,7 @@ typedef struct
 	
 	guint opacity;
 	char *button_title;
+	gboolean show_desktop;
 	
 }LightdashPlugin;
 

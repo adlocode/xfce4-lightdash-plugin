@@ -1029,7 +1029,7 @@ static void lightdash_window_realize (GtkWidget *widget)
 	g_signal_connect (lightdash_compositor_get_wnck_screen (window->compositor), "active-window-changed",
 					G_CALLBACK (lightdash_window_workspace_changed), window);
 					
-	if (!window->root)
+	if (!window->root && window->lightdash_plugin->show_desktop)
 	{
 		window->root = lightdash_compositor_get_root_window (window->compositor);
 		window->cw = lightdash_composited_window_new_from_window (window->root);

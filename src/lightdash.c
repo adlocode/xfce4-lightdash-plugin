@@ -42,6 +42,7 @@
 
 #define BUTTON_TITLE_DEFAULT _("Activities")
 #define DEFAULT_OPACITY 93
+#define DEFAULT_SHOW_DESKTOP TRUE
 
 static gboolean            opt_collapsed = FALSE;
 
@@ -116,9 +117,13 @@ void lightdash_save (XfcePanelPlugin *plugin, LightdashPlugin *lightdash)
 	if (G_LIKELY (rc != NULL))
 	{
 		if (lightdash->button_title)
+		{
 			xfce_rc_write_entry (rc, "button-title", lightdash->button_title);
-				
-			xfce_rc_write_int_entry (rc, "opacity", lightdash->opacity);
+		}
+			
+		xfce_rc_write_int_entry (rc, "opacity", lightdash->opacity);
+		xfce_rc_write_bool_entry (rc, "show-desktop", lightdash->show_desktop);
+			
 			
 			xfce_rc_close (rc);
 		
@@ -144,6 +149,7 @@ static void lightdash_read (LightdashPlugin *lightdash)
 			value = xfce_rc_read_entry (rc, "button-title", g_strdup (BUTTON_TITLE_DEFAULT));
 			lightdash->button_title = g_strdup (value);
 			lightdash->opacity = xfce_rc_read_int_entry (rc, "opacity", DEFAULT_OPACITY);
+			lightdash->show_desktop = xfce_rc_read_int_entry (rc, "show-desktop", DEFAULT_SHOW_DESKTOP);
 			
 			xfce_rc_close (rc);
 			
@@ -166,6 +172,7 @@ lightdash_new (XfcePanelPlugin *plugin)
 	lightdash->plugin = plugin;
 	
 	lightdash->button_title = NULL;
+	lightdash->show_desktop = DEFAULT_SHOW_DESKTOP;
 	
 	lightdash_read (lightdash);
 		
