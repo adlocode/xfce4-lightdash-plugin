@@ -287,7 +287,6 @@ xfce_lightdash_window_apps_button_toggled (GtkToggleButton *button, XfceAppfinde
 static void
 xfce_lightdash_window_show (GtkWidget *widget, XfceAppfinderWindow *window)
 {
-	
 	gtk_window_set_keep_above (GTK_WINDOW (window), TRUE);
 	
 	gtk_widget_hide (window->paned);
@@ -296,6 +295,20 @@ xfce_lightdash_window_show (GtkWidget *widget, XfceAppfinderWindow *window)
 	gtk_widget_grab_focus (window->entry);
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (window->apps_button), FALSE);
 	gtk_window_maximize (GTK_WINDOW (window));
+	
+	if (!window->cw && window->lightdash_plugin->show_desktop)
+	{
+		window->root = lightdash_compositor_get_root_window (window->compositor);
+		window->cw = lightdash_composited_window_new_from_window (window->root);
+		g_signal_connect_swapped (window->cw, "damage-event",
+					G_CALLBACK (gtk_widget_queue_draw), GTK_WIDGET (window));
+		
+	}
+	else if (window->cw && window->lightdash_plugin->show_desktop == FALSE)
+	{
+		g_object_unref (window->cw);
+		window->cw = NULL;
+	}
 	
 }
 
@@ -1028,17 +1041,6 @@ static void lightdash_window_realize (GtkWidget *widget)
 	window->compositor = lightdash_compositor_get_default ();
 	g_signal_connect (lightdash_compositor_get_wnck_screen (window->compositor), "active-window-changed",
 					G_CALLBACK (lightdash_window_workspace_changed), window);
-					
-	if (!window->root && window->lightdash_plugin->show_desktop)
-	{
-		window->root = lightdash_compositor_get_root_window (window->compositor);
-		window->cw = lightdash_composited_window_new_from_window (window->root);
-		g_signal_connect_swapped (window->cw, "damage-event",
-					G_CALLBACK (gtk_widget_queue_draw), GTK_WIDGET (window));
-		
-	}
-	
-	
 }
 
 
