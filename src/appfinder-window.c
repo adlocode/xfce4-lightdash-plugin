@@ -218,6 +218,7 @@ struct _XfceAppfinderWindow
   WnckWindow				  *wnck_window;
   LightdashCompositedWindow *cw;
   LightdashCompositor *compositor;
+  WnckScreen *screen;
 };
 
 typedef struct
@@ -296,9 +297,8 @@ xfce_lightdash_window_show (GtkWidget *widget, XfceAppfinderWindow *window)
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (window->apps_button), FALSE);
 	gtk_window_maximize (GTK_WINDOW (window));
 	
-	if (!window->cw && window->lightdash_plugin->show_desktop)
+	if (window->root && !window->cw && window->lightdash_plugin->show_desktop)
 	{
-		window->root = lightdash_compositor_get_root_window (window->compositor);
 		window->cw = lightdash_composited_window_new_from_window (window->root);
 		g_signal_connect_swapped (window->cw, "damage-event",
 					G_CALLBACK (gtk_widget_queue_draw), GTK_WIDGET (window));
@@ -1032,6 +1032,16 @@ xfce_appfinder_window_unmap (GtkWidget *widget)
   return (*GTK_WIDGET_CLASS (xfce_appfinder_window_parent_class)->unmap) (widget);
 } */
 
+static void lightdash_window_on_desktop_window_opened (XfceAppfinderWindow *window)
+{	
+	window->root = lightdash_compositor_get_root_window (window->compositor);
+	
+	if (window->root)
+	{
+		g_signal_handlers_disconnect_by_func (window->screen,
+					G_CALLBACK (lightdash_window_on_desktop_window_opened), window);
+	}
+}	
 
 static void lightdash_window_realize (GtkWidget *widget)
 {
@@ -1039,8 +1049,18 @@ static void lightdash_window_realize (GtkWidget *widget)
 	(*GTK_WIDGET_CLASS (xfce_appfinder_window_parent_class)->realize) (widget);
 	
 	window->compositor = lightdash_compositor_get_default ();
-	g_signal_connect (lightdash_compositor_get_wnck_screen (window->compositor), "active-window-changed",
+	window->screen = lightdash_compositor_get_wnck_screen (window->compositor);
+	g_signal_connect (window->screen, "active-window-changed",
 					G_CALLBACK (lightdash_window_workspace_changed), window);
+	
+	if (!window->root)				
+		window->root = lightdash_compositor_get_root_window (window->compositor);
+		
+	if (!window->root)
+	{
+		g_signal_connect_swapped (window->screen,
+				"window-opened", G_CALLBACK (lightdash_window_on_desktop_window_opened), window);
+	}
 }
 
 
