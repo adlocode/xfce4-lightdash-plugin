@@ -40,7 +40,11 @@
 	XSetErrorHandler (lightdash_compositor_xhandler_xerror);
 	
 	wnck_screen_force_update (compositor->screen);
-	
+
+	for (int i = 0; i < ScreenCount (compositor->dpy); i++)
+		XCompositeRedirectSubwindows (compositor->dpy, RootWindow (compositor->dpy, i),
+			CompositeRedirectAutomatic);
+
 	XDamageQueryExtension (compositor->dpy, &dv, &dr);
 	gdk_x11_register_standard_event_type (gdk_screen_get_display (compositor->gdk_screen),
 		dv, dv + XDamageNotify);

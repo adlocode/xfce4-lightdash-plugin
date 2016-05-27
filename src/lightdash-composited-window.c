@@ -175,8 +175,6 @@ lightdash_composited_window_get_window_picture (LightdashCompositedWindow *task)
 		//&& task->attr.height != 0)
 		//{
 			gdk_error_trap_push ();
-			XCompositeRedirectWindow (composited_window->compositor->dpy, composited_window->xid,
-					CompositeRedirectAutomatic);
 			
 			composited_window->surface = lightdash_composited_window_get_window_picture (composited_window);
 	
