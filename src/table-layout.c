@@ -80,7 +80,6 @@ void lightdash_table_layout_start_from_beginning (LightdashTableLayout *table_la
 	table_layout->top_attach=0;		
 	table_layout->bottom_attach=1;
 }
-	
 
 void lightdash_table_layout_attach_next (GtkWidget *widget, LightdashTableLayout *table_layout)
 {
@@ -95,7 +94,7 @@ void lightdash_table_layout_attach_next (GtkWidget *widget, LightdashTableLayout
 					gtk_widget_show_all (widget);
 					
 					
-					if (table_layout->right_attach % table_layout->ncols == 0)
+					if (table_layout->left_attach + 1 == table_layout->ncols)
 					{
 						table_layout->top_attach++;
 						table_layout->bottom_attach++;
