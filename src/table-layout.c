@@ -81,6 +81,14 @@ void lightdash_table_layout_start_from_beginning (LightdashTableLayout *table_la
 	table_layout->bottom_attach=1;
 }
 
+void lightdash_table_layout_set_position (LightdashTableLayout *table_layout, guint left_attach, guint top_attach)
+{
+	table_layout->left_attach = left_attach;
+	table_layout->right_attach = left_attach + 1;
+	table_layout->top_attach = top_attach;
+	table_layout->bottom_attach = top_attach + 1;
+}
+
 void lightdash_table_layout_attach_next (GtkWidget *widget, LightdashTableLayout *table_layout)
 {
 	#if GTK_CHECK_VERSION (3, 0, 0)

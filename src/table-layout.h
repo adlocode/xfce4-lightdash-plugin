@@ -68,6 +68,7 @@ void lightdash_table_layout_attach_next (GtkWidget *widget, LightdashTableLayout
 void lightdash_table_layout_resize (LightdashTableLayout *table_layout, guint rows, guint columns);
 void lightdash_table_layout_update_rows_and_columns (LightdashTableLayout *table_layout, guint *table_rows, guint *table_columns);
 void lightdash_table_layout_start_from_beginning (LightdashTableLayout *table_layout);
+void lightdash_table_layout_set_position (LightdashTableLayout *table_layout, guint left_attach, guint top_attach);
  
 G_END_DECLS
  

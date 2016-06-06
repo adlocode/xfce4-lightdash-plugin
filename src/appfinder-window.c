@@ -47,6 +47,7 @@
 #include "lightdash.h"
 #include "lightdash-window-switcher.h"
 #include "lightdash-pager.h"
+#include "table-layout.h"
 #include "lightdash-composited-window.h"
 
 #if GTK_CHECK_VERSION (3, 0, 0)
@@ -378,6 +379,7 @@ static void lightdash_window_bookmarks_changed (XfceAppfinderModel *model, XfceA
 	LightdashBookmark *bookmark;
 	
 	g_list_free_full (window->bookmarks_buttons, (GDestroyNotify) lightdash_bookmark_free);
+	lightdash_table_layout_set_position (LIGHTDASH_TABLE_LAYOUT (window->icon_bar), 0, 1);
 	window->bookmarks_buttons = NULL;
 	
 	valid = gtk_tree_model_get_iter_first (GTK_TREE_MODEL (model), &iter);
@@ -397,7 +399,7 @@ static void lightdash_window_bookmarks_changed (XfceAppfinderModel *model, XfceA
 			button = gtk_button_new ();
 			gtk_container_add (GTK_CONTAINER (button), image);
 			gtk_widget_show (image);
-			gtk_box_pack_start (GTK_BOX (window->icon_bar), button, FALSE, TRUE, 1);
+			lightdash_table_layout_attach_next (button, LIGHTDASH_TABLE_LAYOUT (window->icon_bar));
 			window->bookmarks_buttons = g_list_prepend (window->bookmarks_buttons, bookmark);
 			gtk_widget_set_size_request (button, 70, 70);
 			gtk_widget_show (button);
@@ -626,11 +628,11 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   
   gtk_widget_show (main_hbox);
   
-  #if GTK_CHECK_VERSION (3, 0, 0)
-  window->icon_bar = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-  #else
-  window->icon_bar = gtk_vbox_new (FALSE, 0);
-  #endif
+  //#if GTK_CHECK_VERSION (3, 0, 0)
+  //window->icon_bar = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+  //#else
+  window->icon_bar = lightdash_table_layout_new (1, 1, TRUE);
+  //#endif
   
   gtk_box_pack_start (GTK_BOX (main_hbox), window->icon_bar, FALSE, FALSE, 5);
   gtk_box_pack_start (GTK_BOX (main_hbox), vbox, TRUE, TRUE, 0);
@@ -638,7 +640,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   window->apps_button = gtk_toggle_button_new ();
   gtk_widget_set_tooltip_text (window->apps_button, _("Show Applications"));
   gtk_button_set_focus_on_click (GTK_BUTTON (window->apps_button), FALSE);
-  gtk_box_pack_start (GTK_BOX (window->icon_bar), window->apps_button, FALSE, TRUE, 7);
+  lightdash_table_layout_attach_next (window->apps_button, LIGHTDASH_TABLE_LAYOUT (window->icon_bar));
   gtk_widget_set_size_request (window->apps_button, 70, 70);
   gtk_widget_show (window->apps_button);
   
