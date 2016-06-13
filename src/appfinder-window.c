@@ -640,8 +640,8 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   window->apps_button = gtk_toggle_button_new ();
   gtk_widget_set_tooltip_text (window->apps_button, _("Show Applications"));
   gtk_button_set_focus_on_click (GTK_BUTTON (window->apps_button), FALSE);
-  lightdash_table_layout_attach_next (window->apps_button, LIGHTDASH_TABLE_LAYOUT (window->icon_bar));
   gtk_widget_set_size_request (window->apps_button, 70, 70);
+  lightdash_table_layout_attach_next (window->apps_button, LIGHTDASH_TABLE_LAYOUT (window->icon_bar));
   gtk_widget_show (window->apps_button);
   
   g_signal_connect (G_OBJECT (window->apps_button), "toggled",

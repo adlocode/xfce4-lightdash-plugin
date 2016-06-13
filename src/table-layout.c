@@ -95,8 +95,9 @@ void lightdash_table_layout_attach_next (GtkWidget *widget, LightdashTableLayout
 	gtk_grid_attach (GTK_GRID (table_layout), widget, table_layout->left_attach, 
 				table_layout->top_attach, 1, 1);
 	#else
-	gtk_table_attach_defaults (GTK_TABLE(table_layout), widget, table_layout->left_attach, 
-						table_layout->right_attach, table_layout->top_attach, table_layout->bottom_attach);
+	gtk_table_attach (GTK_TABLE(table_layout), widget, table_layout->left_attach, 
+						table_layout->right_attach, table_layout->top_attach, table_layout->bottom_attach,
+						0, 0, 0, 0);
 	#endif
 					
 					gtk_widget_show_all (widget);

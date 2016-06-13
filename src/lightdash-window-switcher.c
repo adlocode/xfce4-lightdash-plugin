@@ -650,6 +650,13 @@ static void my_tasklist_on_window_opened
 	if(wnck_window_is_on_workspace(task->window, wnck_screen_get_active_workspace(tasklist->screen)))
 	{
 		lightdash_table_layout_attach_next (task->button, LIGHTDASH_TABLE_LAYOUT (tasklist->table));
+		#if GTK_CHECK_VERSION (3, 0, 0)
+		#else
+		gtk_container_child_set (GTK_CONTAINER (tasklist->table), task->button, "x-options",
+			GTK_EXPAND | GTK_FILL, NULL);
+		gtk_container_child_set (GTK_CONTAINER (tasklist->table), task->button, "y-options",
+			GTK_EXPAND | GTK_FILL, NULL);
+		#endif
 		
 		rows = tasklist->table_rows;
 		columns = tasklist->table_columns;
@@ -768,6 +775,13 @@ static void my_tasklist_active_workspace_changed (WnckScreen *screen,
 						wnck_screen_get_active_workspace (tasklist->screen)))
 		{
 			lightdash_table_layout_attach_next (task->button, LIGHTDASH_TABLE_LAYOUT (tasklist->table));
+			#if GTK_CHECK_VERSION (3, 0, 0)
+			#else
+			gtk_container_child_set (GTK_CONTAINER (tasklist->table), task->button, "x-options",
+				GTK_EXPAND | GTK_FILL, NULL);
+			gtk_container_child_set (GTK_CONTAINER (tasklist->table), task->button, "y-options",
+				GTK_EXPAND | GTK_FILL, NULL);
+			#endif
 			
 			if (task->unparented)
 			{
@@ -992,6 +1006,13 @@ void lightdash_windows_view_reattach_widgets (LightdashWindowsView *tasklist)
 			if (wnck_window_is_on_workspace (task->window, wnck_screen_get_active_workspace (tasklist->screen)))
 			{		
 				lightdash_table_layout_attach_next (task->button, LIGHTDASH_TABLE_LAYOUT (tasklist->table));
+				#if GTK_CHECK_VERSION (3, 0, 0)
+				#else
+				gtk_container_child_set (GTK_CONTAINER (tasklist->table), task->button, "x-options",
+					GTK_EXPAND | GTK_FILL, NULL);
+				gtk_container_child_set (GTK_CONTAINER (tasklist->table), task->button, "y-options",
+					GTK_EXPAND | GTK_FILL, NULL);
+				#endif
 				g_object_unref (task->button);
 			}
 		}		
