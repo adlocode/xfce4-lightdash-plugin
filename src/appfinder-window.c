@@ -275,7 +275,7 @@ xfce_lightdash_window_apps_button_toggled (GtkToggleButton *button, XfceAppfinde
 	if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (button)))
         {
 			gtk_widget_show_all (window->paned);
-			gtk_widget_hide_all (window->taskview_container);
+			gtk_widget_hide (window->taskview_container);
 		}
 		
 		else
@@ -1800,7 +1800,7 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
         if (gtk_entry_get_text_length (GTK_ENTRY(window->entry)) != 0)
         {
 			gtk_widget_show_all (window->paned);
-			gtk_widget_hide_all (window->taskview_container);
+			gtk_widget_hide (window->taskview_container);
 			gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (window->apps_button), TRUE);
 		}
 		
