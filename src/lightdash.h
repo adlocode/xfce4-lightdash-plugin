@@ -20,7 +20,6 @@
 
 #include <libxfce4util/libxfce4util.h>
 #include <libxfce4panel/xfce-panel-plugin.h>
-#include <libxfce4panel/xfce-hvbox.h>
 
 G_BEGIN_DECLS
 
