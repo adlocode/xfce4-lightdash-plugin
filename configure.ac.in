@@ -73,6 +73,18 @@ AC_DEFINE([WNCK_I_KNOW_THIS_IS_UNSTABLE], [1], [wnck])
 dnl ***********************************
 dnl *** Check for required packages ***
 dnl ***********************************
+
+if test "x$enable_gtk3" = "xyes"; then
+LIBXFCE4PANEL_VERSION_API="2.0"
+AC_DEFINE([LIBXFCE4PANEL_VERSION_API], "2.0", [libxfce4panel api version])
+else
+LIBXFCE4PANEL_VERSION_API=1.0
+AC_DEFINE([LIBXFCE4PANEL_VERSION_API], "1.0", [libxfce4panel api version])
+fi
+
+
+AC_SUBST([LIBXFCE4PANEL_VERSION_API])
+
 AC_CHECK_LIBM
 AC_SUBST(LIBM)
 
@@ -137,6 +149,7 @@ AC_SUBST([PLATFORM_LDFLAGS])
 AC_OUTPUT([
 Makefile
 src/Makefile
+src/lightdash.desktop.in
 po/Makefile.in
 ])
 

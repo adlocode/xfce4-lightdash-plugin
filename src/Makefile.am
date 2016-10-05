@@ -107,13 +107,16 @@ endif
 desktopdir =								\
 	$(datadir)/xfce4/panel/plugins
 
+desktop_in_files = \
+	lightdash.desktop.in.in
+
 desktop_DATA =								\
-	lightdash.desktop
+	$(desktop_in_files:.desktop.in.in=.desktop)
 
 @INTLTOOL_DESKTOP_RULE@
 
 EXTRA_DIST =
-	lightdash.desktop.in \
+	$(desktop_in_files) \
 	lightdash-preferences.glade
 
 CLEANFILES =								\

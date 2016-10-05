@@ -7,3 +7,4 @@ Icon=xfce4-appfinder
 X-XFCE-Module=lightdash
 X-XFCE-Internal=false
 X-XFCE-Unique=false
+X-XFCE-API=2.0
