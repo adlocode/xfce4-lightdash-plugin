@@ -686,7 +686,14 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   gtk_widget_show (vbox2);
 
   window->entry = entry = gtk_entry_new ();
+
+#if GTK_CHECK_VERSION (3, 0, 0)
+  gtk_widget_set_halign (entry, GTK_ALIGN_FILL);
+  gtk_box_pack_start (GTK_BOX (vbox2), entry, TRUE, TRUE, 0);
+#else 
   gtk_container_add (GTK_CONTAINER (align), entry);
+#endif
+
   g_signal_connect (G_OBJECT (entry), "icon-release",
       G_CALLBACK (xfce_appfinder_window_entry_icon_released), window);
   #if GTK_CHECK_VERSION (3, 0, 0)
@@ -732,6 +739,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
 
 #if GTK_CHECK_VERSION (3, 0, 0)
   window->taskview_container = gtk_grid_new ();
+  gtk_grid_set_column_homogeneous (GTK_GRID(window->taskview_container), TRUE);
 #else
   window->taskview_container = gtk_table_new (1, 8, TRUE);
 #endif
@@ -742,6 +750,7 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   //Add window switcher  
   window->window_switcher = lightdash_window_switcher_new ();
   #if GTK_CHECK_VERSION (3, 0, 0)
+  gtk_widget_set_vexpand (window->window_switcher, TRUE);
   gtk_grid_attach (GTK_GRID (window->taskview_container), 
 				window->window_switcher, 
 				0, 0, 7, 1);
