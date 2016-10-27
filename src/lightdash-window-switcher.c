@@ -959,14 +959,12 @@ void lightdash_windows_view_render_preview_at_size (LightTask *task, gint width,
 		
 		else
 		{
+			if (!task->composited_window->surface) return;
+			
 			cairo_scale (cr, factor, factor);
-
 			cairo_rectangle (cr, 0, 0, src_width, src_height);
-			
 			cairo_set_source_surface (cr, task->composited_window->surface, 0, 0);
-		
 			cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
-			
 			cairo_fill (cr);
 		}
 				

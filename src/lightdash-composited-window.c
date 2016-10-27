@@ -27,6 +27,7 @@
  };
  
  static guint lightdash_composited_window_signals [LAST_SIGNAL]={0};
+ static int _lightdash_composited_window_damage_event_base = 0;
  
  G_DEFINE_TYPE (LightdashCompositedWindow, lightdash_composited_window, G_TYPE_OBJECT)
  
@@ -51,6 +52,7 @@
  
  static void lightdash_composited_window_init (LightdashCompositedWindow *self)
  {
+	 int dr;
 	 self->surface = NULL;
 	 self->compositor = NULL;
 	 self->window = NULL;
@@ -58,6 +60,8 @@
 	 self->gdk_window = NULL;
 	 self->damage = None;
 	 self->compositor = lightdash_compositor_get_default ();
+	 
+	 XDamageQueryExtension (self->compositor->dpy, &_lightdash_composited_window_damage_event_base, &dr);
 	 
  }
  
@@ -100,40 +104,53 @@ void lightdash_composited_window_get_size (LightdashCompositedWindow *self, gint
  
  static GdkFilterReturn lightdash_composited_window_event (GdkXEvent *xevent, GdkEvent *event, LightdashCompositedWindow *self)
  {
-	int dv, dr;
 	XEvent *ev;
 	XDamageNotifyEvent *e;
 	XConfigureEvent *ce;
-	XDamageQueryExtension (self->compositor->dpy, &dv, &dr);
+	
 	int width, height;
+	gint error;
 	
 	ev = (XEvent*)xevent;
 	e = (XDamageNotifyEvent *)ev;
 	
-	if (ev->type == dv + XDamageNotify)
+	switch (ev->type)
 	{
+		case DestroyNotify:
+			gdk_error_trap_push ();
+			cairo_surface_destroy (self->surface);
+			self->surface = NULL;
+			XDamageDestroy (self->compositor->dpy, self->damage);
+			XSync (self->compositor->dpy, False);
+			error = gdk_error_trap_pop ();
+		break;
 	
+		case ConfigureNotify:
+			ce = &ev->xconfigure;
+		
+		//if (ce->height == self->attr.height && ce->width == self->attr.width)
+			//return GDK_FILTER_CONTINUE;
+			
+			self->attr.width = ce->width;
+			self->attr.height = ce->height;
+			cairo_xlib_surface_set_size (self->surface,
+								self->attr.width,
+								self->attr.height);
+							
+			g_signal_emit (self, lightdash_composited_window_signals[DAMAGE_SIGNAL], 0);
+
+		break;
+		default:
+		break;
+	}
+	
+	if (ev->type == _lightdash_composited_window_damage_event_base + XDamageNotify)
+	{
 	XDamageSubtract (self->compositor->dpy, e->damage, None, None);
-	
 	g_signal_emit (self, lightdash_composited_window_signals[DAMAGE_SIGNAL], 0);
 	
 	}
-	else if (ev->type == ConfigureNotify)
-	{
-		ce = &ev->xconfigure;
-		
-		if (ce->height == self->attr.height && ce->width == self->attr.width)
-			return GDK_FILTER_CONTINUE;
-			
-		self->attr.width = ce->width;
-		self->attr.height = ce->height;
-		cairo_xlib_surface_set_size (self->surface,
-							self->attr.width,
-							self->attr.height);
-							
-		g_signal_emit (self, lightdash_composited_window_signals[DAMAGE_SIGNAL], 0);
-
-	}
+	
 	
 	return GDK_FILTER_CONTINUE;
 }
