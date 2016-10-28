@@ -37,7 +37,8 @@
 	compositor->gdk_screen = gdk_screen_get_default ();
 	compositor->dpy = gdk_x11_get_default_xdisplay ();
 	
-	XSetErrorHandler (lightdash_compositor_xhandler_xerror);
+	/* Trap all X errors throughout the lifetime of this object */
+	gdk_error_trap_push ();
 	
 	wnck_screen_force_update (compositor->screen);
 
@@ -54,20 +55,6 @@
  {
 	 return compositor->screen;
  }
- 
- static int lightdash_compositor_xhandler_xerror (Display *dpy, XErrorEvent *e)
-{
-	gchar text [64];
-	
-		g_print ("%s", "X11 error ");
-		g_print ("%d", e->error_code);
-		g_print ("%s", " - ");
-		XGetErrorText (dpy, e->error_code, text, 64);
-		g_print ("%s", text);
-		g_print ("%s", "\n");
-		
-		return 0;
-}
 
 void lightdash_compositor_set_excluded_window (LightdashCompositor *compositor, GdkWindow *gdk_window)
 {
