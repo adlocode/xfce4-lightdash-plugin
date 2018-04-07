@@ -28,7 +28,6 @@
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
-
 #include <libxfce4util/libxfce4util.h>
 #include <libxfce4ui/libxfce4ui.h>
 #include <gdk/gdkkeysyms.h>
@@ -1091,10 +1090,15 @@ xfce_appfinder_window_key_press_event (GtkWidget   *widget,
   XfceAppfinderWindow   *window = XFCE_APPFINDER_WINDOW (widget);
   GtkWidget             *entry;
   XfceAppfinderIconSize  icon_size = XFCE_APPFINDER_ICON_SIZE_DEFAULT_ITEM;
+  entry = XFCE_APPFINDER_WINDOW (widget)->entry;
 
   if (event->keyval == GDK_KEY_Escape)
     {
-      gtk_widget_hide (widget);
+      const gchar *text = gtk_entry_get_text (GTK_ENTRY (entry));
+      if ((text != NULL) && (*text != '\0'))
+      	gtk_entry_set_text (GTK_ENTRY (entry), "");
+      else
+      	gtk_widget_hide (widget);
       return TRUE;
     }
   else if ((event->state & GDK_CONTROL_MASK) != 0)
@@ -1102,7 +1106,6 @@ xfce_appfinder_window_key_press_event (GtkWidget   *widget,
       switch (event->keyval)
         {
         case GDK_KEY_l:
-          entry = XFCE_APPFINDER_WINDOW (widget)->entry;
 
           gtk_widget_grab_focus (entry);
           gtk_editable_select_region (GTK_EDITABLE (entry), 0, -1);
