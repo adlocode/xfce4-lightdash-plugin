@@ -96,6 +96,9 @@ static void appfinder_window_destroyed (GtkWidget *window);
 //static void       xfce_appfinder_window_unmap                         (GtkWidget                   *widget);
 static gboolean   xfce_appfinder_window_key_press_event               (GtkWidget                   *widget,
                                                                        GdkEventKey                 *event);
+static gboolean xfce_lightdash_window_key_press_event_after (GtkWidget   *widget,
+							     GdkEventKey *event,
+							     XfceAppfinderWindow *window);
 static gboolean   xfce_appfinder_window_window_state_event            (GtkWidget                   *widget,
                                                                        GdkEventWindowState         *event);
 static void       xfce_appfinder_window_view                          (XfceAppfinderWindow         *window);
@@ -316,23 +319,7 @@ xfce_lightdash_window_show (GtkWidget *widget, XfceAppfinderWindow *window)
 		g_object_unref (window->cw);
 		window->cw = NULL;
 	}
-	
-}
 
-static gboolean
-xfce_lightdash_window_key_press_event_after
-(GtkWidget   *widget, GdkEventKey *event, XfceAppfinderWindow *window)
-{
-
-	if (widget != window->entry)
-	{
-		gtk_widget_grab_focus (window->entry);
-		gtk_window_propagate_key_event (GTK_WINDOW (window), event);
-		return TRUE;
-	}
-	
-	return FALSE;
-	
 }
 
 static void lightdash_bookmark_free (LightdashBookmark *bookmark)
@@ -344,7 +331,7 @@ static void lightdash_bookmark_free (LightdashBookmark *bookmark)
 static void lightdash_window_bookmark_button_clicked (GtkButton *button, gpointer data)
 {
 	LightdashBookmark *bookmark;
-	
+
   GtkTreeModel *model;
   GtkTreeIter   orig;
   GError       *error = NULL;
@@ -357,7 +344,7 @@ static void lightdash_window_bookmark_button_clicked (GtkButton *button, gpointe
   gboolean      only_custom_cmd = FALSE;
   
   bookmark = data;
-  
+
   model = GTK_TREE_MODEL (bookmark->model);
   
   screen = gtk_window_get_screen (GTK_WINDOW (bookmark->window));
@@ -1101,54 +1088,38 @@ xfce_appfinder_window_key_press_event (GtkWidget   *widget,
       	gtk_widget_hide (widget);
       return TRUE;
     }
-  else if ((event->state & GDK_CONTROL_MASK) != 0)
-    {
-      switch (event->keyval)
-        {
-        case GDK_KEY_l:
 
-          gtk_widget_grab_focus (entry);
-          gtk_editable_select_region (GTK_EDITABLE (entry), 0, -1);
-
-          return TRUE;
-
-        case GDK_KEY_1:
-        case GDK_KEY_2:
-          /* toggle between icon and tree view */
-          //xfconf_channel_set_bool (window->channel, "/icon-view",
-                                   //event->keyval == GDK_KEY_1);
-          return TRUE;
-
-        case GDK_KEY_plus:
-        case GDK_KEY_minus:
-        case GDK_KEY_KP_Add:
-        case GDK_KEY_KP_Subtract:
-          g_object_get (G_OBJECT (window->model), "icon-size", &icon_size, NULL);
-          if ((event->keyval == GDK_KEY_plus || event->keyval == GDK_KEY_KP_Add))
-            {
-              if (icon_size < XFCE_APPFINDER_ICON_SIZE_LARGEST)
-                icon_size++;
-            }
-          else if (icon_size > XFCE_APPFINDER_ICON_SIZE_SMALLEST)
-            {
-              icon_size--;
-            }
-
-        case GDK_KEY_0:
-        case GDK_KEY_KP_0:
-          g_object_set (G_OBJECT (window->model), "icon-size", icon_size, NULL);
-          return TRUE;
-        default:
-        gtk_widget_grab_focus (entry);
-			
-        
-        }
-    }
+   if (event->keyval == GDK_KEY_Up || event->keyval == GDK_KEY_Down)
+	{
+		if (gtk_window_get_focus (GTK_WINDOW (widget)) == entry)
+			{
+				gtk_widget_grab_focus (window->view);
+			}
+	}
 
   return  (*GTK_WIDGET_CLASS (xfce_appfinder_window_parent_class)->key_press_event) (widget, event);
 }
 
+static gboolean
+xfce_lightdash_window_key_press_event_after
+(GtkWidget   *widget, GdkEventKey *event, XfceAppfinderWindow *window)
+{
 
+	if (event->is_modifier)
+		{
+			return FALSE;
+		}
+
+	if (gtk_window_get_focus (GTK_WINDOW (widget)) != window->entry)
+	{
+		gtk_widget_grab_focus (window->entry);
+		gtk_window_propagate_key_event (GTK_WINDOW (window), event);
+		return TRUE;
+	}
+
+	return FALSE;
+
+}
 
 static gboolean
 xfce_appfinder_window_window_state_event (GtkWidget           *widget,
