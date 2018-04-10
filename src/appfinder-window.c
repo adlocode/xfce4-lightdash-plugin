@@ -2299,9 +2299,17 @@ xfce_appfinder_window_execute (XfceAppfinderWindow *window,
 
       if (xfce_appfinder_window_view_get_selected (window, &model, &iter))
         {
-          gtk_tree_model_sort_convert_iter_to_child_iter (GTK_TREE_MODEL_SORT (model), &child_iter, &iter);
-          iter = child_iter;
-          child_model = gtk_tree_model_sort_get_model (GTK_TREE_MODEL_SORT (model));
+          child_model = model;
+
+          if (GTK_IS_TREE_MODEL_SORT (model))
+            {
+              gtk_tree_model_sort_convert_iter_to_child_iter (GTK_TREE_MODEL_SORT (model), &child_iter, &iter);
+              iter = child_iter;
+              child_model = gtk_tree_model_sort_get_model (GTK_TREE_MODEL_SORT (model));
+            }
+
+          gtk_tree_model_filter_convert_iter_to_child_iter (GTK_TREE_MODEL_FILTER (child_model), &child_iter, &iter);
+          result = xfce_appfinder_model_execute (window->model, &child_iter, screen, &regular_command, &error);
 
           if (!result && regular_command)
             {
@@ -2332,7 +2340,7 @@ xfce_appfinder_window_execute (XfceAppfinderWindow *window,
 
   if (!only_custom_cmd)
     {
-      gtk_entry_set_icon_from_stock (GTK_ENTRY (window->entry), GTK_ENTRY_ICON_PRIMARY,
+      gtk_entry_set_icon_from_icon_name (GTK_ENTRY (window->entry), GTK_ENTRY_ICON_PRIMARY,
                                      result ? NULL : XFCE_APPFINDER_STOCK_DIALOG_ERROR);
       gtk_entry_set_icon_tooltip_text (GTK_ENTRY (window->entry), GTK_ENTRY_ICON_PRIMARY,
                                        error != NULL ? error->message : NULL);
