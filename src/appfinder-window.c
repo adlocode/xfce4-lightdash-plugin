@@ -28,7 +28,6 @@
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
-
 #include <libxfce4util/libxfce4util.h>
 #include <libxfce4ui/libxfce4ui.h>
 #include <gdk/gdkkeysyms.h>
@@ -97,6 +96,9 @@ static void appfinder_window_destroyed (GtkWidget *window);
 //static void       xfce_appfinder_window_unmap                         (GtkWidget                   *widget);
 static gboolean   xfce_appfinder_window_key_press_event               (GtkWidget                   *widget,
                                                                        GdkEventKey                 *event);
+static gboolean xfce_lightdash_window_key_press_event_after (GtkWidget   *widget,
+							     GdkEventKey *event,
+							     XfceAppfinderWindow *window);
 static gboolean   xfce_appfinder_window_window_state_event            (GtkWidget                   *widget,
                                                                        GdkEventWindowState         *event);
 static void       xfce_appfinder_window_view                          (XfceAppfinderWindow         *window);
@@ -147,6 +149,10 @@ static void       xfce_appfinder_window_launch_clicked                (XfceAppfi
 static void       xfce_appfinder_window_execute                       (XfceAppfinderWindow         *window,
  
                                                                       gboolean                     close_on_succeed);                                                                     
+static gint       lightdash_window_sort_items                    (GtkTreeModel                *model,
+                                                                       GtkTreeIter                 *a,
+                                                                       GtkTreeIter                 *b,
+                                                                       gpointer                     data);
 static void lightdash_window_set_property (GObject *object, guint property_id, const GValue *value, GParamSpec *pspec);
 static void lightdash_window_get_property (GObject *object, guint property_id, GValue *value, GParamSpec *pspec);
 static void lightdash_window_constructed (GObject *object);
@@ -171,6 +177,9 @@ struct _XfceAppfinderWindow
   LightdashPlugin *lightdash_plugin;
 
   XfceAppfinderModel         *model;
+
+  GtkTreeModel               *sort_model;
+  GtkTreeModel               *filter_model;
 
   XfceAppfinderCategoryModel *category_model;
 
@@ -310,23 +319,7 @@ xfce_lightdash_window_show (GtkWidget *widget, XfceAppfinderWindow *window)
 		g_object_unref (window->cw);
 		window->cw = NULL;
 	}
-	
-}
 
-static gboolean
-xfce_lightdash_window_key_press_event_after
-(GtkWidget   *widget, GdkEventKey *event, XfceAppfinderWindow *window)
-{
-
-	if (widget != window->entry)
-	{
-		gtk_widget_grab_focus (window->entry);
-		gtk_window_propagate_key_event (GTK_WINDOW (window), event);
-		return TRUE;
-	}
-	
-	return FALSE;
-	
 }
 
 static void lightdash_bookmark_free (LightdashBookmark *bookmark)
@@ -338,7 +331,7 @@ static void lightdash_bookmark_free (LightdashBookmark *bookmark)
 static void lightdash_window_bookmark_button_clicked (GtkButton *button, gpointer data)
 {
 	LightdashBookmark *bookmark;
-	
+
   GtkTreeModel *model;
   GtkTreeIter   orig;
   GError       *error = NULL;
@@ -351,7 +344,7 @@ static void lightdash_window_bookmark_button_clicked (GtkButton *button, gpointe
   gboolean      only_custom_cmd = FALSE;
   
   bookmark = data;
-  
+
   model = GTK_TREE_MODEL (bookmark->model);
   
   screen = gtk_window_get_screen (GTK_WINDOW (bookmark->window));
@@ -949,6 +942,8 @@ xfce_appfinder_window_finalize (GObject *object)
 
   g_object_unref (G_OBJECT (window->model));
   g_object_unref (G_OBJECT (window->category_model));
+  g_object_unref (G_OBJECT (window->filter_model));
+  g_object_unref (G_OBJECT (window->sort_model));
   g_object_unref (G_OBJECT (window->completion));
   g_object_unref (G_OBJECT (window->icon_find));
 
@@ -1082,61 +1077,49 @@ xfce_appfinder_window_key_press_event (GtkWidget   *widget,
   XfceAppfinderWindow   *window = XFCE_APPFINDER_WINDOW (widget);
   GtkWidget             *entry;
   XfceAppfinderIconSize  icon_size = XFCE_APPFINDER_ICON_SIZE_DEFAULT_ITEM;
+  entry = XFCE_APPFINDER_WINDOW (widget)->entry;
 
   if (event->keyval == GDK_KEY_Escape)
     {
-      gtk_widget_hide (widget);
+      const gchar *text = gtk_entry_get_text (GTK_ENTRY (entry));
+      if ((text != NULL) && (*text != '\0'))
+      	gtk_entry_set_text (GTK_ENTRY (entry), "");
+      else
+      	gtk_widget_hide (widget);
       return TRUE;
     }
-  else if ((event->state & GDK_CONTROL_MASK) != 0)
-    {
-      switch (event->keyval)
-        {
-        case GDK_KEY_l:
-          entry = XFCE_APPFINDER_WINDOW (widget)->entry;
 
-          gtk_widget_grab_focus (entry);
-          gtk_editable_select_region (GTK_EDITABLE (entry), 0, -1);
-
-          return TRUE;
-
-        case GDK_KEY_1:
-        case GDK_KEY_2:
-          /* toggle between icon and tree view */
-          //xfconf_channel_set_bool (window->channel, "/icon-view",
-                                   //event->keyval == GDK_KEY_1);
-          return TRUE;
-
-        case GDK_KEY_plus:
-        case GDK_KEY_minus:
-        case GDK_KEY_KP_Add:
-        case GDK_KEY_KP_Subtract:
-          g_object_get (G_OBJECT (window->model), "icon-size", &icon_size, NULL);
-          if ((event->keyval == GDK_KEY_plus || event->keyval == GDK_KEY_KP_Add))
-            {
-              if (icon_size < XFCE_APPFINDER_ICON_SIZE_LARGEST)
-                icon_size++;
-            }
-          else if (icon_size > XFCE_APPFINDER_ICON_SIZE_SMALLEST)
-            {
-              icon_size--;
-            }
-
-        case GDK_KEY_0:
-        case GDK_KEY_KP_0:
-          g_object_set (G_OBJECT (window->model), "icon-size", icon_size, NULL);
-          return TRUE;
-        default:
-        gtk_widget_grab_focus (entry);
-			
-        
-        }
-    }
+   if (event->keyval == GDK_KEY_Up || event->keyval == GDK_KEY_Down)
+	{
+		if (gtk_window_get_focus (GTK_WINDOW (widget)) == entry)
+			{
+				gtk_widget_grab_focus (window->view);
+			}
+	}
 
   return  (*GTK_WIDGET_CLASS (xfce_appfinder_window_parent_class)->key_press_event) (widget, event);
 }
 
+static gboolean
+xfce_lightdash_window_key_press_event_after
+(GtkWidget   *widget, GdkEventKey *event, XfceAppfinderWindow *window)
+{
 
+	if (event->is_modifier)
+		{
+			return FALSE;
+		}
+
+	if (gtk_window_get_focus (GTK_WINDOW (widget)) != window->entry)
+	{
+		gtk_widget_grab_focus (window->entry);
+		gtk_window_propagate_key_event (GTK_WINDOW (window), event);
+		return TRUE;
+	}
+
+	return FALSE;
+
+}
 
 static gboolean
 xfce_appfinder_window_window_state_event (GtkWidget           *widget,
@@ -1290,16 +1273,19 @@ xfce_appfinder_window_view (XfceAppfinderWindow *window)
       gtk_widget_destroy (window->view);
     }
 
-  filter_model = gtk_tree_model_filter_new (GTK_TREE_MODEL (window->model), NULL);
-  gtk_tree_model_filter_set_visible_func (GTK_TREE_MODEL_FILTER (filter_model), xfce_appfinder_window_item_visible, window, NULL);
+  window->filter_model = gtk_tree_model_filter_new (GTK_TREE_MODEL (window->model), NULL);
+  gtk_tree_model_filter_set_visible_func (GTK_TREE_MODEL_FILTER (window->filter_model), xfce_appfinder_window_item_visible, window, NULL);
+
+  window->sort_model = gtk_tree_model_sort_new_with_model (GTK_TREE_MODEL (window->filter_model));
+  gtk_tree_sortable_set_default_sort_func (GTK_TREE_SORTABLE (window->sort_model), lightdash_window_sort_items, window->entry, NULL);
 
   if (icon_view)
     {
       #if GTK_CHECK_VERSION (3, 0, 0)
-      window->view = view = gtk_icon_view_new_with_model (filter_model);
+      window->view = view = gtk_icon_view_new_with_model (window->filter_model/*sort_model*/);
       gtk_icon_view_set_activate_on_single_click (GTK_ICON_VIEW (view), TRUE);
       #else
-      window->view = view = exo_icon_view_new_with_model (filter_model);
+      window->view = view = exo_icon_view_new_with_model (window->filter_model);
       exo_icon_view_set_single_click (EXO_ICON_VIEW (view), TRUE);
       #endif
       gtk_icon_view_set_selection_mode (GTK_ICON_VIEW (view), GTK_SELECTION_BROWSE);
@@ -1316,11 +1302,11 @@ xfce_appfinder_window_view (XfceAppfinderWindow *window)
   else
     {
       #if GTK_CHECK_VERSION (3, 0, 0)
-      window->view = view = gtk_tree_view_new_with_model (filter_model);
+      window->view = view = gtk_tree_view_new_with_model (window->sort_model);
       gtk_tree_view_set_activate_on_single_click (GTK_TREE_VIEW (view), TRUE);
       #else
       window->view = view = GTK_WIDGET (exo_tree_view_new ());
-      gtk_tree_view_set_model (GTK_TREE_VIEW (view), filter_model);
+      gtk_tree_view_set_model (GTK_TREE_VIEW (view), window->sort_model);
       exo_tree_view_set_single_click (EXO_TREE_VIEW (view), TRUE);
       #endif
       gtk_tree_view_set_hover_selection (GTK_TREE_VIEW (view), TRUE);
@@ -1369,7 +1355,7 @@ xfce_appfinder_window_view (XfceAppfinderWindow *window)
   gtk_container_add (GTK_CONTAINER (window->viewscroll), view);
   gtk_widget_show (view);
 
-  g_object_unref (G_OBJECT (filter_model));
+  //g_object_unref (G_OBJECT (filter_model));
 }
 
 
@@ -1789,7 +1775,7 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
   const gchar         *text;
   GdkPixbuf           *pixbuf;
   gchar               *normalized;
-  GtkTreeModel        *model;
+  //GtkTreeModel        *model;
 
   text = gtk_entry_get_text (GTK_ENTRY (window->entry));
 
@@ -1812,7 +1798,7 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
 			gtk_widget_hide (window->taskview_container);
 			gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (window->apps_button), TRUE);
 		}
-		
+
 		else
 		{
 			gtk_widget_hide (window->paned);
@@ -1822,11 +1808,13 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
 		}
 
       APPFINDER_DEBUG ("refilter entry");
+      gtk_tree_model_filter_refilter (GTK_TREE_MODEL_FILTER (window->filter_model));
+      APPFINDER_DEBUG ("FILTER TEXT: %s\n", window->filter_text);
       if (GTK_IS_TREE_VIEW (window->view))
-        model = gtk_tree_view_get_model (GTK_TREE_VIEW (window->view));
-      else
-        model = gtk_icon_view_get_model (GTK_ICON_VIEW (window->view));
-      gtk_tree_model_filter_refilter (GTK_TREE_MODEL_FILTER (model));
+        gtk_tree_view_scroll_to_point (GTK_TREE_VIEW (window->view), 0, 0);
+      //else
+        //model = gtk_icon_view_get_model (GTK_ICON_VIEW (window->view));
+      //gtk_tree_model_filter_refilter (GTK_TREE_MODEL_FILTER (model));
 
   return FALSE;
 }
@@ -2054,7 +2042,7 @@ xfce_appfinder_window_category_changed (GtkTreeSelection    *selection,
             model = gtk_tree_view_get_model (GTK_TREE_VIEW (window->view));
           else
             model = gtk_icon_view_get_model (GTK_ICON_VIEW (window->view));
-          gtk_tree_model_filter_refilter (GTK_TREE_MODEL_FILTER (model));
+          gtk_tree_model_filter_refilter (GTK_TREE_MODEL_FILTER (window->filter_model));
 
           /* store last category */
           if (xfconf_channel_get_bool (window->channel, "/remember-category", FALSE))
@@ -2289,8 +2277,8 @@ static void
 xfce_appfinder_window_execute (XfceAppfinderWindow *window,
                                gboolean             close_on_succeed)
 {
-  GtkTreeModel *model;
-  GtkTreeIter   iter, orig;
+  GtkTreeModel *model, *child_model;
+  GtkTreeIter   iter, child_iter;
   GError       *error = NULL;
   gboolean      result = FALSE;
   GdkScreen    *screen;
@@ -2311,12 +2299,21 @@ xfce_appfinder_window_execute (XfceAppfinderWindow *window,
 
       if (xfce_appfinder_window_view_get_selected (window, &model, &iter))
         {
-          gtk_tree_model_filter_convert_iter_to_child_iter (GTK_TREE_MODEL_FILTER (model), &orig, &iter);
-          result = xfce_appfinder_model_execute (window->model, &orig, screen, &regular_command, &error);
+          child_model = model;
+
+          if (GTK_IS_TREE_MODEL_SORT (model))
+            {
+              gtk_tree_model_sort_convert_iter_to_child_iter (GTK_TREE_MODEL_SORT (model), &child_iter, &iter);
+              iter = child_iter;
+              child_model = gtk_tree_model_sort_get_model (GTK_TREE_MODEL_SORT (model));
+            }
+
+          gtk_tree_model_filter_convert_iter_to_child_iter (GTK_TREE_MODEL_FILTER (child_model), &child_iter, &iter);
+          result = xfce_appfinder_model_execute (window->model, &child_iter, screen, &regular_command, &error);
 
           if (!result && regular_command)
             {
-              gtk_tree_model_get (model, &iter, XFCE_APPFINDER_MODEL_COLUMN_COMMAND, &cmd, -1);
+              gtk_tree_model_get (model, &child_iter, XFCE_APPFINDER_MODEL_COLUMN_COMMAND, &cmd, -1);
               result = xfce_appfinder_window_execute_command (cmd, screen, window, FALSE, NULL, &error);
               g_free (cmd);
             }
@@ -2343,7 +2340,7 @@ xfce_appfinder_window_execute (XfceAppfinderWindow *window,
 
   if (!only_custom_cmd)
     {
-      gtk_entry_set_icon_from_stock (GTK_ENTRY (window->entry), GTK_ENTRY_ICON_PRIMARY,
+      gtk_entry_set_icon_from_icon_name (GTK_ENTRY (window->entry), GTK_ENTRY_ICON_PRIMARY,
                                      result ? NULL : XFCE_APPFINDER_STOCK_DIALOG_ERROR);
       gtk_entry_set_icon_tooltip_text (GTK_ENTRY (window->entry), GTK_ENTRY_ICON_PRIMARY,
                                        error != NULL ? error->message : NULL);
@@ -2408,4 +2405,49 @@ xfce_appfinder_window_set_expanded (XfceAppfinderWindow *window,
   /* update state */
   xfce_appfinder_window_entry_changed (window);
   xfce_appfinder_window_item_changed (window);
+}
+
+static gint
+lightdash_window_sort_items (GtkTreeModel *model,
+                                  GtkTreeIter  *a,
+                                  GtkTreeIter  *b,
+                                  gpointer      data)
+{
+  gchar        *normalized, *casefold, *title_a, *title_b, *found;
+  GtkWidget    *entry = GTK_WIDGET (data);
+  gint          result = -1;
+
+  appfinder_return_val_if_fail (GTK_IS_ENTRY (entry), 0);
+
+  normalized = g_utf8_normalize (gtk_entry_get_text (GTK_ENTRY (entry)), -1, G_NORMALIZE_ALL);
+  casefold = g_utf8_casefold (normalized, -1);
+  g_free (normalized);
+
+  gtk_tree_model_get (model, a, XFCE_APPFINDER_MODEL_COLUMN_TITLE, &title_a, -1);
+  normalized = g_utf8_normalize (title_a, -1, G_NORMALIZE_ALL);
+  title_a = g_utf8_casefold (normalized, -1);
+  g_free (normalized);
+
+  gtk_tree_model_get (model, b, XFCE_APPFINDER_MODEL_COLUMN_TITLE, &title_b, -1);
+  normalized = g_utf8_normalize (title_b, -1, G_NORMALIZE_ALL);
+  title_b = g_utf8_casefold (normalized, -1);
+  g_free (normalized);
+
+  if (strcmp (casefold, "") == 0)
+    result = g_strcmp0 (title_a, title_b);
+  else
+    {
+      found = g_strrstr (title_a, casefold);
+      if (found)
+        result -= (G_MAXINT - (found - title_a));
+
+      found = g_strrstr (title_b, casefold);
+      if (found)
+        result += (G_MAXINT - (found - title_b));
+    }
+
+  g_free (casefold);
+  g_free (title_a);
+  g_free (title_b);
+  return result;
 }
