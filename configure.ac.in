@@ -74,14 +74,8 @@ dnl ***********************************
 dnl *** Check for required packages ***
 dnl ***********************************
 
-if test "x$enable_gtk3" = "xyes"; then
 LIBXFCE4PANEL_VERSION_API="2.0"
 AC_DEFINE([LIBXFCE4PANEL_VERSION_API], "2.0", [libxfce4panel api version])
-else
-LIBXFCE4PANEL_VERSION_API=1.0
-AC_DEFINE([LIBXFCE4PANEL_VERSION_API], "1.0", [libxfce4panel api version])
-fi
-
 
 AC_SUBST([LIBXFCE4PANEL_VERSION_API])
 
@@ -102,25 +96,13 @@ XDT_CHECK_PACKAGE([CAIRO_XLIB_XRENDER], [cairo-xlib-xrender], [0.0.0])
 
 
 dnl ************************************
-dnl *** Compile against GTK3 or GTK2 ***
+dnl *** Compile against GTK3 ***
 dnl ************************************
-AC_ARG_ENABLE([gtk3],
-              [AC_HELP_STRING([--enable-gtk3],
-                              [Compile against GTK+-3.0 (default=disabled)])],
-              [enable_gtk3=$enableval], [enable_gtk3=no])
-if test "x$enable_gtk3" = "xyes"; then
+
   XDT_CHECK_PACKAGE([LIBXFCE4UI], [libxfce4ui-2], [4.10.0])
   XDT_CHECK_PACKAGE([GTK], [gtk+-3.0], [3.14.0])
   XDT_CHECK_PACKAGE([LIBWNCK], [libwnck-3.0], [3.14.0])
   XDT_CHECK_PACKAGE([LIBXFCE4PANEL], [libxfce4panel-2.0], [4.8.0])
-else
-  XDT_CHECK_PACKAGE([LIBXFCE4UI], [libxfce4ui-1], [4.10.0])
-  XDT_CHECK_PACKAGE([GTK], [gtk+-2.0], [2.24.0])
-  XDT_CHECK_PACKAGE([LIBWNCK], [libwnck-1.0], [1.0.0])
-  XDT_CHECK_PACKAGE([EXO], [exo-1], [0.0.0])
-  XDT_CHECK_PACKAGE([LIBXFCE4PANEL], [libxfce4panel-1.0], [4.8.0])
-fi
-AM_CONDITIONAL([ENABLE_GTK3], [test "x$enable_gtk3" = "xyes"])
 
 dnl ***********************************
 dnl *** Check for debugging support ***
@@ -159,11 +141,9 @@ dnl ***************************
 echo
 echo "Build Configuration:"
 echo
-if test x"$enable_gtk3" = x"yes"; then
+
 echo " * Toolkit:           GTK+-3"
-else
-echo " * Toolkit:           GTK+-2"
-fi
+
 echo " * Debugging Support: $enable_debug"
 echo
 
