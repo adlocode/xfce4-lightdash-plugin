@@ -1775,7 +1775,6 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
   const gchar         *text;
   GdkPixbuf           *pixbuf;
   gchar               *normalized;
-  //GtkTreeModel        *model;
 
   text = gtk_entry_get_text (GTK_ENTRY (window->entry));
 
@@ -1812,9 +1811,6 @@ xfce_appfinder_window_entry_changed_idle (gpointer data)
       APPFINDER_DEBUG ("FILTER TEXT: %s\n", window->filter_text);
       if (GTK_IS_TREE_VIEW (window->view))
         gtk_tree_view_scroll_to_point (GTK_TREE_VIEW (window->view), 0, 0);
-      //else
-        //model = gtk_icon_view_get_model (GTK_ICON_VIEW (window->view));
-      //gtk_tree_model_filter_refilter (GTK_TREE_MODEL_FILTER (model));
 
   return FALSE;
 }
