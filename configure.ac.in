@@ -95,9 +95,9 @@ XDT_CHECK_PACKAGE([XDAMAGE], [xdamage], [0.0.0])
 XDT_CHECK_PACKAGE([CAIRO_XLIB_XRENDER], [cairo-xlib-xrender], [0.0.0])
 
 
-dnl ************************************
+dnl ****************************
 dnl *** Compile against GTK3 ***
-dnl ************************************
+dnl ****************************
 
   XDT_CHECK_PACKAGE([LIBXFCE4UI], [libxfce4ui-2], [4.10.0])
   XDT_CHECK_PACKAGE([GTK], [gtk+-3.0], [3.14.0])
