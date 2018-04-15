@@ -193,6 +193,12 @@ G_DEFINE_TYPE_WITH_CODE (XfceAppfinderModel, xfce_appfinder_model, G_TYPE_OBJECT
     G_IMPLEMENT_INTERFACE (GTK_TYPE_TREE_MODEL, xfce_appfinder_model_tree_model_init))
 
 
+void lightdash_bookmark_free (LightdashBookmark *bookmark)
+{
+	gtk_widget_destroy (bookmark->button);
+	g_slice_free (LightdashBookmark, bookmark);
+}
+
 
 static void
 xfce_appfinder_model_class_init (XfceAppfinderModelClass *klass)
@@ -2444,6 +2450,7 @@ xfce_appfinder_model_bookmark_toggle (XfceAppfinderModel  *model,
   GtkTreePath  *path;
   gint          idx;
   GtkTreeIter   iter;
+  LightdashBookmark *bookmark;
 
   appfinder_return_val_if_fail (XFCE_IS_APPFINDER_MODEL (model), FALSE);
   appfinder_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -2486,9 +2493,19 @@ xfce_appfinder_model_bookmark_toggle (XfceAppfinderModel  *model,
               gtk_tree_path_free (path);
 
               if (item->is_bookmark)
-		    g_signal_emit (model, model_signals[BOOKMARK_ADDED], 0, &iter);
+		{
+		    bookmark = g_slice_new0 (LightdashBookmark);
+		    bookmark->item = item->item;
+		    GtkWidget *image = gtk_image_new_from_pixbuf (item->icon_large);
+		    bookmark->button = gtk_button_new ();
+			gtk_container_add (GTK_CONTAINER (bookmark->button), image);
+			gtk_widget_show (image);
+			gtk_widget_show (bookmark->button);
+			g_object_unref (item->icon_large);
+		    g_signal_emit (model, model_signals[BOOKMARK_ADDED], 0, bookmark);
+		}
 	      else
-		      g_signal_emit (model, model_signals[BOOKMARK_REMOVED], 0, &iter);
+		      g_signal_emit (model, model_signals[BOOKMARK_REMOVED], 0, item->item);
 
 	g_print ("%s", "model: emit b signal\n");
             }

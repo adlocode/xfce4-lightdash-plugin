@@ -59,6 +59,14 @@ typedef enum
 }
 XfceAppfinderIconSize;
 
+typedef struct
+{
+	GtkWidget *button;
+	GarconMenuItem *item;
+	XfceAppfinderModel *model;
+	GtkWidget *window;
+}LightdashBookmark;
+
 #define XFCE_APPFINDER_ICON_SIZE_DEFAULT_CATEGORY XFCE_APPFINDER_ICON_SIZE_SMALLER
 #define XFCE_APPFINDER_ICON_SIZE_DEFAULT_ITEM     XFCE_APPFINDER_ICON_SIZE_SMALL
 #define XFCE_APPFINDER_ICON_SIZE_48               XFCE_APPFINDER_ICON_SIZE_NORMAL
@@ -106,6 +114,8 @@ gboolean             xfce_appfinder_model_bookmark_toggle        (XfceAppfinderM
 GarconMenuDirectory *xfce_appfinder_model_get_command_category   (void);
 
 GarconMenuDirectory *xfce_appfinder_model_get_bookmarks_category (void);
+
+void lightdash_bookmark_free (LightdashBookmark *bookmark);
 
 G_END_DECLS
 
