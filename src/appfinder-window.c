@@ -322,28 +322,73 @@ static void lightdash_window_bookmark_button_clicked (GtkButton *button, gpointe
 
   GtkTreeModel *model;
   GtkTreeIter   orig;
+  GarconMenuItem *item;
+  const gchar     *command, *p;
+  GString         *string;
+  gboolean         succeed = FALSE;
   GError       *error = NULL;
   gboolean      result = FALSE;
   GdkScreen    *screen;
   const gchar  *text;
+  gchar        **argv;
   gchar        *cmd = NULL;
   gboolean      regular_command = FALSE;
   gboolean      save_cmd;
   gboolean      only_custom_cmd = FALSE;
-  
+
   bookmark = data;
+  item = bookmark->item;
 
-  model = GTK_TREE_MODEL (bookmark->model);
-  
-  screen = gtk_window_get_screen (GTK_WINDOW (bookmark->window));
+  if (item == NULL)
+    return;
 
-  //result = xfce_appfinder_model_execute (bookmark->model, &bookmark->iter, screen, &regular_command, &error);
+  appfinder_return_val_if_fail (GARCON_IS_MENU_ITEM (item), FALSE);
 
-  if (error != NULL)
+  command = garcon_menu_item_get_command (item);
+  if (!IS_STRING (command))
     {
-      g_printerr ("%s: failed to execute: %s\n", G_LOG_DOMAIN, error->message);
-      g_error_free (error);
+      g_set_error_literal (error, 0, 0, _("Application has no command"));
+      return;
     }
+
+  string = g_string_sized_new (100);
+
+  if (garcon_menu_item_requires_terminal (item))
+    g_string_append (string, "exo-open --launch TerminalEmulator ");
+
+  /* expand the field codes */
+  for (p = command; *p != '\0'; ++p)
+    {
+      if (G_UNLIKELY (p[0] == '%' && p[1] != '\0'))
+        {
+          switch (*++p)
+            {
+            case '%':
+              g_string_append_c (string, '%');
+              break;
+
+            /* skip all the other %? values for now we don't have dnd anyways */
+            }
+        }
+      else
+        {
+          g_string_append_c (string, *p);
+        }
+    }
+
+  if (g_shell_parse_argv (string->str, NULL, &argv, error))
+    {
+      succeed = xfce_spawn_on_screen (screen, garcon_menu_item_get_path (item),
+                                      argv, NULL, G_SPAWN_SEARCH_PATH,
+                                      garcon_menu_item_supports_startup_notification (item),
+                                      gtk_get_current_event_time (),
+                                      garcon_menu_item_get_icon_name (item),
+                                      error);
+
+      g_strfreev (argv);
+    }
+
+  g_string_free (string, TRUE);
 
     gtk_widget_hide (GTK_WIDGET (bookmark->window));
 
