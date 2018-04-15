@@ -173,7 +173,8 @@ CollectContext;
 enum
 {
   CATEGORIES_CHANGED,
-  BOOKMARKS_CHANGED,
+  BOOKMARK_ADDED,
+  BOOKMARK_REMOVED,
   LAST_SIGNAL
 };
 
@@ -182,7 +183,6 @@ enum
   PROP_0,
   PROP_ICON_SIZE
 };
-
 
 
 static guint model_signals[LAST_SIGNAL];
@@ -220,13 +220,22 @@ xfce_appfinder_model_class_init (XfceAppfinderModelClass *klass)
                   g_cclosure_marshal_VOID__VOID,
                   G_TYPE_NONE, 0);
                   
-  model_signals[BOOKMARKS_CHANGED] =
-    g_signal_new (g_intern_static_string ("bookmarks-changed"),
+  model_signals[BOOKMARK_ADDED] =
+    g_signal_new (g_intern_static_string ("bookmark-added"),
                   G_TYPE_FROM_CLASS (gobject_class),
                   G_SIGNAL_RUN_LAST,
                   0, NULL, NULL,
-                  g_cclosure_marshal_VOID__VOID,
-                  G_TYPE_NONE, 0);
+                  g_cclosure_marshal_VOID__POINTER,
+                  G_TYPE_NONE, 1,
+		  G_TYPE_POINTER);
+  model_signals[BOOKMARK_REMOVED] =
+    g_signal_new (g_intern_static_string ("bookmark-removed"),
+                  G_TYPE_FROM_CLASS (gobject_class),
+                  G_SIGNAL_RUN_LAST,
+                  0, NULL, NULL,
+                  g_cclosure_marshal_VOID__POINTER,
+                  G_TYPE_NONE, 1,
+		  G_TYPE_POINTER);
 }
 
 
@@ -2467,16 +2476,21 @@ xfce_appfinder_model_bookmark_toggle (XfceAppfinderModel  *model,
               
               /* stop searching, continue collecting */
               desktop_id = NULL;
-              
-              
+
+
 
               /* update model */
               path = gtk_tree_path_new_from_indices (idx, -1);
               ITER_INIT (iter, model->stamp, li);
               gtk_tree_model_row_changed (GTK_TREE_MODEL (model), path, &iter);
               gtk_tree_path_free (path);
-              
-              g_signal_emit_by_name (model, "bookmarks-changed");
+
+              if (item->is_bookmark)
+		    g_signal_emit (model, model_signals[BOOKMARK_ADDED], 0, &iter);
+	      else
+		      g_signal_emit (model, model_signals[BOOKMARK_REMOVED], 0, &iter);
+
+	g_print ("%s", "model: emit b signal\n");
             }
         }
 

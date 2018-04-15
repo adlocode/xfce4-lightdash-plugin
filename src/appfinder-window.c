@@ -360,7 +360,60 @@ static void lightdash_window_bookmark_button_clicked (GtkButton *button, gpointe
     gtk_widget_hide (GTK_WIDGET (bookmark->window));
 
 }	
+
+static void lightdash_window_bookmark_added (XfceAppfinderModel  *model,
+                                             GtkTreeIter         *iter,
+                                             XfceAppfinderWindow *window)
+{
+	GtkWidget *button;
+	gboolean valid;
+	GdkPixbuf *icon_large;
+	gboolean is_bookmark;
+	LightdashBookmark *bookmark;
+
+	g_print ("%s", "Bookmark added \n");
+
+		gtk_tree_model_get (GTK_TREE_MODEL (model), iter,
+				XFCE_APPFINDER_MODEL_COLUMN_ICON_LARGE, &icon_large,
+				XFCE_APPFINDER_MODEL_COLUMN_BOOKMARK, &is_bookmark,
+				-1);
+
+			bookmark = g_slice_new0 (LightdashBookmark);
+			GtkWidget *image = gtk_image_new_from_pixbuf (icon_large);
+			button = gtk_button_new ();
+			gtk_container_add (GTK_CONTAINER (button), image);
+			gtk_widget_show (image);
+			lightdash_table_layout_attach_next (button, LIGHTDASH_TABLE_LAYOUT (window->icon_bar));
+			window->bookmarks_buttons = g_list_prepend (window->bookmarks_buttons, bookmark);
+			gtk_widget_set_size_request (button, 70, 70);
+			gtk_widget_show (button);
+			g_object_unref (icon_large);
+			bookmark->button = button;
+			bookmark->iter = *iter;
+			bookmark->model = model;
+			bookmark->window = window;
+
+			g_signal_connect (button, "clicked",
+				G_CALLBACK (lightdash_window_bookmark_button_clicked), bookmark);
+}
+
+static void lightdash_window_bookmark_removed (XfceAppfinderModel  *model,
+                                             GtkTreeIter         *iter,
+                                             XfceAppfinderWindow *window)
+{
+	GList *li;
 	
+	for (li = window->bookmarks_buttons; li != NULL; li = li->next)
+		{
+			LightdashBookmark *bookmark = (LightdashBookmark *)li->data;
+			if (&(bookmark->iter) == iter)
+				{
+					window->bookmarks_buttons = g_list_remove (window->bookmarks_buttons, (gconstpointer) bookmark);
+					lightdash_bookmark_free (bookmark);
+				}
+		}
+}
+
 
 static void lightdash_window_bookmarks_changed (XfceAppfinderModel *model, XfceAppfinderWindow *window)
 {
@@ -863,10 +916,13 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
     //g_signal_connect (G_OBJECT (window->channel), "property-changed",
         //G_CALLBACK (xfce_appfinder_window_property_changed), window);
         
-  lightdash_window_bookmarks_changed (window->model, window);
+  //lightdash_window_bookmarks_changed (window->model, window);
   
-  g_signal_connect (G_OBJECT (window->model), "bookmarks-changed",
-	G_CALLBACK (lightdash_window_bookmarks_changed), window);
+  g_signal_connect (G_OBJECT (window->model), "bookmark-added",
+	G_CALLBACK (lightdash_window_bookmark_added), window);
+
+  g_signal_connect (G_OBJECT (window->model), "bookmark-removed",
+	G_CALLBACK (lightdash_window_bookmark_removed), window);
         
   gtk_widget_grab_focus (entry);
 
