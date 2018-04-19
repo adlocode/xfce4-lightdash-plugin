@@ -119,6 +119,7 @@ struct _XfceAppfinderModel
   GHashTable            *items_hash;
 
   GHashTable            *bookmarks_hash;
+  GPtrArray 		*bookmarks_array;
 
   GFileMonitor          *bookmarks_monitor;
   GFile                 *bookmarks_file;
@@ -253,6 +254,7 @@ xfce_appfinder_model_init (XfceAppfinderModel *model)
   model->stamp = g_random_int ();
   model->items_hash = g_hash_table_new (g_str_hash, g_str_equal);
   model->bookmarks_hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+  model->bookmarks_array = g_ptr_array_new ();
   model->icon_size = XFCE_APPFINDER_ICON_SIZE_DEFAULT_ITEM;
   model->command_icon = xfce_appfinder_model_load_pixbuf (GTK_STOCK_EXECUTE, model->icon_size);
   model->command_icon_large = xfce_appfinder_model_load_pixbuf (GTK_STOCK_EXECUTE, XFCE_APPFINDER_ICON_SIZE_48);
@@ -2433,7 +2435,17 @@ xfce_appfinder_model_history_clear (XfceAppfinderModel *model)
   g_free (filename);
 }
 
-
+void lightdash_model_get_string (LightdashBookmark *bookmark,
+                                 GString **contents)
+{
+	const gchar  *desktop_id2;
+	desktop_id2 = garcon_menu_item_get_desktop_id (bookmark->item);
+          if (G_LIKELY (desktop_id2 != NULL))
+            {
+              g_string_append (*contents, desktop_id2);
+              g_string_append_c (*contents, '\n');
+	    }
+}
 
 gboolean
 xfce_appfinder_model_bookmark_toggle (XfceAppfinderModel  *model,
@@ -2502,6 +2514,7 @@ xfce_appfinder_model_bookmark_toggle (XfceAppfinderModel  *model,
 			gtk_widget_show (image);
 			gtk_widget_show (bookmark->button);
 			g_object_unref (item->icon_large);
+			g_ptr_array_add (model->bookmarks_array, bookmark);
 		    g_signal_emit (model, model_signals[BOOKMARK_ADDED], 0, bookmark);
 		}
 	      else
@@ -2511,18 +2524,20 @@ xfce_appfinder_model_bookmark_toggle (XfceAppfinderModel  *model,
             }
         }
 
-      /* collect bookmarked items */
+
+    }
+	/* collect bookmarked items */
+	g_ptr_array_foreach (model->bookmarks_array,
+			     (GFunc *)lightdash_model_get_string,
+			     &contents);
+
+
       if (item->is_bookmark)
         {
-          desktop_id2 = garcon_menu_item_get_desktop_id (item->item);
-          if (G_LIKELY (desktop_id2 != NULL))
-            {
-              g_string_append (contents, desktop_id2);
-              g_string_append_c (contents, '\n');
+
             }
             
-        }
-    }
+        //}
 
   APPFINDER_DEBUG ("saving bookmarks");
 
