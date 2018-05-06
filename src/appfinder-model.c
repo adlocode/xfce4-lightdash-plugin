@@ -1876,7 +1876,7 @@ xfce_appfinder_model_menu_changed_idle (gpointer data)
       mmap = g_mapped_file_new (filename, FALSE, &error);
       if (G_LIKELY (mmap != NULL))
         {
-          xfce_appfinder_model_bookmarks_collect (model, mmap);
+          //xfce_appfinder_model_bookmarks_collect (model, mmap);
           g_mapped_file_unref (mmap);
         }
     }
@@ -2006,7 +2006,7 @@ xfce_appfinder_model_collect_thread (gpointer user_data)
       mmap = g_mapped_file_new (filename, FALSE, &error);
       if (G_LIKELY (mmap != NULL))
         {
-          xfce_appfinder_model_bookmarks_collect (model, mmap);
+          //xfce_appfinder_model_bookmarks_collect (model, mmap);
           g_mapped_file_unref (mmap);
         }
     }
