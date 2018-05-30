@@ -65,7 +65,10 @@ typedef struct
 	GarconMenuItem *item;
 	XfceAppfinderModel *model;
 	GtkWidget *window;
+  gchar *desktop_id;
 }LightdashBookmark;
+
+LightdashBookmark * lightdash_bookmark_new ();
 
 #define XFCE_APPFINDER_ICON_SIZE_DEFAULT_CATEGORY XFCE_APPFINDER_ICON_SIZE_SMALLER
 #define XFCE_APPFINDER_ICON_SIZE_DEFAULT_ITEM     XFCE_APPFINDER_ICON_SIZE_SMALL

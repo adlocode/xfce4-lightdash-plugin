@@ -193,6 +193,16 @@ static guint model_signals[LAST_SIGNAL];
 G_DEFINE_TYPE_WITH_CODE (XfceAppfinderModel, xfce_appfinder_model, G_TYPE_OBJECT,
     G_IMPLEMENT_INTERFACE (GTK_TYPE_TREE_MODEL, xfce_appfinder_model_tree_model_init))
 
+LightdashBookmark * lightdash_bookmark_new ()
+{
+  LightdashBookmark *bookmark;
+  bookmark = g_slice_new0 (LightdashBookmark);
+	bookmark->item = NULL;
+	bookmark->button = NULL;
+  bookmark->desktop_id = NULL;
+
+  return bookmark;
+}
 
 void lightdash_bookmark_free (LightdashBookmark *bookmark)
 {
@@ -1315,7 +1325,8 @@ xfce_appfinder_model_bookmarks_collect (XfceAppfinderModel *model,
               /* stop searching, continue collecting */
               //desktop_id = NULL;
 
-		    bookmark = g_slice_new0 (LightdashBookmark);
+		    bookmark = lightdash_bookmark_new ();
+        bookmark->desktop_id = g_strdup (line);
 		    //bookmark->item = item->item;
 		    //GtkWidget *image = gtk_image_new_from_pixbuf (item->icon_large);
 		    bookmark->button = gtk_button_new ();
@@ -1333,6 +1344,58 @@ xfce_appfinder_model_bookmarks_collect (XfceAppfinderModel *model,
         }
       contents = end + 1;
     }
+
+}
+
+static void
+lightdash_bookmark_add_menu_item (LightdashBookmark *bookmark,
+                                    XfceAppfinderModel *model)
+{
+  gchar *line;
+  gchar *end;
+  gchar *contents;
+  ModelItem    *item;
+  GSList       *li;
+  const gchar  *desktop_id2;
+  static gsize  old_len = 0;
+  gchar        *filename;
+  gboolean      succeed;
+  GtkTreePath  *path;
+  gint          idx;
+  GtkTreeIter   iter;
+  gchar *desktop_id;
+
+
+          if (bookmark->desktop_id && model->items)
+            {
+          for (idx = 0, li = model->items; li != NULL; li = li->next, idx++)
+    {
+      item = li->data;
+      if (item->item == NULL)
+        continue;
+
+          desktop_id2 = garcon_menu_item_get_desktop_id (item->item);
+          if (desktop_id2 != NULL
+              && strcmp (bookmark->desktop_id, desktop_id2) == 0)
+            {
+
+              /* stop searching, continue collecting */
+              //desktop_id = NULL;
+
+		    bookmark->item = item->item;
+		    GtkWidget *image = gtk_image_new_from_pixbuf (item->icon_large);
+			  gtk_container_add (GTK_CONTAINER (bookmark->button), image);
+			gtk_widget_show (image);
+			gtk_widget_show (bookmark->button);
+			g_object_unref (item->icon_large);
+			//g_ptr_array_add (model->bookmarks_array, bookmark);
+		    //g_signal_emit (model, model_signals[BOOKMARK_ADDED], 0, bookmark);
+
+        //}
+        }
+
+        }
+        }
 
 }
 
@@ -1881,6 +1944,11 @@ xfce_appfinder_model_menu_changed_idle (gpointer data)
         }
     }
 
+  if (model->bookmarks_array)
+    g_ptr_array_foreach (model->bookmarks_array,
+                         (GFunc*)lightdash_bookmark_add_menu_item,
+                         model);
+
 
   return FALSE;
 }
@@ -2010,6 +2078,11 @@ xfce_appfinder_model_collect_thread (gpointer user_data)
           g_mapped_file_unref (mmap);
         }
     }
+
+  if (model->bookmarks_array)
+    g_ptr_array_foreach (model->bookmarks_array,
+                         (GFunc*)lightdash_bookmark_add_menu_item,
+                         model);
 
   APPFINDER_DEBUG ("collect thread end");
 
@@ -2583,7 +2656,7 @@ xfce_appfinder_model_bookmark_toggle (XfceAppfinderModel  *model,
 
               if (item->is_bookmark)
 		{
-		    bookmark = g_slice_new0 (LightdashBookmark);
+		    bookmark = lightdash_bookmark_new ();
 		    bookmark->item = item->item;
 		    GtkWidget *image = gtk_image_new_from_pixbuf (item->icon_large);
 		    bookmark->button = gtk_button_new ();
