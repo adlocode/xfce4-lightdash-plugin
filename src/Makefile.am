@@ -115,7 +115,7 @@ desktop_DATA =								\
 
 @INTLTOOL_DESKTOP_RULE@
 
-EXTRA_DIST =
+EXTRA_DIST = \
 	$(desktop_in_files) \
 	lightdash-preferences.glade
 
