@@ -2579,7 +2579,6 @@ xfce_appfinder_model_bookmark_toggle (XfceAppfinderModel  *model,
 		{
 		      g_signal_emit (model, model_signals[BOOKMARK_REMOVED], 0, item->item);
 
-	g_print ("%s", "model: emit b signal\n");
             }
         }
 
