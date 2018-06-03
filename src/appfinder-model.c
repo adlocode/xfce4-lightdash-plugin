@@ -1285,6 +1285,7 @@ xfce_appfinder_model_bookmarks_collect (XfceAppfinderModel *model,
   GtkTreeIter   iter;
   LightdashBookmark *bookmark;
   gchar *desktop_id;
+  const gchar *name;
 
   /* empty the database */
   g_hash_table_remove_all (model->bookmarks_hash);
@@ -1326,6 +1327,8 @@ xfce_appfinder_model_bookmarks_collect (XfceAppfinderModel *model,
 
 		    bookmark = lightdash_bookmark_new ();
 		    bookmark->item = item->item;
+        name = garcon_menu_item_get_icon_name (bookmark->item);
+        item->icon_large = xfce_appfinder_model_load_pixbuf (name, XFCE_APPFINDER_ICON_SIZE_48);
 		    GtkWidget *image = gtk_image_new_from_pixbuf (item->icon_large);
 		    bookmark->button = gtk_button_new ();
 			gtk_container_add (GTK_CONTAINER (bookmark->button), image);
