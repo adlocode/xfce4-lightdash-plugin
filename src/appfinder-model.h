@@ -65,7 +65,6 @@ typedef struct
 	GarconMenuItem *item;
 	XfceAppfinderModel *model;
 	GtkWidget *window;
-  gchar *desktop_id;
 }LightdashBookmark;
 
 LightdashBookmark * lightdash_bookmark_new ();

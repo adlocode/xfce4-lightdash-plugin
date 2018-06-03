@@ -199,7 +199,6 @@ LightdashBookmark * lightdash_bookmark_new ()
   bookmark = g_slice_new0 (LightdashBookmark);
 	bookmark->item = NULL;
 	bookmark->button = NULL;
-  bookmark->desktop_id = NULL;
 
   return bookmark;
 }
@@ -1306,16 +1305,16 @@ xfce_appfinder_model_bookmarks_collect (XfceAppfinderModel *model,
           /* look for new commands */
           line = g_strndup (contents, end - contents);
           g_hash_table_insert (model->bookmarks_hash, line, GUINT_TO_POINTER (1));
-          /*if (model->items)
+          if (model->collect_items)
             {
-          for (idx = 0, li = model->items; li != NULL; li = li->next, idx++)
+          for (idx = 0, li = model->collect_items; li != NULL; li = li->next, idx++)
     {
       item = li->data;
       if (item->item == NULL)
         continue;
 
       /* find the item we're trying to add/remove */
-      /*if (line != NULL)
+      if (line != NULL)
         {
           desktop_id2 = garcon_menu_item_get_desktop_id (item->item);
           if (desktop_id2 != NULL
@@ -1326,80 +1325,25 @@ xfce_appfinder_model_bookmarks_collect (XfceAppfinderModel *model,
               //desktop_id = NULL;
 
 		    bookmark = lightdash_bookmark_new ();
-        bookmark->desktop_id = g_strdup (line);
-		    //bookmark->item = item->item;
-		    //GtkWidget *image = gtk_image_new_from_pixbuf (item->icon_large);
+		    bookmark->item = item->item;
+		    GtkWidget *image = gtk_image_new_from_pixbuf (item->icon_large);
 		    bookmark->button = gtk_button_new ();
-			//gtk_container_add (GTK_CONTAINER (bookmark->button), image);
-			//gtk_widget_show (image);
+			gtk_container_add (GTK_CONTAINER (bookmark->button), image);
+			gtk_widget_show (image);
 			gtk_widget_show (bookmark->button);
-			//g_object_unref (item->icon_large);
+			g_object_unref (item->icon_large);
 			g_ptr_array_add (model->bookmarks_array, bookmark);
 		    g_signal_emit (model, model_signals[BOOKMARK_ADDED], 0, bookmark);
 
-        //}
-        //}
-    //}
-        //}
+        }
+        }
+    }
+        }
         }
       contents = end + 1;
     }
 
 }
-
-static void
-lightdash_bookmark_add_menu_item (LightdashBookmark *bookmark,
-                                    XfceAppfinderModel *model)
-{
-  gchar *line;
-  gchar *end;
-  gchar *contents;
-  ModelItem    *item;
-  GSList       *li;
-  const gchar  *desktop_id2;
-  static gsize  old_len = 0;
-  gchar        *filename;
-  gboolean      succeed;
-  GtkTreePath  *path;
-  gint          idx;
-  GtkTreeIter   iter;
-  gchar *desktop_id;
-
-
-          if (bookmark->desktop_id && model->items)
-            {
-          for (idx = 0, li = model->items; li != NULL; li = li->next, idx++)
-    {
-      item = li->data;
-      if (item->item == NULL)
-        continue;
-
-          desktop_id2 = garcon_menu_item_get_desktop_id (item->item);
-          if (desktop_id2 != NULL
-              && strcmp (bookmark->desktop_id, desktop_id2) == 0)
-            {
-
-              /* stop searching, continue collecting */
-              //desktop_id = NULL;
-
-		    bookmark->item = item->item;
-		    GtkWidget *image = gtk_image_new_from_pixbuf (item->icon_large);
-			  gtk_container_add (GTK_CONTAINER (bookmark->button), image);
-			gtk_widget_show (image);
-			gtk_widget_show (bookmark->button);
-			g_object_unref (item->icon_large);
-			//g_ptr_array_add (model->bookmarks_array, bookmark);
-		    //g_signal_emit (model, model_signals[BOOKMARK_ADDED], 0, bookmark);
-
-        //}
-        }
-
-        }
-        }
-
-}
-
-
 
 static void
 xfce_appfinder_model_bookmarks_changed (GFileMonitor       *monitor,
@@ -1931,25 +1875,6 @@ xfce_appfinder_model_menu_changed_idle (gpointer data)
   g_slist_foreach (tmp, (GFunc) g_object_unref, NULL);
   g_slist_free (tmp);
 
-  filename = xfce_resource_lookup (XFCE_RESOURCE_CONFIG, BOOKMARKS_PATH);
-  if (G_LIKELY (filename != NULL))
-    {
-      g_print ("%s", "menu changed collect bookmarks");
-
-      mmap = g_mapped_file_new (filename, FALSE, &error);
-      if (G_LIKELY (mmap != NULL))
-        {
-          //xfce_appfinder_model_bookmarks_collect (model, mmap);
-          g_mapped_file_unref (mmap);
-        }
-    }
-
-  if (model->bookmarks_array)
-    g_ptr_array_foreach (model->bookmarks_array,
-                         (GFunc*)lightdash_bookmark_add_menu_item,
-                         model);
-
-
   return FALSE;
 }
 
@@ -2063,26 +1988,6 @@ xfce_appfinder_model_collect_thread (gpointer user_data)
       g_signal_connect (G_OBJECT (model->menu), "reload-required",
                         G_CALLBACK (xfce_appfinder_model_menu_changed), model);
     }
-//if (!bookmarks_collected)
-  //xfce_appfinder_model_menu_changed (model->menu, model);
-
-  filename = xfce_resource_lookup (XFCE_RESOURCE_CONFIG, BOOKMARKS_PATH);
-  if (G_LIKELY (filename != NULL))
-    {
-      APPFINDER_DEBUG ("load bookmarks from %s", filename);
-
-      mmap = g_mapped_file_new (filename, FALSE, &error);
-      if (G_LIKELY (mmap != NULL))
-        {
-          //xfce_appfinder_model_bookmarks_collect (model, mmap);
-          g_mapped_file_unref (mmap);
-        }
-    }
-
-  if (model->bookmarks_array)
-    g_ptr_array_foreach (model->bookmarks_array,
-                         (GFunc*)lightdash_bookmark_add_menu_item,
-                         model);
 
   APPFINDER_DEBUG ("collect thread end");
 
