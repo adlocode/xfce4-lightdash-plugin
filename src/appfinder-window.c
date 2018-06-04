@@ -427,6 +427,7 @@ static void lightdash_window_bookmark_removed (XfceAppfinderModel  *model,
 		{
 			window->bookmarks_buttons = g_list_remove (window->bookmarks_buttons, (gconstpointer) bookmark);
 			lightdash_bookmark_free (bookmark);
+      bookmark = NULL;
 		}
 	}
 }

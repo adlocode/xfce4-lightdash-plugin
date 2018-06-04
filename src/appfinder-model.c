@@ -2573,7 +2573,6 @@ xfce_appfinder_model_bookmark_toggle (XfceAppfinderModel  *model,
 			gtk_container_add (GTK_CONTAINER (bookmark->button), image);
 			gtk_widget_show (image);
 			gtk_widget_show (bookmark->button);
-			g_object_unref (item->icon_large);
 			g_ptr_array_add (model->bookmarks_array, bookmark);
 		    g_signal_emit (model, model_signals[BOOKMARK_ADDED], 0, bookmark);
 		}
