@@ -825,8 +825,6 @@ xfce_appfinder_model_collect_idle (gpointer user_data)
       g_slist_foreach (tmp, (GFunc) g_object_unref, NULL);
       g_slist_free (tmp);
     }
-    
-  g_signal_emit_by_name (model, "bookmarks-changed");
 
   APPFINDER_DEBUG ("insert idle end");
 
@@ -1423,7 +1421,6 @@ xfce_appfinder_model_bookmarks_changed (GFileMonitor       *monitor,
                       gtk_tree_path_free (path);
                     }
                 }
-               g_signal_emit_by_name (model, "bookmarks-changed"); 
             }
         }
       break;
