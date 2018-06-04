@@ -1331,6 +1331,7 @@ xfce_appfinder_model_bookmarks_collect (XfceAppfinderModel *model,
         item->icon_large = xfce_appfinder_model_load_pixbuf (name, XFCE_APPFINDER_ICON_SIZE_48);
 		    GtkWidget *image = gtk_image_new_from_pixbuf (item->icon_large);
 		    bookmark->button = gtk_button_new ();
+        gtk_widget_set_tooltip_text (bookmark->button, garcon_menu_item_get_name (bookmark->item));
 			gtk_container_add (GTK_CONTAINER (bookmark->button), image);
 			gtk_widget_show (image);
 			gtk_widget_show (bookmark->button);
@@ -2568,6 +2569,7 @@ xfce_appfinder_model_bookmark_toggle (XfceAppfinderModel  *model,
 		    bookmark->item = item->item;
 		    GtkWidget *image = gtk_image_new_from_pixbuf (item->icon_large);
 		    bookmark->button = gtk_button_new ();
+      gtk_widget_set_tooltip_text (bookmark->button, garcon_menu_item_get_name (bookmark->item));
 			gtk_container_add (GTK_CONTAINER (bookmark->button), image);
 			gtk_widget_show (image);
 			gtk_widget_show (bookmark->button);
