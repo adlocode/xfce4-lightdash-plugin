@@ -404,8 +404,6 @@ static void lightdash_window_bookmark_added (XfceAppfinderModel  *model,
 	gboolean is_bookmark;
 	//LightdashBookmark *bookmark;
 
-	g_print ("%s", "Bookmark added \n");
-
 	lightdash_table_layout_attach_next (bookmark->button, LIGHTDASH_TABLE_LAYOUT (window->icon_bar));
 	window->bookmarks_buttons = g_list_prepend (window->bookmarks_buttons, bookmark);
 	gtk_widget_set_size_request (bookmark->button, 70, 70);
