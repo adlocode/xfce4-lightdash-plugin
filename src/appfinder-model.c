@@ -35,7 +35,7 @@
 
 
 #define HISTORY_PATH   "xfce4/xfce4-appfinder/history"
-#define BOOKMARKS_PATH "xfce4/appfinder/bookmarks"
+#define BOOKMARKS_PATH "xfce4/lightdash/bookmarks"
 
 
 static gboolean bookmarks_collected = FALSE;
