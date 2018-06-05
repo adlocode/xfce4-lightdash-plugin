@@ -149,11 +149,6 @@ void lightdash_table_layout_update_rows_and_columns (LightdashTableLayout *table
 	columns = ceil (sqrt ((double)table_layout->number_children));
 	rows = ceil ((double)table_layout->number_children / (double)*table_columns);
 	
-	if (columns < 2)
-		columns = 2;
-	if (rows < 2)
-		rows = 2;
-	
 	*table_columns = columns;
 	*table_rows = rows;
 }

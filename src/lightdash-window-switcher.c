@@ -1,4 +1,4 @@
-/* Copyright (C) 2015-2016 adlo
+/* Copyright (C) 2015-2016, 2018 adlo
  * 
  * This library is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,8 @@
 #include "lightdash-image.h"
 #include "lightdash-composited-window.h"
 
-#define DEFAULT_TABLE_COLUMNS 3
-#define DEFAULT_TABLE_ROWS 2
+#define DEFAULT_TABLE_COLUMNS 1
+#define DEFAULT_TABLE_ROWS 1
 
 /* 
  * This tasklist emits signals when various events happen. This allows
