@@ -36,6 +36,8 @@ liblightdash_la_SOURCES = \
 	lightdash-composited-window.h \
 	table-layout.c \
 	table-layout.h \
+	lightdash-button.c \
+	lightdash-button.h \
 	lightdash-image.c \
 	lightdash-image.h \
 	lightdash.c \

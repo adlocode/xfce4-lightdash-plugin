@@ -30,6 +30,7 @@
 #include <math.h>
 #include "lightdash-window-switcher.h"
 #include "table-layout.h"
+#include "lightdash-button.h"
 #include "lightdash-image.h"
 #include "lightdash-composited-window.h"
 
@@ -1311,8 +1312,8 @@ static void light_task_create_widgets (LightTask *task)
 	}
 	
 	
-	task->button = gtk_button_new();
-	gtk_button_set_relief (GTK_BUTTON (task->button), GTK_RELIEF_NONE);
+	task->button = lightdash_button_new();
+	//gtk_button_set_relief (GTK_BUTTON (task->button), GTK_RELIEF_NONE);
 	gtk_label_set_ellipsize(GTK_LABEL(task->label),PANGO_ELLIPSIZE_END);
 	gtk_container_add (GTK_CONTAINER(task->button),task->vbox);
 	gtk_box_pack_start (GTK_BOX (task->vbox), task->image, TRUE, TRUE, 0);
