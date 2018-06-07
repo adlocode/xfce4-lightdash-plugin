@@ -279,17 +279,8 @@ static void lightdash_pager_realize (GtkWidget *widget)
 	window = gdk_window_new (gtk_widget_get_parent_window (widget), &attributes, attributes_mask);
 	gtk_widget_set_window (widget, window);
 	gdk_window_set_user_data (window, widget);
-	
-	style = gtk_widget_get_style (widget);
-	
-	new_style = gtk_style_attach (style, window);
-	if (new_style != style)
-	{
-		gtk_widget_set_style (widget, style);
-		style = new_style;
-	}
-	
-	gtk_style_set_background (style, window, GTK_STATE_NORMAL);
+
+  gtk_style_context_set_background (gtk_widget_get_style_context (widget), window);
 	
 	if (pager->priv->screen == NULL)
 		pager->priv->screen = wnck_screen_get_default ();
@@ -477,7 +468,6 @@ get_window_rect (WnckWindow         *window,
   gdk_rectangle_intersect ((GdkRectangle *) workspace_rect, &unclipped_win_rect, rect);
 }
 
-#if GTK_CHECK_VERSION (3, 0, 0)
 static void
 draw_window (cairo_t *cr,
              GtkWidget          *widget,
@@ -485,53 +475,40 @@ draw_window (cairo_t *cr,
              const GdkRectangle *winrect,
              GtkStateType        state,
              gboolean            translucent)
-#else
-static void
-draw_window (GdkDrawable        *drawable,
-             GtkWidget          *widget,
-             WnckWindow         *win,
-             const GdkRectangle *winrect,
-             GtkStateType        state,
-             gboolean            translucent)
-#endif             
 {
-  GtkStyle *style;
-  #if GTK_CHECK_VERSION (3, 0, 0)
-  #else
-  cairo_t *cr;
-  #endif
+  GtkStyleContext *context;
+
   GdkPixbuf *icon;
   int icon_x, icon_y, icon_w, icon_h;
   gboolean is_active;
   GdkColor *color;
+  GdkRGBA fg;
   gdouble translucency;
 
-  style = gtk_widget_get_style (widget);
+  context = gtk_widget_get_style_context (widget);
 
   is_active = wnck_window_is_active (win);
   translucency = translucent ? 0.4 : 1.0;
   
-  #if GTK_CHECK_VERSION (3, 0, 0)
-  cairo_save (cr);
-  #else
-  cr = gdk_cairo_create (drawable);
-  #endif
-  cairo_rectangle (cr, winrect->x, winrect->y, winrect->width, winrect->height);
-  cairo_clip (cr);
+  gtk_style_context_save (context);
+  gtk_style_context_set_state (context, state);
+
+  cairo_push_group (cr);
+
+  gtk_render_background (context, cr, winrect->x + 1, winrect->y + 1,
+                         MAX (0, winrect->width - 2), MAX (0, winrect->height - 2));
 
   if (is_active)
-    color = &style->light[state];
-  else
-    color = &style->bg[state];
-  cairo_set_source_rgba (cr,
-                         color->red / 65535.,
-                         color->green / 65535.,
-                         color->blue / 65535.,
-                         translucency);
-  cairo_rectangle (cr,
-                   winrect->x + 1, winrect->y + 1,
-                   MAX (0, winrect->width - 2), MAX (0, winrect->height - 2));
-  cairo_fill (cr);
+    {
+      /* Sharpen the foreground color */
+      cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.3f);
+      cairo_rectangle (cr, winrect->x + 1, winrect->y + 1,
+                       MAX (0, winrect->width - 2), MAX (0, winrect->height - 2));
+      cairo_fill (cr);
+    }
+
+  cairo_pop_group_to_source (cr);
+  cairo_paint_with_alpha (cr, translucency);
 
   icon = wnck_window_get_icon (win);
 
@@ -567,35 +544,29 @@ draw_window (GdkDrawable        *drawable,
     {
       icon_x = winrect->x + (winrect->width - icon_w) / 2;
       icon_y = winrect->y + (winrect->height - icon_h) / 2;
-                
-      cairo_save (cr);
-      gdk_cairo_set_source_pixbuf (cr, icon, icon_x, icon_y);
-      cairo_rectangle (cr, icon_x, icon_y, icon_w, icon_h);
-      cairo_clip (cr);
+
+      cairo_push_group (cr);
+      gtk_render_icon (context, cr, icon, icon_x, icon_y);
+      cairo_pop_group_to_source (cr);
       cairo_paint_with_alpha (cr, translucency);
-      cairo_restore (cr);
     }
-          
-  if (is_active)
-    color = &style->fg[state];
-  else
-    color = &style->fg[state];
-  cairo_set_source_rgba (cr,
-                         color->red / 65535.,
-                         color->green / 65535.,
-                         color->blue / 65535.,
-                         translucency);
+
+  cairo_push_group (cr);
+  gtk_render_frame (context, cr, winrect->x + 0.5, winrect->y + 0.5,
+                    MAX (0, winrect->width - 1), MAX (0, winrect->height - 1));
+  cairo_pop_group_to_source (cr);
+  cairo_paint_with_alpha (cr, translucency);
+
+  gtk_style_context_get_color (context, state, &fg);
+  fg.alpha = translucency;
+  gdk_cairo_set_source_rgba (cr, &fg);
   cairo_set_line_width (cr, 1.0);
   cairo_rectangle (cr,
                    winrect->x + 0.5, winrect->y + 0.5,
                    MAX (0, winrect->width - 1), MAX (0, winrect->height - 1));
   cairo_stroke (cr);
   
-  #if GTK_CHECK_VERSION (3, 0, 0)
-  cairo_restore (cr);
-  #else
-  cairo_destroy (cr);
-  #endif
+  gtk_style_context_restore (context);
 }
 
 static WnckWindow *
@@ -1224,69 +1195,69 @@ lightdash_pager_button_press (GtkWidget      *widget,
   return TRUE;
 }
 
-#if GTK_CHECK_VERSION (3, 0, 0)
+static void
+draw_dark_rectangle (GtkStyleContext *context,
+                     cairo_t *cr,
+                     GtkStateFlags state,
+                     int rx, int ry, int rw, int rh)
+{
+  gtk_style_context_save (context);
+
+  gtk_style_context_set_state (context, state);
+
+  cairo_push_group (cr);
+
+  gtk_render_background (context, cr, rx, ry, rw, rh);
+  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.3f);
+  cairo_rectangle (cr, rx, ry, rw, rh);
+  cairo_fill (cr);
+
+  cairo_pop_group_to_source (cr);
+  cairo_paint (cr);
+
+  gtk_style_context_restore (context);
+}
 
 static void lightdash_pager_draw_workspace (LightdashPager *pager,
 	cairo_t *cr, int workspace, GdkRectangle *rect, GdkPixbuf *bg_pixbuf)
-#else
-		
-static void lightdash_pager_draw_workspace (LightdashPager *pager,
-	int workspace, GdkRectangle *rect, GdkPixbuf *bg_pixbuf)
-#endif	
 {
-	GdkWindow *window;
 	GList *windows;
-	WnckWorkspace *space;
-	gboolean is_current;
-	GtkStyle *style;
-	GtkWidget *widget;
-	GtkStateType state;
-	
-	space = wnck_screen_get_workspace (pager->priv->screen, workspace);
-	widget = GTK_WIDGET (pager);
-	is_current = (space == wnck_screen_get_active_workspace (pager->priv->screen));
-	
-	if (is_current)
-		state = GTK_STATE_SELECTED;
-	else
-		state = GTK_STATE_NORMAL;
-	
-	#if GTK_CHECK_VERSION (3, 0, 0)
-	#else
-	window = gtk_widget_get_window (widget);
-	#endif
-	style = gtk_widget_get_style (widget);
-	
-	if (bg_pixbuf)
-	{
-		#if GTK_CHECK_VERSION (3, 0, 0)
-		gdk_cairo_set_source_pixbuf (cr, bg_pixbuf, rect->x, rect->y);
-		cairo_paint (cr);
-		#else
-		gdk_draw_pixbuf (window,
-			style->dark_gc[state],
-			bg_pixbuf,
-			0, 0,
-			rect->x, rect->y,
-			-1, -1,
-			GDK_RGB_DITHER_MAX,
-			0, 0);
-		#endif
-	}
-	else
+  GList *tmp;
+  gboolean is_current;
+  WnckWorkspace *space;
+  GtkWidget *widget;
+  GtkStateFlags state;
+  GtkStyleContext *context;
+
+  space = wnck_screen_get_workspace (pager->priv->screen, workspace);
+  if (!space)
+    return;
+
+  widget = GTK_WIDGET (pager);
+  is_current = (space == wnck_screen_get_active_workspace (pager->priv->screen));
+
+  state = GTK_STATE_FLAG_NORMAL;
+  if (is_current)
+    state |= GTK_STATE_FLAG_SELECTED;
+  else if (workspace == pager->priv->prelight)
+    state |= GTK_STATE_FLAG_PRELIGHT;
+
+  context = gtk_widget_get_style_context (widget);
+
+  /* FIXME in names mode, should probably draw things like a button.
+   */
+
+  if (bg_pixbuf)
     {
-	  #if GTK_CHECK_VERSION (3, 0, 0)
-	  #else
-      cairo_t *cr;
-
-      cr = gdk_cairo_create (window);
-      #endif
-
+      gdk_cairo_set_source_pixbuf (cr, bg_pixbuf, rect->x, rect->y);
+      cairo_paint (cr);
+    }
+  else
+    {
       if (!wnck_workspace_is_virtual (space))
         {
-          gdk_cairo_set_source_color (cr, &style->dark[state]);
-          cairo_rectangle (cr, rect->x, rect->y, rect->width, rect->height);
-          cairo_fill (cr);
+          draw_dark_rectangle (context, cr, state,
+                               rect->x, rect->y, rect->width, rect->height);
         }
       else
         {
@@ -1347,18 +1318,15 @@ static void lightdash_pager_draw_workspace (LightdashPager *pager,
                     {
                       /* "+ j" is for the thin lines */
                       vy = rect->y + (height_ratio * screen_height) * j + j;
+                      GtkStateFlags rec_state = GTK_STATE_FLAG_NORMAL;
 
                       if (j == verti_views - 1)
                         vh = rect->height + rect->y - vy;
 
                       if (active_i == i && active_j == j)
-                        gdk_cairo_set_source_color (cr,
-                                                    &style->dark[GTK_STATE_SELECTED]);
-                      else
-                        gdk_cairo_set_source_color (cr,
-                                                    &style->dark[GTK_STATE_NORMAL]);
-                      cairo_rectangle (cr, vx, vy, vw, vh);
-                      cairo_fill (cr);
+                        rec_state = GTK_STATE_FLAG_SELECTED;
+
+                      draw_dark_rectangle (context, cr, rec_state, vx, vy, vw, vh);
                     }
                 }
             }
@@ -1368,9 +1336,8 @@ static void lightdash_pager_draw_workspace (LightdashPager *pager,
               height_ratio = rect->height / (double) workspace_height;
 
               /* first draw non-active part of the viewport */
-              gdk_cairo_set_source_color (cr, &style->dark[GTK_STATE_NORMAL]);
-              cairo_rectangle (cr, rect->x, rect->y, rect->width, rect->height);
-              cairo_fill (cr);
+              draw_dark_rectangle (context, cr, GTK_STATE_FLAG_NORMAL,
+                                   rect->x, rect->y, rect->width, rect->height);
 
               if (is_current)
                 {
@@ -1382,50 +1349,32 @@ static void lightdash_pager_draw_workspace (LightdashPager *pager,
                   vw = width_ratio * screen_width;
                   vh = height_ratio * screen_height;
 
-                  gdk_cairo_set_source_color (cr, &style->dark[GTK_STATE_SELECTED]);
-                  cairo_rectangle (cr, vx, vy, vw, vh);
-                  cairo_fill (cr);
+                  draw_dark_rectangle (context, cr, GTK_STATE_FLAG_SELECTED,
+                                       vx, vy, vw, vh);
                 }
             }
         }
-      #if GTK_CHECK_VERSION (3, 0, 0)
-      #else
-      cairo_destroy (cr);
-      #endif
     }
-    
-    windows = get_windows_for_workspace_in_bottom_to_top (pager->priv->screen, 
-										wnck_screen_get_workspace (pager->priv->screen, workspace));
-	
-	GList *tmp = windows;
-	while (tmp != NULL)
-	{
-		WnckWindow *win = tmp->data;
-		GdkRectangle winrect;
-		
-		get_window_rect (win, rect, &winrect);
-		
-		#if GTK_CHECK_VERSION (3, 0, 0)
-		draw_window (cr,
-					widget,
-					win,
-					&winrect,
-					state,
-					FALSE);
-		#else
-		draw_window (window,
-					widget,
-					win,
-					&winrect,
-					state,
-					FALSE);
-		#endif
-		
-		tmp = tmp->next;
-	}
-	
-	g_list_free (windows);
-		
+
+      windows = get_windows_for_workspace_in_bottom_to_top (pager->priv->screen,
+							    wnck_screen_get_workspace (pager->priv->screen,
+										       workspace));
+
+  tmp = windows;
+  while (tmp != NULL)
+  	{
+  	  WnckWindow *win = tmp->data;
+  	  GdkRectangle winrect;
+
+  	  get_window_rect (win, rect, &winrect);
+
+      gboolean translucent = (win == pager->priv->drag_window) && pager->priv->dragging;
+      draw_window (cr, widget, win, &winrect, state, translucent);
+
+  	  tmp = tmp->next;
+  	}
+
+      g_list_free (windows);
 }
 	
 #if GTK_CHECK_VERSION (3, 0, 0)
