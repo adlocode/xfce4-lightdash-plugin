@@ -27,27 +27,13 @@
  #include <gtk/gtk.h>
  #include <libwnck/libwnck.h>
  #include <X11/Xlib.h>
+ #include <gdk/gdk.h>
  #include <gdk/gdkx.h>
  #include <cairo/cairo.h>
  #include <cairo/cairo-xlib.h>
 
-#if GTK_CHECK_VERSION (3, 0, 0)
 GdkPixbuf*
-_lightdash_gdk_pixbuf_get_from_pixmap (Pixmap       xpixmap);
-#else
-GdkPixbuf*
-_lightdash_gdk_pixbuf_get_from_pixmap (GdkPixbuf   *dest,
-                                  Pixmap       xpixmap,
-                                  int          src_x,
-                                  int          src_y,
-                                  int          dest_x,
-                                  int          dest_y,
-                                  int          width,
-                                  int          height);
-
-
-static GdkColormap*
-get_cmap (GdkPixmap *pixmap);
-#endif
+_lightdash_gdk_pixbuf_get_from_pixmap (Screen *screen,
+                                  Pixmap  xpixmap);
 
 #endif /* LIGHTDASH_XUTILS_H */

@@ -27,6 +27,8 @@
 struct _LightdashPagerPrivate
 {
 	WnckScreen *screen;
+
+  GdkScreen *gdk_screen;
 	
 	int prelight;
 	gboolean prelight_dnd;
@@ -118,7 +120,6 @@ static void lightdash_pager_workspace_destroyed_callback
 static GList*
 get_windows_for_workspace_in_bottom_to_top (WnckScreen    *screen,
                                             WnckWorkspace *workspace);
-#if GTK_CHECK_VERSION (3, 0, 0)
 static void
 draw_window (cairo_t *cr,
              GtkWidget          *widget,
@@ -126,16 +127,7 @@ draw_window (cairo_t *cr,
              const GdkRectangle *winrect,
              GtkStateType        state,
              gboolean            translucent);
-#else                                            
-static void
-draw_window (GdkDrawable        *drawable,
-             GtkWidget          *widget,
-             WnckWindow         *win,
-             const GdkRectangle *winrect,
-             GtkStateType        state,
-             gboolean            translucent);
-#endif
-             
+
 static void window_opened_callback (WnckScreen *screen, WnckWindow *window, gpointer data);
 
 static void window_closed_callback (WnckScreen *screen, WnckWindow *window, gpointer data);
@@ -186,6 +178,7 @@ static void lightdash_pager_init (LightdashPager *pager)
 	pager->priv = LIGHTDASH_PAGER_GET_PRIVATE (pager);
 	
 	pager->priv->screen = NULL;
+  pager->priv->gdk_screen = NULL;
 	pager->priv->n_rows = 1;
 	pager->priv->bg_cache = NULL;
 	pager->priv->drag_start_x = 0;
@@ -245,8 +238,7 @@ static void lightdash_pager_realize (GtkWidget *widget)
 	LightdashPager *pager;
 	GtkAllocation allocation;
 	GdkWindow *window;
-	GtkStyle *style;
-	GtkStyle *new_style;
+
 	GList *tmp;
 	
 	pager = LIGHTDASH_PAGER (widget);
@@ -284,6 +276,8 @@ static void lightdash_pager_realize (GtkWidget *widget)
 	
 	if (pager->priv->screen == NULL)
 		pager->priv->screen = wnck_screen_get_default ();
+
+  pager->priv->gdk_screen = gdk_screen_get_default ();
 		
 	for (tmp = wnck_screen_get_windows (pager->priv->screen); tmp; tmp = tmp->next)
 	{
@@ -326,6 +320,28 @@ static void lightdash_pager_unrealize (GtkWidget *widget)
 	(*GTK_WIDGET_CLASS (lightdash_pager_parent_class)->unrealize) (widget);
 }
 
+static void
+_lightdash_pager_get_padding (LightdashPager *pager,
+                         GtkBorder *padding)
+{
+  /*if (pager->priv->shadow_type != GTK_SHADOW_NONE)
+    {
+      GtkWidget       *widget;
+      GtkStyleContext *context;
+      GtkStateFlags    state;
+
+      widget = GTK_WIDGET (pager);
+      context = gtk_widget_get_style_context (widget);
+      state = gtk_style_context_get_state (context);
+      gtk_style_context_get_padding (context, state, padding);
+    }
+  else
+    {*/
+      GtkBorder empty_padding = { 0, 0, 0, 0 };
+      *padding = empty_padding;
+    //}
+}
+
 static void get_workspace_rect (LightdashPager *pager,
 	int space, GdkRectangle *rect)
 {
@@ -335,20 +351,33 @@ static void get_workspace_rect (LightdashPager *pager,
   GtkWidget *widget;
   int col, row;
   GtkAllocation allocation;
-  GtkStyle *style;
-  int focus_width;
+  GtkBorder padding;
 
   widget = GTK_WIDGET (pager);
 
   gtk_widget_get_allocation (widget, &allocation);
 
-  style = gtk_widget_get_style (widget);
-  gtk_widget_style_get (widget,
-			"focus-line-width", &focus_width,
-			NULL);
+  if (allocation.x < 0 || allocation.y < 0 ||
+      allocation.width < 0 || allocation.height < 0)
+    {
+      rect->x = 0;
+      rect->y = 0;
+      rect->width = 0;
+      rect->height = 0;
+
+      return;
+    }
+
+  _lightdash_pager_get_padding (pager, &padding);
   
-  hsize = allocation.width - 2 * focus_width;
-  vsize = allocation.height - 2 * focus_width;
+  hsize = allocation.width;
+  vsize = allocation.height;
+
+  /*if (pager->priv->shadow_type != GTK_SHADOW_NONE)
+    {
+      hsize -= padding.left + padding.right;
+      vsize -= padding.top + padding.bottom;
+    }*/
   
   
   n_spaces = wnck_screen_get_workspace_count (pager->priv->screen);
@@ -373,11 +402,7 @@ static void get_workspace_rect (LightdashPager *pager,
       
       if (row  == spaces_per_row - 1)
 	rect->height = vsize - rect->y;
-	
-	
-  rect->x += focus_width;
-  rect->y += focus_width;
-  
+
 }
 static gboolean lightdash_pager_window_state_is_relevant (int state)
 {
@@ -619,40 +644,21 @@ workspace_at_point (LightdashPager *pager,
   int i;
   int n_spaces;
   GtkAllocation allocation;
-  int focus_width;
-  int xthickness;
-  int ythickness;
+  GtkBorder padding;
 
   widget = GTK_WIDGET (pager);
 
   gtk_widget_get_allocation (widget, &allocation);
 
-  gtk_widget_style_get (GTK_WIDGET (pager),
-			"focus-line-width", &focus_width,
-			NULL);
-
-  //if (pager->priv->shadow_type != GTK_SHADOW_NONE)
-   //{
-      GtkStyle *style;
-
-      style = gtk_widget_get_style (widget);
-
-      xthickness = focus_width + style->xthickness;
-      ythickness = focus_width + style->ythickness;
-    //}
-  //else
-    //{
-      //xthickness = focus_width;
-      //ythickness = focus_width;
-    //}
+  _lightdash_pager_get_padding (pager, &padding);
 
   n_spaces = wnck_screen_get_workspace_count (pager->priv->screen);
-  
+
   i = 0;
   while (i < n_spaces)
     {
       GdkRectangle rect;
-      
+
       get_workspace_rect (pager, i, &rect);
 
       /* If workspace is on the edge, pretend points on the frame belong to the
@@ -661,27 +667,27 @@ workspace_at_point (LightdashPager *pager,
        * to the workspace.
        */
 
-      if (rect.x == xthickness)
+      if (rect.x == padding.left)
         {
           rect.x = 0;
-          rect.width += xthickness;
+          rect.width += padding.left;
         }
-      if (rect.y == ythickness)
+      if (rect.y == padding.top)
         {
           rect.y = 0;
-          rect.height += ythickness;
+          rect.height += padding.top;
         }
-      if (rect.y + rect.height == allocation.height - ythickness)
+      if (rect.y + rect.height == allocation.height - padding.bottom)
         {
-          rect.height += ythickness;
+          rect.height += padding.bottom;
         }
       else
         {
           rect.height += 1;
         }
-      if (rect.x + rect.width == allocation.width - xthickness)
+      if (rect.x + rect.width == allocation.width - padding.right)
         {
-          rect.width += xthickness;
+          rect.width += padding.right;
         }
       else
         {
@@ -697,7 +703,7 @@ workspace_at_point (LightdashPager *pager,
           g_assert (space != NULL);
 
           /* Scale x, y mouse coords to corresponding screenwide viewport coords */
-          
+
           width_ratio = (double) wnck_workspace_get_width (space) / (double) rect.width;
           height_ratio = (double) wnck_workspace_get_height (space) / (double) rect.height;
 
@@ -714,6 +720,7 @@ workspace_at_point (LightdashPager *pager,
 
   return -1;
 }
+
 /*
 static gboolean
 lightdash_pager_drag_motion_timeout (gpointer data)
@@ -1377,96 +1384,78 @@ static void lightdash_pager_draw_workspace (LightdashPager *pager,
       g_list_free (windows);
 }
 	
-#if GTK_CHECK_VERSION (3, 0, 0)
-
-static gboolean lightdash_pager_draw (GtkWidget *widget, cairo_t *cr)
-#else
-
-static gboolean lightdash_pager_expose_event (GtkWidget *widget, GdkEventExpose *event)
-#endif
+static gboolean
+lightdash_pager_draw (GtkWidget *widget,
+                 cairo_t   *cr)
 {
-	LightdashPager *pager;
-	int i;
-	int n_spaces;
-	WnckWorkspace *active_space;
-	GdkPixbuf *bg_pixbuf;
-	gboolean first;
-	#if GTK_CHECK_VERSION (3, 0, 0)
-	#else
-	GdkWindow *window;
-	GtkAllocation allocation;
-	#endif
-	GtkStyle *style;
-	int focus_width;
-	
-	bg_pixbuf = NULL;
-	
-	pager = LIGHTDASH_PAGER (widget);
-	
-	n_spaces = wnck_screen_get_workspace_count (pager->priv->screen);
-	active_space = wnck_screen_get_active_workspace (pager->priv->screen);
-	bg_pixbuf = NULL;
-	first = TRUE;
-	
-	#if GTK_CHECK_VERSION (3, 0, 0)
-	#else
-	window = gtk_widget_get_window  (widget);
-	gtk_widget_get_allocation (widget, &allocation);
-	#endif
-	
-	style = gtk_widget_get_style (widget);
-	gtk_widget_style_get (widget,
-							"focus-line-width", &focus_width,
-							NULL);
-												
-	if (gtk_widget_has_focus (widget))
-	#if GTK_CHECK_VERSION (3, 0, 0)	
-		gtk_paint_focus (style,
-						cr,
-						gtk_widget_get_state (widget),
-						widget,
-						"pager",
-						0, 0,
-						gtk_widget_get_allocated_width (widget),
-						gtk_widget_get_allocated_height (widget));
-	#else
-		gtk_paint_focus (style,
-						window,
-						gtk_widget_get_state (widget),
-						NULL,
-						widget,
-						"pager",
-						0, 0,
-						allocation.width,
-						allocation.height);
-	#endif
-	
-	i = 0;
-	while (i < n_spaces)
-	{
-		GdkRectangle rect, intersect;
-		
-		get_workspace_rect (pager, i, &rect);
-		if (first)
-		{
-			bg_pixbuf = lightdash_pager_get_background (pager,
-														rect.width,
-														rect.height);
-			first = FALSE;
-		}
-		#if GTK_CHECK_VERSION (3, 0, 0)
-		lightdash_pager_draw_workspace (pager, cr, i, &rect, bg_pixbuf);
-		#else
-		lightdash_pager_draw_workspace (pager, i, &rect, bg_pixbuf);
-		#endif
-		
-		++i;
-	}
-	
-	
-	
-	return FALSE;	
-	
+  LightdashPager *pager;
+  int i;
+  int n_spaces;
+  WnckWorkspace *active_space;
+  GdkPixbuf *bg_pixbuf;
+  gboolean first;
+  GtkStyleContext *context;
+  GtkStateFlags state;
+
+  pager = LIGHTDASH_PAGER (widget);
+
+  n_spaces = wnck_screen_get_workspace_count (pager->priv->screen);
+  active_space = wnck_screen_get_active_workspace (pager->priv->screen);
+  bg_pixbuf = NULL;
+  first = TRUE;
+
+  state = gtk_widget_get_state_flags (widget);
+  context = gtk_widget_get_style_context (widget);
+
+  gtk_style_context_save (context);
+  gtk_style_context_set_state (context, state);
+
+  if (gtk_widget_has_focus (widget))
+  {
+    cairo_save (cr);
+    gtk_render_focus (context, cr,
+		      0, 0,
+		      gtk_widget_get_allocated_width (widget),
+		      gtk_widget_get_allocated_height (widget));
+    cairo_restore (cr);
+  }
+
+  /*if (pager->priv->shadow_type != GTK_SHADOW_NONE)
+    {
+      cairo_save (cr);
+      gtk_render_frame (context, cr, 0, 0,
+                        gtk_widget_get_allocated_width (widget),
+                        gtk_widget_get_allocated_height (widget));
+      cairo_restore (cr);
+    }*/
+
+  gtk_style_context_restore (context);
+
+  i = 0;
+  while (i < n_spaces)
+    {
+      GdkRectangle rect;
+
+	  get_workspace_rect (pager, i, &rect);
+
+          /* We only want to do this once, even if w/h change,
+           * for efficiency. width/height will only change by
+           * one pixel at most.
+           */
+          if (first)
+            {
+              bg_pixbuf = lightdash_pager_get_background (pager,
+                                                     rect.width,
+                                                     rect.height);
+              first = FALSE;
+            }
+
+	  lightdash_pager_draw_workspace (pager, cr, i, &rect, bg_pixbuf);
+
+      ++i;
+    }
+
+  return FALSE;
 }
 
 static void lightdash_pager_disconnect_window (LightdashPager *pager, WnckWindow *window)
@@ -1504,7 +1493,7 @@ lightdash_pager_get_background (LightdashPager *pager,
 {
   Pixmap p;
   GdkPixbuf *pix = NULL;
-  
+
   /* We have to be careful not to keep alternating between
    * width/height values, otherwise this would get really slow.
    */
@@ -1522,29 +1511,23 @@ lightdash_pager_get_background (LightdashPager *pager,
   if (pager->priv->screen == NULL)
     return NULL;
 
-
   /* FIXME this just globally disables the thumbnailing feature */
   return NULL;
-  
+
 #define MIN_BG_SIZE 10
-  
+
   if (width < MIN_BG_SIZE || height < MIN_BG_SIZE)
     return NULL;
-  
-  p = wnck_screen_get_background_pixmap (pager->priv->screen);
-  
-  if (p != None)
-  {
-	  #if GTK_CHECK_VERSION (3, 0, 0)
-	  pix = _lightdash_gdk_pixbuf_get_from_pixmap (p);
-	  #else
-      pix = _lightdash_gdk_pixbuf_get_from_pixmap (NULL,
-                                              p,
-                                              0, 0, 0, 0,
-                                              -1, -1);
-      #endif
-  }
 
+  p = wnck_screen_get_background_pixmap (pager->priv->screen);
+
+  if (p != None)
+    {
+      Screen *xscreen;
+
+      xscreen = GDK_SCREEN_XSCREEN (pager->priv->gdk_screen);
+      pix = _lightdash_gdk_pixbuf_get_from_pixmap (xscreen, p);
+    }
 
   if (pix)
     {
