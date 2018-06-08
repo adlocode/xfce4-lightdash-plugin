@@ -1016,43 +1016,23 @@ void lightdash_windows_view_reattach_widgets (LightdashWindowsView *tasklist)
 		}		
 }
 
-#if GTK_CHECK_VERSION (3, 0, 0)
 gboolean lightdash_windows_view_image_draw (GtkWidget *widget, cairo_t *cr, LightTask *task)
-#else
-gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose *event, LightTask *task)
-#endif
 {
-		#if GTK_CHECK_VERSION (3, 0, 0)
-		#else
-		cairo_t *cr;
-		#endif
-		
 		int width, height;
 		
 		gfloat aspect_ratio;
 	
-		#if GTK_CHECK_VERSION (3, 0, 0)
 		width = gtk_widget_get_allocated_width (task->image);
 		height = gtk_widget_get_allocated_height (task->image);
-		#else
-		width = task->image->allocation.width;
-		height = task->image->allocation.height;
-		#endif
-		
+
 		lightdash_windows_view_render_preview_at_size (task, width, height);
 		
-		#if GTK_CHECK_VERSION (3, 0, 0)
 		task->previous_width = gtk_widget_get_allocated_width (task->image);
 		task->previous_height = gtk_widget_get_allocated_height (task->image);
-		#else
-		task->previous_width = task->image->allocation.width;
-		task->previous_height = task->image->allocation.height;
-		#endif
-		
+
 		task->scaled = TRUE;
 			
-		#if GTK_CHECK_VERSION (3, 0, 0)
-		cairo_set_source_surface (cr, task->image_surface, 
+		cairo_set_source_surface (cr, task->image_surface,
 				width/2 - task->surface_width/2, 
 				height/2 - task->surface_height/2);
 				
@@ -1060,23 +1040,6 @@ gboolean lightdash_windows_view_image_expose (GtkWidget *widget, GdkEventExpose 
 		
 		task->previous_width = gtk_widget_get_allocated_width (task->image);
 		task->previous_height = gtk_widget_get_allocated_height (task->image);
-	
-		#else
-
-		cr = gdk_cairo_create (widget->window);
-		
-		cairo_set_source_surface (cr, task->image_surface, 
-				widget->allocation.x + width/2 - task->surface_width/2,
-				widget->allocation.y + height/2 - task->surface_height/2);
-		
-		cairo_paint (cr);
-		
-		task->previous_width = task->image->allocation.width;
-		task->previous_height = task->image->allocation.height;
-		
-		cairo_destroy (cr);	
-		
-		#endif
 
 		return FALSE;
 }
