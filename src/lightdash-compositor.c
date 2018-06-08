@@ -36,10 +36,10 @@
 	compositor->screen = wnck_screen_get_default();
 	compositor->gdk_screen = gdk_screen_get_default ();
 	compositor->dpy = gdk_x11_get_default_xdisplay ();
+  compositor->gdk_display = gdk_display_get_default ();
 	
 	/* Trap all X errors throughout the lifetime of this object */
-	gdk_error_trap_push ();
-	
+	gdk_x11_display_error_trap_push (compositor->gdk_display);
 	wnck_screen_force_update (compositor->screen);
 
 	for (int i = 0; i < ScreenCount (compositor->dpy); i++)

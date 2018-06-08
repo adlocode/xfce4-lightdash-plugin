@@ -44,6 +44,7 @@ struct _LightdashCompositor
 	
 	WnckScreen *screen;
 	GdkScreen *gdk_screen;
+  GdkDisplay *gdk_display;
 	Display *dpy;
 	
 	GdkWindow *excluded_gdk_window;

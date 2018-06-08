@@ -67,28 +67,28 @@
  
  static void lightdash_composited_window_finalize (GObject *object)
  {
-	 LightdashCompositedWindow *task;
-	 gint error;
-	 task = LIGHTDASH_COMPOSITED_WINDOW (object);
+	 LightdashCompositedWindow *cw;
+
+	 cw = LIGHTDASH_COMPOSITED_WINDOW (object);
 	 
-	 if (task->damage != None)
+	 if (cw->damage != None)
 	{
-		gdk_error_trap_push ();
-		XDamageDestroy (task->compositor->dpy, task->damage);
-		task->damage = None;
-		error = gdk_error_trap_pop ();
+		gdk_x11_display_error_trap_push (cw->compositor->gdk_display);
+		XDamageDestroy (cw->compositor->dpy, cw->damage);
+		cw->damage = None;
+		gdk_x11_display_error_trap_pop_ignored (cw->compositor->gdk_display);
 	}
 	
 	
-	gdk_window_remove_filter (task->gdk_window, (GdkFilterFunc) lightdash_composited_window_event, task);
+	gdk_window_remove_filter (cw->gdk_window, (GdkFilterFunc) lightdash_composited_window_event, cw);
 	
-	if (task->surface)
+	if (cw->surface)
 	{	
-		cairo_surface_destroy (task->surface);
-		task->surface = NULL;
+		cairo_surface_destroy (cw->surface);
+		cw->surface = NULL;
 	}
 	
-	g_object_unref (task->compositor);
+	g_object_unref (cw->compositor);
 	
 	G_OBJECT_CLASS (lightdash_composited_window_parent_class)->finalize (object);
 }
@@ -109,20 +109,19 @@ void lightdash_composited_window_get_size (LightdashCompositedWindow *self, gint
 	XConfigureEvent *ce;
 	
 	int width, height;
-	gint error;
-	
+
 	ev = (XEvent*)xevent;
 	e = (XDamageNotifyEvent *)ev;
 	
 	switch (ev->type)
 	{
 		case DestroyNotify:
-			gdk_error_trap_push ();
+			gdk_x11_display_error_trap_push (self->compositor->gdk_display);
 			cairo_surface_destroy (self->surface);
 			self->surface = NULL;
 			XDamageDestroy (self->compositor->dpy, self->damage);
 			XSync (self->compositor->dpy, False);
-			error = gdk_error_trap_pop ();
+			gdk_x11_display_error_trap_pop_ignored (self->compositor->gdk_display);
 		break;
 	
 		case ConfigureNotify:
@@ -156,21 +155,21 @@ void lightdash_composited_window_get_size (LightdashCompositedWindow *self, gint
 }
  
  cairo_surface_t *
-lightdash_composited_window_get_window_picture (LightdashCompositedWindow *task)
+lightdash_composited_window_get_window_picture (LightdashCompositedWindow *cw)
 {
 	cairo_surface_t *surface;
 	XRenderPictFormat *format;
 		
 	format = None;
 			
-	format = XRenderFindVisualFormat (task->compositor->dpy, task->attr.visual);	
+	format = XRenderFindVisualFormat (cw->compositor->dpy, cw->attr.visual);
 
-	surface = cairo_xlib_surface_create_with_xrender_format (task->compositor->dpy,
-			task->xid,
-			task->attr.screen,
+	surface = cairo_xlib_surface_create_with_xrender_format (cw->compositor->dpy,
+			cw->xid,
+			cw->attr.screen,
 			format,
-			task->attr.width,
-			task->attr.height);
+			cw->attr.width,
+			cw->attr.height);
 			
 	return surface;
 }
@@ -178,8 +177,7 @@ lightdash_composited_window_get_window_picture (LightdashCompositedWindow *task)
  LightdashCompositedWindow * lightdash_composited_window_new_from_window (WnckWindow *window)
  {
 	LightdashCompositedWindow *composited_window;
-	gint error;
-	 
+
 	composited_window = LIGHTDASH_COMPOSITED_WINDOW (g_object_new (LIGHTDASH_TYPE_COMPOSITED_WINDOW, NULL));
 	 
 	composited_window->window = window;
@@ -191,7 +189,7 @@ lightdash_composited_window_get_window_picture (LightdashCompositedWindow *task)
 	//if (task->tasklist->composited 
 		//&& task->attr.height != 0)
 		//{
-			gdk_error_trap_push ();
+			gdk_x11_display_error_trap_push (composited_window->compositor->gdk_display);
 			
 			composited_window->surface = lightdash_composited_window_get_window_picture (composited_window);
 	
@@ -206,7 +204,7 @@ lightdash_composited_window_get_window_picture (LightdashCompositedWindow *task)
 								(GdkFilterFunc) lightdash_composited_window_event, 
 								composited_window);
 				}
-			error = gdk_error_trap_pop ();
+			gdk_x11_display_error_trap_pop_ignored (composited_window->compositor->gdk_display);
 		//}
 		
 	return composited_window;
