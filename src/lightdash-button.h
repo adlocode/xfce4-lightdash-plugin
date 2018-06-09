@@ -23,7 +23,7 @@ G_BEGIN_DECLS
 
 #define LIGHTDASH_TYPE_BUTTON (lightdash_button_get_type())
 #define LIGHTDASH_BUTTON(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), LIGHTDASH_TYPE_BUTTON, LightdashButton))
-#define MY_TASKLIST_CLASS (klass) (G_TYPE_CHECK_CLASS_CAST ((klass), LIGHTDASH_TYPE_BUTTON, LightdashButtonClass))
+#define LIGHTDASH_BUTTON_CLASS (klass) (G_TYPE_CHECK_CLASS_CAST ((klass), LIGHTDASH_TYPE_BUTTON, LightdashButtonClass))
 #define IS_LIGHTDASH_BUTTON (obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), LIGHTDASH_TYPE_BUTTON))
 #define IS_LIGHTDASH_BUTTON_CLASS(klass), (G_TYPE_CHECK_CLASS_TYPE ((klass), LIGHTDASH_TYPE_BUTTON))
 
@@ -34,7 +34,9 @@ typedef LightdashButtonClass LightdashButtonClass;
 
 struct _LightdashButton
 {
-	GtkBin parent_instance;
+	GtkEventBox parent_instance;
+
+  guint button_release_tag;
 
 };
 
@@ -42,8 +44,10 @@ struct _LightdashButton
 
 struct _LightdashButtonClass
 {
-	GtkBinClass parent_class;
+	GtkEventBoxClass parent_class;
 };
+
+GType lightdash_button_get_type (void);
 
 GtkWidget* lightdash_button_new (void);
 

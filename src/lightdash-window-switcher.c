@@ -167,7 +167,7 @@ lightdash_windows_view_get_window_picture (LightTask *task);
 static gint
 lightdash_popup_handler (GtkWidget *widget, GdkEventButton *event, LightTask *task);
 
-static void my_tasklist_button_clicked (GtkButton *button, LightTask *task);
+static gboolean my_tasklist_button_button_press_event (GtkWidget *widget, GdkEventButton *event, LightTask *task);
 
 
 
@@ -863,7 +863,36 @@ static void lightdash_windows_view_skipped_window_state_changed (WnckWindow *win
 static gboolean
 lightdash_popup_handler (GtkWidget *widget, GdkEventButton *event, LightTask *task)
 {
-	if (event->button == 3)
+
+}
+static void lightdash_window_switcher_button_released (GtkWidget *widget, GdkEventButton *event, LightTask *task)
+{
+  LightdashButton *button;
+  button = LIGHTDASH_BUTTON (widget);
+
+  if (button->button_release_tag)
+    {
+      g_signal_handler_disconnect (widget, button->button_release_tag);
+      button->button_release_tag = 0;
+    }
+
+  wnck_window_activate (task->window, gtk_get_current_event_time());
+	g_signal_emit_by_name (task->tasklist, "task-button-clicked");
+}
+
+static gboolean my_tasklist_button_button_press_event (GtkWidget *widget, GdkEventButton *event, LightTask *task)
+
+{
+  LightdashButton *button;
+  button = LIGHTDASH_BUTTON (widget);
+
+  if (event->button == 1)
+    {
+      button->button_release_tag = g_signal_connect (widget, "button-release-event",
+                                                 G_CALLBACK (lightdash_window_switcher_button_released),
+                                                 task);
+    }
+  else if (event->button == 3)
 	{
 		if (!task->action_menu)
 		{
@@ -885,15 +914,7 @@ lightdash_popup_handler (GtkWidget *widget, GdkEventButton *event, LightTask *ta
 	{
 		return FALSE;
 		
-	}			
-}
-
-static void my_tasklist_button_clicked (GtkButton *button, LightTask *task)
-	
-{
-	wnck_window_activate (task->window, gtk_get_current_event_time());
-	g_signal_emit_by_name (task->tasklist, "task-button-clicked");
-	
+	}
 }
 
 void lightdash_windows_view_render_preview_at_size (LightTask *task, gint width, gint height)
@@ -1326,11 +1347,11 @@ static void light_task_create_widgets (LightTask *task)
 					0);				
 					
 					
-	g_signal_connect_object (task->button, "clicked", 
-					G_CALLBACK (my_tasklist_button_clicked), task,
+	g_signal_connect_object (task->button, "button-press-event",
+					G_CALLBACK (my_tasklist_button_button_press_event), task,
 					0);
 					
-	g_signal_connect_object (task->button, "button-press-event", 
-					G_CALLBACK (lightdash_popup_handler), G_OBJECT (task),
-					0);
+	//g_signal_connect_object (task->button, "button-press-event",
+					//G_CALLBACK (lightdash_popup_handler), G_OBJECT (task),
+					//0);
 }

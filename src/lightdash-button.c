@@ -16,7 +16,8 @@
 
 #include "lightdash-button.h"
 
-G_DEFINE_TYPE (LightdashButton, lightdash_button, GTK_TYPE_BIN);
+G_DEFINE_TYPE (LightdashButton, lightdash_button, GTK_TYPE_EVENT_BOX);
+
 
 enum
 {
@@ -28,6 +29,10 @@ static guint button_signals[LAST_SIGNAL] = {0};
 
 static void lightdash_button_init (LightdashButton *button)
 {
+  button->button_release_tag = 0;
+  gtk_event_box_set_visible_window (GTK_EVENT_BOX (button), FALSE);
+  gtk_widget_add_events (GTK_WIDGET (button),
+                         GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
 
 }
 
