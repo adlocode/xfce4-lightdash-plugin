@@ -18,6 +18,8 @@
 
 G_DEFINE_TYPE (LightdashButton, lightdash_button, GTK_TYPE_EVENT_BOX);
 
+static void lightdash_button_finalize (GObject *object);
+
 
 enum
 {
@@ -42,6 +44,8 @@ static void lightdash_button_class_init (LightdashButtonClass *klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
 
+  gobject_class->finalize = lightdash_button_finalize;
+
   button_signals[CLICKED] =
     g_signal_new ("clicked",
                   G_OBJECT_CLASS_TYPE (gobject_class),
@@ -51,6 +55,19 @@ static void lightdash_button_class_init (LightdashButtonClass *klass)
                   NULL,
                   G_TYPE_NONE, 0);
 
+}
+
+static void lightdash_button_finalize (GObject *object)
+{
+  LightdashButton *button;
+
+  button = LIGHTDASH_BUTTON (object);
+
+  if (button->button_release_tag)
+    {
+      g_signal_handler_disconnect (GTK_WIDGET (button), button->button_release_tag);
+      button->button_release_tag = 0;
+    }
 }
 
 GtkWidget * lightdash_button_new ()
