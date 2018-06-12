@@ -428,6 +428,8 @@ static void lightdash_windows_view_init (LightdashWindowsView *tasklist)
 	
 	gtk_event_box_set_visible_window (GTK_EVENT_BOX (tasklist), FALSE);
 	tasklist->table = lightdash_table_layout_new (DEFAULT_TABLE_ROWS, DEFAULT_TABLE_COLUMNS, TRUE);
+  gtk_grid_set_row_spacing (GTK_GRID (tasklist->table), 5);
+  gtk_grid_set_column_spacing (GTK_GRID (tasklist->table), 5);
 	gtk_container_add (GTK_CONTAINER(tasklist), tasklist->table);
 	
 	gtk_drag_dest_set (GTK_WIDGET (tasklist), 
