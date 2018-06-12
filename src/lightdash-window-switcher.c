@@ -1078,7 +1078,7 @@ static void my_tasklist_drag_begin_handl
 	
 	g_signal_emit_by_name (task->tasklist, "task-button-drag-begin");
 	
-	gtk_widget_hide (task->button);
+	gtk_widget_hide (task->vbox);
 	
 	lightdash_composited_window_get_size (task->composited_window, &src_width, &src_height);
 	
@@ -1136,7 +1136,7 @@ static void my_tasklist_drag_end_handl
 (GtkWidget *widget, GdkDragContext *context, LightTask *task)
 {
 	g_signal_emit_by_name (task->tasklist, "task-button-drag-end");
-	gtk_widget_show (task->button);
+	gtk_widget_show (task->vbox);
 }
 
 static void
