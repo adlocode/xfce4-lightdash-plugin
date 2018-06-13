@@ -885,7 +885,7 @@ static void lightdash_window_switcher_button_released (GtkWidget *widget, GdkEve
   gdk_window_get_device_position (root_window, (GdkEvent *)event->device,
                                   &x, &y, NULL);
   gtk_widget_get_allocation (widget, &allocation);
-  if (x >= allocation.x && x <= allocation.x + allocation.height
+  if (x >= allocation.x && x <= allocation.x + allocation.width
       && y >= allocation.y && y <= allocation.y + allocation.height)
     {
 
