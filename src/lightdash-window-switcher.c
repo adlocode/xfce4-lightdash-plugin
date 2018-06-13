@@ -871,6 +871,9 @@ static void lightdash_window_switcher_button_released (GtkWidget *widget, GdkEve
 {
   LightdashButton *button;
   button = LIGHTDASH_BUTTON (widget);
+  GdkWindow *root_window;
+  gint x, y;
+  GtkAllocation allocation;
 
   if (button->button_release_tag)
     {
@@ -878,8 +881,17 @@ static void lightdash_window_switcher_button_released (GtkWidget *widget, GdkEve
       button->button_release_tag = 0;
     }
 
+  root_window = gdk_screen_get_root_window (task->tasklist->compositor->gdk_screen);
+  gdk_window_get_device_position (root_window, (GdkEvent *)event->device,
+                                  &x, &y, NULL);
+  gtk_widget_get_allocation (widget, &allocation);
+  if (x >= allocation.x && x <= allocation.x + allocation.height
+      && y >= allocation.y && y <= allocation.y + allocation.height)
+    {
+
   wnck_window_activate (task->window, gtk_get_current_event_time());
 	g_signal_emit_by_name (task->tasklist, "task-button-clicked");
+  }
 }
 
 static gboolean my_tasklist_button_button_press_event (GtkWidget *widget, GdkEventButton *event, LightTask *task)
