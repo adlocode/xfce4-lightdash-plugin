@@ -327,13 +327,7 @@ enum {
 	LAST_SIGNAL
 };
 
-static guint task_button_clicked_signals[LAST_SIGNAL]={0};
-
-static guint task_button_drag_begin_signals[LAST_SIGNAL]={0};
-
-static guint task_button_drag_end_signals[LAST_SIGNAL]={0};
-
-static guint workspace_changed_signals[LAST_SIGNAL]={0};
+static guint window_switcher_signals[LAST_SIGNAL]={0};
 
 G_DEFINE_TYPE (LightdashWindowsView, lightdash_windows_view, GTK_TYPE_EVENT_BOX);
 
@@ -454,7 +448,7 @@ static void lightdash_windows_view_class_init (MyTasklistClass *klass)
 	widget_class->drag_motion = lightdash_windows_view_drag_motion;
 	widget_class->unrealize = lightdash_windows_view_unrealize;
 	
-	task_button_clicked_signals [TASK_BUTTON_CLICKED_SIGNAL] = 
+	window_switcher_signals [TASK_BUTTON_CLICKED_SIGNAL] =
 		g_signal_new ("task-button-clicked",
 		G_TYPE_FROM_CLASS(klass),
 		G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
@@ -464,7 +458,7 @@ static void lightdash_windows_view_class_init (MyTasklistClass *klass)
 		g_cclosure_marshal_VOID__VOID,
 		G_TYPE_NONE, 0);
 		
-		task_button_drag_begin_signals [TASK_BUTTON_DRAG_BEGIN_SIGNAL] = 
+		window_switcher_signals [TASK_BUTTON_DRAG_BEGIN_SIGNAL] =
 		g_signal_new ("task-button-drag-begin",
 		G_TYPE_FROM_CLASS(klass),
 		G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
@@ -474,7 +468,7 @@ static void lightdash_windows_view_class_init (MyTasklistClass *klass)
 		g_cclosure_marshal_VOID__VOID,
 		G_TYPE_NONE, 0);
 		
-		task_button_drag_end_signals [TASK_BUTTON_DRAG_END_SIGNAL] = 
+		window_switcher_signals [TASK_BUTTON_DRAG_END_SIGNAL] =
 		g_signal_new ("task-button-drag-end",
 		G_TYPE_FROM_CLASS(klass),
 		G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
@@ -484,7 +478,7 @@ static void lightdash_windows_view_class_init (MyTasklistClass *klass)
 		g_cclosure_marshal_VOID__VOID,
 		G_TYPE_NONE, 0);
 		
-		workspace_changed_signals [WORKSPACE_CHANGED_SIGNAL] = 
+		window_switcher_signals [WORKSPACE_CHANGED_SIGNAL] =
 		g_signal_new ("workspace-changed",
 		G_TYPE_FROM_CLASS(klass),
 		G_SIGNAL_RUN_FIRST|G_SIGNAL_ACTION,
@@ -931,6 +925,14 @@ static gboolean my_tasklist_button_button_press_event (GtkWidget *widget, GdkEve
 	}
 }
 
+static void my_tasklist_button_clicked (LightdashButton *button,
+                                        LightTask       *task)
+{
+  wnck_window_activate (task->window, gtk_get_current_event_time());
+	g_signal_emit (task->tasklist, window_switcher_signals[TASK_BUTTON_CLICKED_SIGNAL], 0);
+
+}
+
 void lightdash_windows_view_render_preview_at_size (LightTask *task, gint width, gint height)
 {
 		gint src_width, src_height;
@@ -1316,6 +1318,7 @@ static void light_task_create_widgets (LightTask *task)
 	gtk_container_add (GTK_CONTAINER(task->button),task->vbox);
 	gtk_box_pack_start (GTK_BOX (task->vbox), task->image, TRUE, TRUE, 0);
 	gtk_box_pack_start (GTK_BOX (task->vbox), task->label, FALSE, TRUE, 0);
+  gtk_widget_show_all (task->button);
 	
 	task->icon_changed_tag = g_signal_connect (task->window, "icon-changed",
 					G_CALLBACK (my_tasklist_window_icon_changed), task);
@@ -1363,6 +1366,10 @@ static void light_task_create_widgets (LightTask *task)
 					
 	g_signal_connect_object (task->button, "button-press-event",
 					G_CALLBACK (my_tasklist_button_button_press_event), task,
+					0);
+
+  g_signal_connect_object (task->button, "clicked",
+					G_CALLBACK (my_tasklist_button_clicked), task,
 					0);
 					
 	//g_signal_connect_object (task->button, "button-press-event",

@@ -18,7 +18,12 @@
 
 G_DEFINE_TYPE (LightdashButton, lightdash_button, GTK_TYPE_EVENT_BOX);
 
+static void lightdash_button_realize (GtkWidget *widget);
 static void lightdash_button_finalize (GObject *object);
+gboolean lightdash_button_draw (GtkWidget *widget,
+                                cairo_t   *cr);
+static gboolean lightdash_button_key_release (GtkWidget *widget,
+                                              GdkEventKey *event);
 
 
 enum
@@ -32,19 +37,30 @@ static guint button_signals[LAST_SIGNAL] = {0};
 static void lightdash_button_init (LightdashButton *button)
 {
   button->button_release_tag = 0;
+  gtk_widget_set_can_focus (GTK_WIDGET (button), TRUE);
+  gtk_widget_set_receives_default (GTK_WIDGET (button), TRUE);
   gtk_event_box_set_visible_window (GTK_EVENT_BOX (button), FALSE);
-  gtk_widget_add_events (GTK_WIDGET (button),
-                         GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+
+  g_signal_connect (GTK_WIDGET (button), "realize",
+                    G_CALLBACK (lightdash_button_realize), NULL);
+
+  g_signal_connect (GTK_WIDGET (button), "draw",
+                    G_CALLBACK (lightdash_button_draw), NULL);
+
 
 }
 
 static void lightdash_button_class_init (LightdashButtonClass *klass)
 {
   GObjectClass *gobject_class;
+  GtkWidgetClass *widget_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  widget_class = GTK_WIDGET_CLASS (klass);
 
   gobject_class->finalize = lightdash_button_finalize;
+
+  widget_class->key_release_event = lightdash_button_key_release;
 
   button_signals[CLICKED] =
     g_signal_new ("clicked",
@@ -54,6 +70,16 @@ static void lightdash_button_class_init (LightdashButtonClass *klass)
                   NULL, NULL,
                   NULL,
                   G_TYPE_NONE, 0);
+
+}
+
+static void lightdash_button_realize (GtkWidget *widget)
+{
+
+  gtk_widget_add_events (widget,
+                         GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK
+                         | GDK_KEY_RELEASE_MASK);
+
 
 }
 
@@ -70,7 +96,45 @@ static void lightdash_button_finalize (GObject *object)
     }
 }
 
+gboolean lightdash_button_draw (GtkWidget *widget,
+                                cairo_t   *cr)
+{
+  GtkStyleContext *context;
+  GtkAllocation allocation;
+
+  context = gtk_widget_get_style_context (widget);
+  gtk_widget_get_allocation (widget, &allocation);
+
+  if (gtk_widget_has_focus (widget))
+    {
+  gtk_render_focus (context,
+                    cr,
+                    allocation.x,
+                    allocation.y,
+                    allocation.width,
+                    allocation.height);
+    }
+
+  return FALSE;
+
+
+}
+
 GtkWidget * lightdash_button_new ()
 {
   return g_object_new (LIGHTDASH_TYPE_BUTTON, NULL);
+}
+
+static gboolean lightdash_button_key_release (GtkWidget *widget,
+                                              GdkEventKey *event)
+{
+  if (event->keyval == GDK_KEY_Return)
+    {
+  g_signal_emit (LIGHTDASH_BUTTON (widget), button_signals[CLICKED], 0);
+
+  if (GTK_WIDGET_CLASS (lightdash_button_parent_class)->key_release_event)
+      return GTK_WIDGET_CLASS (lightdash_button_parent_class)->key_release_event (widget, event);
+  return FALSE;
+    }
+  return FALSE;
 }
