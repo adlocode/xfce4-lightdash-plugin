@@ -774,9 +774,6 @@ xfce_appfinder_window_init (XfceAppfinderWindow *window)
   gtk_entry_set_icon_from_icon_name (GTK_ENTRY (entry),
                                      GTK_ENTRY_ICON_SECONDARY,
                                      XFCE_APPFINDER_STOCK_GO_DOWN);
-  gtk_entry_set_icon_tooltip_text (GTK_ENTRY (entry),
-                                   GTK_ENTRY_ICON_SECONDARY,
-                                   _("Toggle view mode"));
   gtk_widget_show (entry);
 
   window->completion = completion = gtk_entry_completion_new ();
