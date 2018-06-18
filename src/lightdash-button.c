@@ -109,8 +109,8 @@ gboolean lightdash_button_draw (GtkWidget *widget,
     {
   gtk_render_focus (context,
                     cr,
-                    allocation.x,
-                    allocation.y,
+                    0,
+                    0,
                     allocation.width,
                     allocation.height);
     }
