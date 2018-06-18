@@ -1158,6 +1158,12 @@ xfce_appfinder_window_key_press_event (GtkWidget   *widget,
       const gchar *text = gtk_entry_get_text (GTK_ENTRY (entry));
       if ((text != NULL) && (*text != '\0'))
       	gtk_entry_set_text (GTK_ENTRY (entry), "");
+      else if (gtk_widget_get_visible (window->paned))
+        {
+          gtk_widget_hide (window->paned);
+          gtk_widget_show_all (window->taskview_container);
+          gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (window->apps_button), FALSE);
+        }
       else
       	gtk_widget_hide (widget);
       return TRUE;
