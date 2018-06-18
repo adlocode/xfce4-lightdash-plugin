@@ -24,6 +24,11 @@ gboolean lightdash_button_draw (GtkWidget *widget,
                                 cairo_t   *cr);
 static gboolean lightdash_button_key_release (GtkWidget *widget,
                                               GdkEventKey *event);
+static gboolean lightdash_button_enter_notify (GtkWidget        *widget,
+                                               GdkEventCrossing *event);
+static gboolean lightdash_button_leave_notify (GtkWidget        *widget,
+                                               GdkEventCrossing *event);
+
 
 
 enum
@@ -61,6 +66,8 @@ static void lightdash_button_class_init (LightdashButtonClass *klass)
   gobject_class->finalize = lightdash_button_finalize;
 
   widget_class->key_release_event = lightdash_button_key_release;
+  widget_class->enter_notify_event = lightdash_button_enter_notify;
+  widget_class->leave_notify_event = lightdash_button_leave_notify;
 
   button_signals[CLICKED] =
     g_signal_new ("clicked",
@@ -101,11 +108,13 @@ gboolean lightdash_button_draw (GtkWidget *widget,
 {
   GtkStyleContext *context;
   GtkAllocation allocation;
+  GtkStateFlags state;
 
   context = gtk_widget_get_style_context (widget);
+  state = gtk_widget_get_state_flags (widget);
   gtk_widget_get_allocation (widget, &allocation);
 
-  if (gtk_widget_has_focus (widget))
+  if (gtk_widget_has_focus (widget) || state & GTK_STATE_FLAG_PRELIGHT)
     {
   gtk_render_focus (context,
                     cr,
@@ -137,4 +146,38 @@ static gboolean lightdash_button_key_release (GtkWidget *widget,
   return FALSE;
     }
   return FALSE;
+}
+
+static gboolean lightdash_button_enter_notify (GtkWidget        *widget,
+                                               GdkEventCrossing *event)
+{
+  GtkStateFlags new_state;
+
+  new_state = gtk_widget_get_state_flags (widget) &
+  ~(GTK_STATE_FLAG_PRELIGHT | GTK_STATE_FLAG_ACTIVE);
+
+  new_state |= GTK_STATE_FLAG_PRELIGHT;
+
+  gtk_widget_set_state_flags (widget, new_state, TRUE);
+
+  gtk_widget_queue_draw (widget);
+
+
+}
+
+static gboolean lightdash_button_leave_notify (GtkWidget        *widget,
+                                               GdkEventCrossing *event)
+{
+  GtkStateFlags new_state;
+
+  new_state = gtk_widget_get_state_flags (widget) &
+  ~(GTK_STATE_FLAG_PRELIGHT | GTK_STATE_FLAG_ACTIVE);
+
+  //new_state |= GTK_STATE_FLAG_PRELIGHT;
+
+  gtk_widget_set_state_flags (widget, new_state, TRUE);
+
+  gtk_widget_queue_draw (widget);
+
+
 }
