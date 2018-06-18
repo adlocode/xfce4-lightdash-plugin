@@ -405,8 +405,8 @@ static void lightdash_windows_view_init (LightdashWindowsView *tasklist)
 {
 	
 	static const GtkTargetEntry targets [] = { {"application/x-wnck-window-id",0,0} };
-	
-	tasklist->tasks = NULL;
+
+  tasklist->tasks = NULL;
 	tasklist->skipped_windows = NULL;
 	tasklist->adjusted = FALSE;
 	

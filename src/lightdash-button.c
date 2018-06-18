@@ -41,10 +41,26 @@ static guint button_signals[LAST_SIGNAL] = {0};
 
 static void lightdash_button_init (LightdashButton *button)
 {
+  GtkStyleProvider *provider;
+  GtkStyleContext *context;
+
+  context = gtk_widget_get_style_context (GTK_WIDGET (button));
+
+  provider = (GtkStyleProvider *)gtk_css_provider_new ();
+  gtk_css_provider_load_from_data (GTK_CSS_PROVIDER (provider),
+                                   "#lightdash-window-button .frame1 {\n"
+                                   "  border-style: solid;\n"
+                                     "  border-color: rgb (33,93,156);\n"
+                                    " border-width: 3px;\n"
+                                     "  border-radius: 0px;\n"
+                                   "}\n", -1, NULL);
+  gtk_style_context_add_provider (context, provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
   button->button_release_tag = 0;
   gtk_widget_set_can_focus (GTK_WIDGET (button), TRUE);
   gtk_widget_set_receives_default (GTK_WIDGET (button), TRUE);
   gtk_event_box_set_visible_window (GTK_EVENT_BOX (button), FALSE);
+  gtk_widget_set_name (GTK_WIDGET (button), "lightdash-window-button");
 
   g_signal_connect (GTK_WIDGET (button), "realize",
                     G_CALLBACK (lightdash_button_realize), NULL);
@@ -111,18 +127,23 @@ gboolean lightdash_button_draw (GtkWidget *widget,
   GtkStateFlags state;
 
   context = gtk_widget_get_style_context (widget);
+  gtk_style_context_save (context);
   state = gtk_widget_get_state_flags (widget);
   gtk_widget_get_allocation (widget, &allocation);
+  gtk_style_context_add_class (context, "frame1");
 
   if (gtk_widget_has_focus (widget) || state & GTK_STATE_FLAG_PRELIGHT)
     {
-  gtk_render_focus (context,
+  gtk_render_frame (context,
                     cr,
                     0,
                     0,
                     allocation.width,
                     allocation.height);
     }
+
+  gtk_style_context_remove_class (context, "frame1");
+  gtk_style_context_restore (context);
 
   return FALSE;
 
