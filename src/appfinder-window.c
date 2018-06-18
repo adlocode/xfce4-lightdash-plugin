@@ -1163,6 +1163,8 @@ xfce_appfinder_window_key_press_event (GtkWidget   *widget,
       return TRUE;
     }
 
+  if (gtk_widget_get_visible (window->paned))
+    {
    if (event->keyval == GDK_KEY_Up || event->keyval == GDK_KEY_Down)
 	{
 		if (gtk_window_get_focus (GTK_WINDOW (widget)) == entry)
@@ -1170,6 +1172,7 @@ xfce_appfinder_window_key_press_event (GtkWidget   *widget,
 				gtk_widget_grab_focus (window->view);
 			}
 	}
+}
 
   return  (*GTK_WIDGET_CLASS (xfce_appfinder_window_parent_class)->key_press_event) (widget, event);
 }
