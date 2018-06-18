@@ -173,8 +173,6 @@ static gboolean lightdash_button_leave_notify (GtkWidget        *widget,
   new_state = gtk_widget_get_state_flags (widget) &
   ~(GTK_STATE_FLAG_PRELIGHT | GTK_STATE_FLAG_ACTIVE);
 
-  //new_state |= GTK_STATE_FLAG_PRELIGHT;
-
   gtk_widget_set_state_flags (widget, new_state, TRUE);
 
   gtk_widget_queue_draw (widget);
