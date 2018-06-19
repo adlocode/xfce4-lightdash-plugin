@@ -66,6 +66,8 @@ struct _MyTasklist
 	
 	guint table_columns;
 	guint table_rows;
+
+  GtkStyleProvider *provider;
 	
 };
 

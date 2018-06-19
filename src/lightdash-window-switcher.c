@@ -418,6 +418,15 @@ static void lightdash_windows_view_init (LightdashWindowsView *tasklist)
 	tasklist->table_rows = DEFAULT_TABLE_ROWS;
 	
 	tasklist->unique_id_counter = 0;
+
+  tasklist->provider = (GtkStyleProvider *)gtk_css_provider_new ();
+  gtk_css_provider_load_from_data (GTK_CSS_PROVIDER (tasklist->provider),
+                                   "#lightdash-window-button .frame1 {\n"
+                                   "  border-style: solid;\n"
+                                     "  border-color: rgb (33,93,156);\n"
+                                    " border-width: 3px;\n"
+                                     "  border-radius: 0px;\n"
+                                   "}\n", -1, NULL);
 	
 	
 	gtk_event_box_set_visible_window (GTK_EVENT_BOX (tasklist), FALSE);
@@ -1267,6 +1276,7 @@ static void light_task_create_widgets (LightTask *task)
 {
 	static const GtkTargetEntry targets [] = { {"application/x-wnck-window-id",0,0} };
 	gfloat aspect_ratio;
+  GtkStyleContext *context;
 	
 	/* avoid integer overflows */
 	if (G_UNLIKELY (task->tasklist->unique_id_counter >= G_MAXUINT))
@@ -1313,6 +1323,13 @@ static void light_task_create_widgets (LightTask *task)
 	
 	
 	task->button = lightdash_button_new();
+
+  context = gtk_widget_get_style_context (GTK_WIDGET (task->button));
+  gtk_style_context_add_provider (context,
+                                  task->tasklist->provider,
+                                  GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+
 	//gtk_button_set_relief (GTK_BUTTON (task->button), GTK_RELIEF_NONE);
 	gtk_label_set_ellipsize(GTK_LABEL(task->label),PANGO_ELLIPSIZE_END);
 	gtk_container_add (GTK_CONTAINER(task->button),task->vbox);
