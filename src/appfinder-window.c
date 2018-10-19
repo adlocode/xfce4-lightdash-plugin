@@ -148,7 +148,9 @@ static void       xfce_appfinder_window_icon_theme_changed            (XfceAppfi
 static void       xfce_appfinder_window_launch_clicked                (XfceAppfinderWindow         *window);
 static void       xfce_appfinder_window_execute                       (XfceAppfinderWindow         *window,
  
-                                                                      gboolean                     close_on_succeed);                                                                     
+                                                                      gboolean                     close_on_succeed);
+static void       xfce_appfinder_window_popup_menu_toggle_bookmark    (GtkWidget           *mi,
+                                                                        XfceAppfinderWindow *window);
 static gint       lightdash_window_sort_items                    (GtkTreeModel                *model,
                                                                        GtkTreeIter                 *a,
                                                                        GtkTreeIter                 *b,
@@ -381,7 +383,11 @@ static gboolean lightdash_window_bookmark_popup_menu (GtkWidget *widget,
   if (event->button == 3)
 	{
     GtkWidget *menu = gtk_menu_new ();
+    gchar *uri;
     gtk_menu_attach_to_widget (GTK_MENU (menu), bookmark->button, NULL);
+
+    uri = garcon_menu_item_get_uri (bookmark->item);
+    g_object_set_data_full (G_OBJECT (menu), "uri", uri, g_free);
 
     GtkWidget *open = gtk_menu_item_new_with_label (_("Open New Window"));
     gtk_menu_attach (GTK_MENU (menu), open,
@@ -394,6 +400,9 @@ static gboolean lightdash_window_bookmark_popup_menu (GtkWidget *widget,
     GtkWidget *remove = gtk_menu_item_new_with_label (_("Remove from Bookmarks"));
     gtk_menu_attach (GTK_MENU (menu), remove,
                      0, 1, 1, 2);
+    g_signal_connect (G_OBJECT (remove), "activate",
+                      G_CALLBACK (xfce_appfinder_window_popup_menu_toggle_bookmark),
+                      bookmark->window);
     gtk_widget_show (remove);
 
 		GdkEventButton *event_button = (GdkEventButton *) event;
