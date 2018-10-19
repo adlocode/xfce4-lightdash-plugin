@@ -328,7 +328,7 @@ static void lightdash_window_bookmark_button_clicked (GtkButton *button, gpointe
   gboolean         succeed = FALSE;
   GError       *error = NULL;
   gboolean      result = FALSE;
-  GdkScreen    *screen;
+  GdkScreen    *screen = NULL;
   const gchar  *text;
   gchar        **argv;
   gchar        *cmd = NULL;
@@ -339,60 +339,71 @@ static void lightdash_window_bookmark_button_clicked (GtkButton *button, gpointe
   bookmark = data;
   item = bookmark->item;
 
-  if (item == NULL)
-    return;
+  succeed = lightdash_model_execute_menu_item (model, item, screen,
+                                               &regular_command, &error);
 
-  appfinder_return_val_if_fail (GARCON_IS_MENU_ITEM (item), FALSE);
+  gtk_widget_hide (GTK_WIDGET (bookmark->window));
 
-  command = garcon_menu_item_get_command (item);
-  if (!IS_STRING (command))
-    {
-      g_set_error_literal (error, 0, 0, _("Application has no command"));
-      return;
-    }
+}
 
-  string = g_string_sized_new (100);
+void lightdash_window_bookmark_menu_open_activate (GtkMenuItem       *menuitem,
+                                                   LightdashBookmark *bookmark)
+{
+  GtkTreeModel *model;
+  GtkTreeIter   orig;
+  GarconMenuItem *item;
+  const gchar     *command, *p;
+  GString         *string;
+  gboolean         succeed = FALSE;
+  GError       *error = NULL;
+  gboolean      result = FALSE;
+  GdkScreen    *screen = NULL;
+  const gchar  *text;
+  gchar        **argv;
+  gchar        *cmd = NULL;
+  gboolean      regular_command = FALSE;
+  gboolean      save_cmd;
+  gboolean      only_custom_cmd = FALSE;
 
-  if (garcon_menu_item_requires_terminal (item))
-    g_string_append (string, "exo-open --launch TerminalEmulator ");
+  item = bookmark->item;
 
-  /* expand the field codes */
-  for (p = command; *p != '\0'; ++p)
-    {
-      if (G_UNLIKELY (p[0] == '%' && p[1] != '\0'))
-        {
-          switch (*++p)
-            {
-            case '%':
-              g_string_append_c (string, '%');
-              break;
+  succeed = lightdash_model_execute_menu_item (model, item, screen,
+                                               &regular_command, &error);
 
-            /* skip all the other %? values for now we don't have dnd anyways */
-            }
-        }
-      else
-        {
-          g_string_append_c (string, *p);
-        }
-    }
+  gtk_widget_hide (GTK_WIDGET (bookmark->window));
 
-  if (g_shell_parse_argv (string->str, NULL, &argv, error))
-    {
-      succeed = xfce_spawn_on_screen (screen, garcon_menu_item_get_path (item),
-                                      argv, NULL, G_SPAWN_SEARCH_PATH,
-                                      garcon_menu_item_supports_startup_notification (item),
-                                      gtk_get_current_event_time (),
-                                      garcon_menu_item_get_icon_name (item),
-                                      error);
+}
 
-      g_strfreev (argv);
-    }
+static gboolean lightdash_window_bookmark_popup_menu (GtkWidget *widget,
+                                                      GdkEventButton *event,
+                                                      LightdashBookmark *bookmark)
+{
+  if (event->button == 3)
+	{
+    GtkWidget *menu = gtk_menu_new ();
+    gtk_menu_attach_to_widget (GTK_MENU (menu), bookmark->button, NULL);
 
-  g_string_free (string, TRUE);
+    GtkWidget *open = gtk_menu_item_new_with_label (_("Open New Window"));
+    gtk_menu_attach (GTK_MENU (menu), open,
+                     0, 1, 0, 1);
+    g_signal_connect (G_OBJECT (open), "activate",
+                      G_CALLBACK (lightdash_window_bookmark_menu_open_activate),
+                      bookmark);
+    gtk_widget_show (open);
 
-    gtk_widget_hide (GTK_WIDGET (bookmark->window));
+    GtkWidget *remove = gtk_menu_item_new_with_label (_("Remove from Bookmarks"));
+    gtk_menu_attach (GTK_MENU (menu), remove,
+                     0, 1, 1, 2);
+    gtk_widget_show (remove);
 
-}	
+		GdkEventButton *event_button = (GdkEventButton *) event;
+    gtk_menu_popup_at_widget (GTK_MENU (menu), bookmark->button,
+                              GDK_GRAVITY_EAST, GDK_GRAVITY_WEST, NULL);
+
+		return TRUE;
+	}
+  return FALSE;
+}
 
 static void lightdash_window_bookmark_added (XfceAppfinderModel  *model,
                                              LightdashBookmark         *bookmark,
@@ -412,6 +423,8 @@ static void lightdash_window_bookmark_added (XfceAppfinderModel  *model,
 
 	g_signal_connect (bookmark->button, "clicked",
 		G_CALLBACK (lightdash_window_bookmark_button_clicked), bookmark);
+  g_signal_connect (bookmark->button, "button-press-event",
+		G_CALLBACK (lightdash_window_bookmark_popup_menu), bookmark);
 }
 
 static void lightdash_window_bookmark_removed (XfceAppfinderModel  *model,

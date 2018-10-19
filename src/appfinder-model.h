@@ -90,6 +90,12 @@ gboolean             xfce_appfinder_model_get_visible_command    (XfceAppfinderM
                                                                   const GtkTreeIter         *iter,
                                                                   const gchar               *string);
 
+gboolean             lightdash_model_execute_menu_item           (XfceAppfinderModel  *model,
+                                                                  GarconMenuItem *item,
+                                                                  GdkScreen           *screen,
+                                                                  gboolean            *is_regular_command,
+                                                                  GError             **error);
+
 gboolean             xfce_appfinder_model_execute                (XfceAppfinderModel        *model,
                                                                   const GtkTreeIter         *iter,
                                                                   GdkScreen                 *screen,

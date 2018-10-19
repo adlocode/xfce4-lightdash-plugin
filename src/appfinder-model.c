@@ -2146,30 +2146,20 @@ xfce_appfinder_model_get_visible_command (XfceAppfinderModel *model,
   return FALSE;
 }
 
-
-
 gboolean
-xfce_appfinder_model_execute (XfceAppfinderModel  *model,
-                              const GtkTreeIter   *iter,
+lightdash_model_execute_menu_item (XfceAppfinderModel  *model,
+                              GarconMenuItem *item,
                               GdkScreen           *screen,
                               gboolean            *is_regular_command,
                               GError             **error)
 {
   const gchar     *command, *p;
-  GarconMenuItem  *item;
   ModelItem       *mitem;
   GString         *string;
   gboolean         succeed = FALSE;
   gchar          **argv;
 
-  appfinder_return_val_if_fail (XFCE_IS_APPFINDER_MODEL (model), FALSE);
-  appfinder_return_val_if_fail (iter->stamp == model->stamp, FALSE);
-  appfinder_return_val_if_fail (GDK_IS_SCREEN (screen), FALSE);
-
-  mitem = ITER_GET_DATA (iter);
-  item = mitem->item;
-
-  /* leave if this is not a menu item */
+    /* leave if this is not a menu item */
   *is_regular_command = (item == NULL);
   if (item == NULL)
     return FALSE;
@@ -2221,6 +2211,34 @@ xfce_appfinder_model_execute (XfceAppfinderModel  *model,
     }
 
   g_string_free (string, TRUE);
+
+  return succeed;
+}
+
+gboolean
+xfce_appfinder_model_execute (XfceAppfinderModel  *model,
+                              const GtkTreeIter   *iter,
+                              GdkScreen           *screen,
+                              gboolean            *is_regular_command,
+                              GError             **error)
+{
+  const gchar     *command, *p;
+  GarconMenuItem  *item;
+  ModelItem       *mitem;
+  GString         *string;
+  gboolean         succeed = FALSE;
+  gchar          **argv;
+
+  appfinder_return_val_if_fail (XFCE_IS_APPFINDER_MODEL (model), FALSE);
+  appfinder_return_val_if_fail (iter->stamp == model->stamp, FALSE);
+  appfinder_return_val_if_fail (GDK_IS_SCREEN (screen), FALSE);
+
+  mitem = ITER_GET_DATA (iter);
+  item = mitem->item;
+
+  succeed = lightdash_model_execute_menu_item (model, item, screen,
+                                               is_regular_command,
+                                               error);
 
   return succeed;
 }
