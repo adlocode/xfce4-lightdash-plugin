@@ -129,6 +129,9 @@ static void       xfce_appfinder_window_drag_data_get                 (GtkWidget
 static gboolean   xfce_appfinder_window_treeview_key_press_event      (GtkWidget                   *widget,
                                                                        GdkEventKey                 *event,
                                                                        XfceAppfinderWindow         *window);
+static gboolean   lightdash_window_treeview_key_release_event         (GtkWidget           *widget,
+                                                                       GdkEventKey         *event,
+                                                                        XfceAppfinderWindow *window);
 static void       xfce_appfinder_window_category_changed              (GtkTreeSelection            *selection,
                                                                        XfceAppfinderWindow         *window);
 static void       xfce_appfinder_window_category_set_categories       (XfceAppfinderModel          *model,
@@ -1421,6 +1424,8 @@ xfce_appfinder_window_view (XfceAppfinderWindow *window)
           G_CALLBACK (gtk_widget_grab_focus), window->entry);
       g_signal_connect (G_OBJECT (view), "key-press-event",
            G_CALLBACK (xfce_appfinder_window_treeview_key_press_event), window);
+      g_signal_connect (G_OBJECT (view), "key-release-event",
+           G_CALLBACK (lightdash_window_treeview_key_release_event), window);
 
       selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (view));
       gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
@@ -2102,6 +2107,10 @@ xfce_appfinder_window_treeview_key_press_event (GtkWidget           *widget,
           gtk_widget_grab_focus (window->sidepane);
           return TRUE;
         }
+      else if ((event->keyval == GDK_KEY_Up) || (event->keyval == GDK_KEY_Down))
+        {
+          gtk_tree_view_set_hover_selection (GTK_TREE_VIEW (window->view), FALSE);
+        }
     }
   else if (widget == window->sidepane)
     {
@@ -2121,6 +2130,18 @@ xfce_appfinder_window_treeview_key_press_event (GtkWidget           *widget,
    
 		
 
+  return FALSE;
+}
+
+static gboolean
+lightdash_window_treeview_key_release_event (GtkWidget           *widget,
+                                                GdkEventKey         *event,
+                                                XfceAppfinderWindow *window)
+{
+  if ((event->keyval == GDK_KEY_Up) || (event->keyval == GDK_KEY_Down))
+    {
+      gtk_tree_view_set_hover_selection (GTK_TREE_VIEW (window->view), TRUE);
+    }
   return FALSE;
 }
 
