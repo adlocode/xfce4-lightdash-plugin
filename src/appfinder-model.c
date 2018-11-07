@@ -2623,9 +2623,19 @@ xfce_appfinder_model_bookmark_toggle (XfceAppfinderModel  *model,
 		}
 	      else
 		{
-		      g_signal_emit (model, model_signals[BOOKMARK_REMOVED], 0, item->item);
+          gsize i;
 
-            }
+          g_signal_emit (model, model_signals[BOOKMARK_REMOVED], 0, item->item);
+
+          for (i = 0; i < model->bookmarks_array->len; i++)
+          {
+            const LightdashBookmark *e = g_ptr_array_index (model->bookmarks_array, i);
+
+            if (e->item == item->item)
+              g_ptr_array_remove (model->bookmarks_array, e);
+          }
+
+          }
         }
 
 
