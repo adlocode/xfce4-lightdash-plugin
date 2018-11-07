@@ -32,6 +32,8 @@
 #include <src/appfinder-model.h>
 #include <src/appfinder-private.h>
 
+#include "lightdash-image.h"
+
 
 
 #define HISTORY_PATH   "xfce4/xfce4-appfinder/history"
@@ -199,6 +201,7 @@ LightdashBookmark * lightdash_bookmark_new ()
   bookmark = g_slice_new0 (LightdashBookmark);
 	bookmark->item = NULL;
 	bookmark->button = NULL;
+  bookmark->image = NULL;
 
   return bookmark;
 }
@@ -1264,6 +1267,26 @@ xfce_appfinder_model_history_monitor (XfceAppfinderModel *model,
   g_object_unref (G_OBJECT (file));
 }
 
+gboolean lightdash_model_bookmark_image_draw (GtkWidget *widget, cairo_t *cr, LightdashBookmark *bookmark)
+{
+		int width, height, pw, ph;
+
+    if (bookmark->image)
+    {
+		  width = gtk_widget_get_allocated_width (widget);
+		  height = gtk_widget_get_allocated_height (widget);
+
+      pw = gdk_pixbuf_get_width (bookmark->image);
+      ph = gdk_pixbuf_get_height (bookmark->image);
+
+      gdk_cairo_set_source_pixbuf (cr, bookmark->image, width/2 - pw/2,
+                                  height/2 - ph/2);
+
+		  cairo_paint (cr);
+    }
+
+		return FALSE;
+}
 
 static void
 xfce_appfinder_model_bookmarks_collect (XfceAppfinderModel *model,
@@ -1327,7 +1350,11 @@ xfce_appfinder_model_bookmarks_collect (XfceAppfinderModel *model,
 		    bookmark->item = item->item;
         name = garcon_menu_item_get_icon_name (bookmark->item);
         item->icon_large = xfce_appfinder_model_load_pixbuf (name, XFCE_APPFINDER_ICON_SIZE_48);
-		    GtkWidget *image = gtk_image_new_from_pixbuf (item->icon_large);
+		    bookmark->image = item->icon_large;
+        GtkWidget *image = lightdash_image_new ();
+        g_signal_connect (image, "draw",
+							G_CALLBACK (lightdash_model_bookmark_image_draw),
+							bookmark);
 		    bookmark->button = gtk_button_new ();
         gtk_widget_set_tooltip_text (bookmark->button, garcon_menu_item_get_name (bookmark->item));
 			gtk_container_add (GTK_CONTAINER (bookmark->button), image);
@@ -2581,7 +2608,11 @@ xfce_appfinder_model_bookmark_toggle (XfceAppfinderModel  *model,
 		{
 		    bookmark = lightdash_bookmark_new ();
 		    bookmark->item = item->item;
-		    GtkWidget *image = gtk_image_new_from_pixbuf (item->icon_large);
+		    bookmark->image = item->icon_large;
+        GtkWidget *image = lightdash_image_new ();
+        g_signal_connect (image, "draw",
+							G_CALLBACK (lightdash_model_bookmark_image_draw),
+							bookmark);
 		    bookmark->button = gtk_button_new ();
       gtk_widget_set_tooltip_text (bookmark->button, garcon_menu_item_get_name (bookmark->item));
 			gtk_container_add (GTK_CONTAINER (bookmark->button), image);

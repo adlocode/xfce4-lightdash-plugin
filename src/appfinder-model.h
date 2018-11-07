@@ -63,6 +63,7 @@ XfceAppfinderIconSize;
 typedef struct
 {
 	GtkWidget *button;
+  GdkPixbuf *image;
 	GarconMenuItem *item;
 	XfceAppfinderModel *model;
 	GtkWidget *window;
