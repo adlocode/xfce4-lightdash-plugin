@@ -17,14 +17,60 @@
  #include "lightdash-compositor.h"
  
  G_DEFINE_TYPE (LightdashCompositor, lightdash_compositor, G_TYPE_OBJECT);
- 
+
+ static void lightdash_compositor_on_window_opened
+	(WnckScreen *screen, WnckWindow *window, LightdashCompositor *compositor);
+static void lightdash_compositor_on_window_closed
+	(WnckScreen *screen, WnckWindow *window, LightdashCompositor *compositor);
+static void lightdash_compositor_active_workspace_changed (WnckScreen          *screen,
+                                                  WnckWorkspace       *previously_active_workspace,
+                                                  LightdashCompositor *compositor);
  static int lightdash_compositor_xhandler_xerror (Display *dpy, XErrorEvent *e);
  
  static LightdashCompositor *_lightdash_compositor_singleton = NULL;
+
+enum {
+  WINDOW_OPENED_SIGNAL,
+  WINDOW_CLOSED_SIGNAL,
+  ACTIVE_WORKSPACE_CHANGED_SIGNAL,
+	LAST_SIGNAL
+};
+
+static guint compositor_signals[LAST_SIGNAL]={0};
  
  static void lightdash_compositor_class_init (LightdashCompositorClass *klass)
  {
 	 GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+   compositor_signals [WINDOW_OPENED_SIGNAL] =
+		g_signal_new ("window-opened",
+		G_TYPE_FROM_CLASS(klass),
+		G_SIGNAL_RUN_LAST,
+		0,
+		NULL,
+		NULL,
+		NULL,
+		G_TYPE_NONE, 1, WNCK_TYPE_WINDOW);
+
+   compositor_signals [WINDOW_CLOSED_SIGNAL] =
+		g_signal_new ("window-closed",
+		G_TYPE_FROM_CLASS(klass),
+		G_SIGNAL_RUN_LAST,
+		0,
+		NULL,
+		NULL,
+		NULL,
+		G_TYPE_NONE, 1, WNCK_TYPE_WINDOW);
+
+   compositor_signals [ACTIVE_WORKSPACE_CHANGED_SIGNAL] =
+		g_signal_new ("active-workspace-changed",
+		G_TYPE_FROM_CLASS(klass),
+		G_SIGNAL_RUN_LAST,
+		0,
+		NULL,
+		NULL,
+		NULL,
+		G_TYPE_NONE, 1, WNCK_TYPE_WORKSPACE);
 	 
  }
  
@@ -49,8 +95,39 @@
 	XDamageQueryExtension (compositor->dpy, &dv, &dr);
 	gdk_x11_register_standard_event_type (gdk_screen_get_display (compositor->gdk_screen),
 		dv, dv + XDamageNotify);
+
+   g_signal_connect (compositor->screen, "window-opened",
+                G_CALLBACK (lightdash_compositor_on_window_opened), compositor);
+
+   g_signal_connect (compositor->screen, "window-closed",
+                G_CALLBACK (lightdash_compositor_on_window_closed), compositor);
+
+   g_signal_connect (compositor->screen, "active-workspace-changed",
+               G_CALLBACK (lightdash_compositor_active_workspace_changed), compositor);
  }
  
+static void lightdash_compositor_on_window_opened
+	(WnckScreen *screen, WnckWindow *window, LightdashCompositor *compositor)
+{
+  g_signal_emit (compositor, compositor_signals[WINDOW_OPENED_SIGNAL],
+                 0, window);
+}
+
+static void lightdash_compositor_on_window_closed
+	(WnckScreen *screen, WnckWindow *window, LightdashCompositor *compositor)
+{
+  g_signal_emit (compositor, compositor_signals[WINDOW_CLOSED_SIGNAL],
+                 0, window);
+}
+
+static void lightdash_compositor_active_workspace_changed (WnckScreen          *screen,
+                                                  WnckWorkspace       *previously_active_workspace,
+                                                  LightdashCompositor *compositor)
+{
+  g_signal_emit (compositor, compositor_signals[ACTIVE_WORKSPACE_CHANGED_SIGNAL],
+                 0, previously_active_workspace);
+}
+
  WnckScreen * lightdash_compositor_get_wnck_screen (LightdashCompositor *compositor)
  {
 	 return compositor->screen;

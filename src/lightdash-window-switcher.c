@@ -42,9 +42,9 @@
  * the parent application to perform actions based on these events.
  */
 
-static void my_tasklist_on_window_opened (WnckScreen *screen, WnckWindow *window, LightdashWindowsView *tasklist);
-static void my_tasklist_on_window_closed (WnckScreen *screen, WnckWindow *window, LightdashWindowsView *tasklist);
-static void my_tasklist_active_workspace_changed (WnckScreen *screen, 
+static void my_tasklist_on_window_opened (LightdashCompositor *compositor, WnckWindow *window, LightdashWindowsView *tasklist);
+static void my_tasklist_on_window_closed (LightdashCompositor *compositor, WnckWindow *window, LightdashWindowsView *tasklist);
+static void my_tasklist_active_workspace_changed (LightdashCompositor *compositor,
 			WnckWorkspace *previously_active_workspace, LightdashWindowsView *tasklist);
 static void my_tasklist_on_name_changed (WnckWindow *window, GtkWidget *label);
 static void my_tasklist_window_workspace_changed (WnckWindow *window, LightdashWindowsView *tasklist);
@@ -388,13 +388,13 @@ static void lightdash_windows_view_realize (GtkWidget *widget)
 	lightdash_table_layout_resize (LIGHTDASH_TABLE_LAYOUT (tasklist->table), 
 			tasklist->table_rows, tasklist->table_columns);
 	
-	g_signal_connect (tasklist->screen, "window-opened",
+	g_signal_connect (tasklist->compositor, "window-opened",
                 G_CALLBACK (my_tasklist_on_window_opened), tasklist); 
                 
-    g_signal_connect (tasklist->screen, "window-closed",
+    g_signal_connect (tasklist->compositor, "window-closed",
                 G_CALLBACK (my_tasklist_on_window_closed), tasklist); 
                 
-   g_signal_connect (tasklist->screen, "active-workspace-changed",
+   g_signal_connect (tasklist->compositor, "active-workspace-changed",
                G_CALLBACK (my_tasklist_active_workspace_changed), tasklist);
                
    g_signal_connect (tasklist->gdk_screen, "composited-changed",
@@ -630,7 +630,7 @@ static void my_tasklist_on_name_changed (WnckWindow *window, GtkWidget *label)
 }
 
 static void my_tasklist_on_window_opened 
-	(WnckScreen *screen, WnckWindow *window, LightdashWindowsView *tasklist)
+	(LightdashCompositor *compositor, WnckWindow *window, LightdashWindowsView *tasklist)
 {
 	LightTask *task;
 	gint rows, columns;
@@ -687,7 +687,7 @@ static void my_tasklist_on_window_opened
 
 
 static void my_tasklist_on_window_closed 
-	(WnckScreen *screen, WnckWindow *window, LightdashWindowsView *tasklist)
+	(LightdashCompositor *compositor, WnckWindow *window, LightdashWindowsView *tasklist)
 {
 	LightTask *task;
 	skipped_window *skipped;
@@ -748,7 +748,7 @@ static void my_tasklist_on_window_closed
 		
 }
 
-static void my_tasklist_active_workspace_changed (WnckScreen *screen, 
+static void my_tasklist_active_workspace_changed (LightdashCompositor *compositor,
 				WnckWorkspace *previously_active_workspace, LightdashWindowsView *tasklist)
 {
 	GList *li;

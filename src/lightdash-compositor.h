@@ -27,6 +27,8 @@
 #include <gdk/gdkx.h>
 #include <libwnck/libwnck.h>
 
+#include "lightdash-window-tracker-window.h"
+
 G_BEGIN_DECLS
 
 #define LIGHTDASH_TYPE_COMPOSITOR (lightdash_compositor_get_type())
